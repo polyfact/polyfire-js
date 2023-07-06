@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "es2019",
+        "strict": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "allowJs": false,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "baseUrl": "./",
+        "noEmit": true,
+        "skipLibCheck": true,
+        "paths": {
+            "@/*": ["src/*"],
+            "?/*": ["tests/*"],
+            "@config/*": ["config/*"]
+        },
+        "typeRoots": ["./types", "./node_modules/@types"]
+    },
+    "exclude": ["node_modules", "types"]
+}

@@ -1,0 +1,40 @@
+mergeKind = ":twisted_rightwards_arrows:"
+
+maxCommitLength = 72
+
+[kinds]
+":sparkles:" = "implement a new feature"
+":zap:" = "update existing feature"
+
+":recycle:" = "refactor code"
+":racehorse:" = "improve performance"
+":wastebasket:" = "deprecate code that needs to be cleaned up"
+
+":bug:" = "fix a bug"
+":rotating_light:" = "critical hotfix"
+":warning:" = "fix compiler / linter warnings"
+
+":books:" = "add or update documentation"
+":bulb:" = "add or update comments in source code"
+":loud_sound:" = "add or update logs"
+":mute:" = "remove logs"
+
+":floppy_disk:" = "update ressources"
+
+":file_cabinet:" = "perform database related changes"
+
+":white_check_mark:" = "add, update, or pass tests"
+
+":triangular_flag_on_post:" = "add, update, or remove feature flags"
+":chart_with_upwards_trend:" = "add or update analytics or track code"
+
+":speech_balloon:" = "add or update text and literals"
+
+":rewind:" = "revert changes"
+":twisted_rightwards_arrows:" = "merge branches"
+
+":bookmark:" = "prepare a new release version"
+":package:" = "update dependencies"
+":wrench:" = "update dev workspace"
+
+":beers:" = "write code drunkenly"
