@@ -1,9 +1,10 @@
 {
-    "name": "polyfact-node",
-    "version": "0.1.0",
+    "name": "polyfact",
+    "version": "0.1.1",
     "main": "src/index.js",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
     "license": "MIT",
+    "bin": "build/polyfact",
     "dependencies": {
         "cli-progress": "^3.12.0",
         "commander": "^11.0.0",
@@ -11,7 +12,8 @@
         "io-ts": "^2.2.20",
         "module-alias": "^2.2.2",
         "node-fetch": "^2.6.1",
-        "ts-node": "^10.9.1"
+        "ts-node": "^10.9.1",
+        "esbuild": "0.15.10"
     },
     "devDependencies": {
         "@types/cli-progress": "^3.11.0",
@@ -39,6 +41,7 @@
         "prepare": "husky install && koumu setup --copy-into-husky",
         "start": "ts-node src/index.ts",
         "lint": "prettier --check src/ ; eslint src/",
-        "lint:fix": "prettier --write src/ ; eslint --fix src/"
+        "lint:fix": "prettier --write src/ ; eslint --fix src/",
+        "build": "ts-node scripts/build.ts"
     }
 }
