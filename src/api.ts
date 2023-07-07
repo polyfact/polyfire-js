@@ -3,7 +3,7 @@ import * as t from "io-ts";
 
 import { File } from "@/folder_to_json";
 
-const API_URL = "http://34.122.20.120/api/v1";
+const API_URL = "https://api.polyfact.com/api/v1";
 
 const GenerateResponse = t.type({
     docs_id: t.string,
@@ -12,11 +12,13 @@ const GenerateResponse = t.type({
 
 export async function generateReferences(
     files: File[],
+    token: string,
 ): Promise<t.TypeOf<typeof GenerateResponse>> {
     const res = await fetch(`${API_URL}/reference`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "X-Access-Token": token,
         },
         body: JSON.stringify({ files_list: files }),
     }).then((res) => res.json());
@@ -39,8 +41,13 @@ const ProgressResponse = t.type({
 export async function getProgress(
     docId: string,
     type: "references" | "folders",
+    token: string,
 ): Promise<t.TypeOf<typeof ProgressResponse>> {
-    const res = await fetch(`${API_URL}/progress/${docId}/${type}`).then((res) => res.json());
+    const res = await fetch(`${API_URL}/progress/${docId}/${type}`, {
+        headers: {
+            "X-Access-Token": token,
+        },
+    }).then((res) => res.json());
 
     if (!ProgressResponse.is(res)) {
         throw new Error(`Unexpected response type in getProgress: ${JSON.stringify(res)}`);
@@ -52,11 +59,13 @@ export async function getProgress(
 export async function generate(
     docId: string,
     type: "folders" | "structure" | "overview" | "getting-started",
+    token: string,
 ): Promise<t.TypeOf<typeof GenerateResponse>> {
     const res = await fetch(`${API_URL}/${type}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "X-Access-Token": token,
         },
         body: JSON.stringify({ doc_id: docId }),
     }).then((res) => res.json());
@@ -73,8 +82,15 @@ const StructureResponse = t.type({
     status: t.string,
 });
 
-export async function getStructure(docId: string): Promise<t.TypeOf<typeof StructureResponse>> {
-    const res = await fetch(`${API_URL}/structure/${docId}`).then((res) => res.json());
+export async function getStructure(
+    docId: string,
+    token: string,
+): Promise<t.TypeOf<typeof StructureResponse>> {
+    const res = await fetch(`${API_URL}/structure/${docId}`, {
+        headers: {
+            "X-Access-Token": token,
+        },
+    }).then((res) => res.json());
 
     if (!StructureResponse.is(res)) {
         throw new Error(`Unexpected response type in getStructure: ${JSON.stringify(res)}`);
@@ -88,8 +104,15 @@ const OverviewResponse = t.type({
     status: t.string,
 });
 
-export async function getOverview(docId: string): Promise<t.TypeOf<typeof OverviewResponse>> {
-    const res = await fetch(`${API_URL}/overview/${docId}`).then((res) => res.json());
+export async function getOverview(
+    docId: string,
+    token: string,
+): Promise<t.TypeOf<typeof OverviewResponse>> {
+    const res = await fetch(`${API_URL}/overview/${docId}`, {
+        headers: {
+            "X-Access-Token": token,
+        },
+    }).then((res) => res.json());
 
     if (!OverviewResponse.is(res)) {
         throw new Error(`Unexpected response type in getOverview: ${JSON.stringify(res)}`);
@@ -105,8 +128,13 @@ const GettingStartedResponse = t.type({
 
 export async function getGettingStarted(
     docId: string,
+    token: string,
 ): Promise<t.TypeOf<typeof GettingStartedResponse>> {
-    const res = await fetch(`${API_URL}/getting-started/${docId}`).then((res) => res.json());
+    const res = await fetch(`${API_URL}/getting-started/${docId}`, {
+        headers: {
+            "X-Access-Token": token,
+        },
+    }).then((res) => res.json());
 
     if (!GettingStartedResponse.is(res)) {
         throw new Error(`Unexpected response type in getGettingStarted: ${JSON.stringify(res)}`);
@@ -119,7 +147,7 @@ export interface GetResult {
     status: string;
 }
 
-export type getFunction<T extends GetResult> = (docId: string) => Promise<T>;
+export type getFunction<T extends GetResult> = (docId: string, token: string) => Promise<T>;
 
 const DeployResponse = t.type({
     status: t.string,
@@ -130,11 +158,13 @@ export async function deploy(
     docId: string,
     name: string,
     domain: string,
+    token: string,
 ): Promise<t.TypeOf<typeof DeployResponse>> {
     const res = await fetch(`${API_URL}/deploy`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "X-Access-Token": token,
         },
         body: JSON.stringify({ doc_id: docId, name, domain }),
     }).then((res) => res.json());
