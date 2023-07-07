@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "main": "src/index.js",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
     "license": "MIT",
@@ -37,6 +37,6 @@
         "start": "ts-node src/index.ts",
         "lint": "prettier --check src/ ; eslint src/",
         "lint:fix": "prettier --write src/ ; eslint --fix src/",
-        "build": "esbuild src/index.ts --bundle --outfile=build/polyfact --platform=node"
+        "build": "esbuild src/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo -n '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp"
     }
 }
