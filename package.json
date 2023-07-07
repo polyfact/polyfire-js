@@ -1,5 +1,5 @@
 {
-    "name": "polyfact-docs",
+    "name": "polyfact-node",
     "version": "0.1.0",
     "main": "src/index.js",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
