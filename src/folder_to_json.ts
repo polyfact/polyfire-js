@@ -4,7 +4,7 @@ import path from "path";
 import {
     extensions as excludedExtensionsArray,
     names as excludedNamesArray,
-} from "@/excluded_extensions.json";
+} from "./excluded_extensions.json";
 
 const excludedExtensions = new Set(excludedExtensionsArray);
 const excludedNames = new Set(excludedNamesArray);

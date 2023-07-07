@@ -18,7 +18,6 @@
             "@/*": ["src/*"],
             "?/*": ["tests/*"],
             "@config/*": ["config/*"],
-            "@packagejson": ["package.json"]
         },
         "typeRoots": ["./types", "./node_modules/@types"]
     },

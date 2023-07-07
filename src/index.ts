@@ -1,9 +1,8 @@
-import "module-alias/register";
 import { Command } from "commander";
 import cliProgress from "cli-progress";
 
-import { version } from "@packagejson";
-import { getJSONFolderRepresentation } from "@/folder_to_json";
+import { getJSONFolderRepresentation } from "./folder_to_json";
+import { version } from "../package.json";
 import {
     generateReferences,
     getProgress,
@@ -14,7 +13,7 @@ import {
     getOverview,
     getGettingStarted,
     deploy,
-} from "@/api";
+} from "./api";
 
 const program = new Command();
 

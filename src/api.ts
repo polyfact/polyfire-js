@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import * as t from "io-ts";
 
-import { File } from "@/folder_to_json";
+import { File } from "./folder_to_json";
 
 const API_URL = "https://api.polyfact.com/api/v1";
 
