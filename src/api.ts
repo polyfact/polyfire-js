@@ -120,3 +120,28 @@ export interface GetResult {
 }
 
 export type getFunction<T extends GetResult> = (docId: string) => Promise<T>;
+
+const DeployResponse = t.type({
+    status: t.string,
+    domain: t.string,
+});
+
+export async function deploy(
+    docId: string,
+    name: string,
+    domain: string,
+): Promise<t.TypeOf<typeof DeployResponse>> {
+    const res = await fetch(`${API_URL}/deploy`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ doc_id: docId, name, domain }),
+    }).then((res) => res.json());
+
+    if (!DeployResponse.is(res)) {
+        throw new Error(`Unexpected response type in deploy: ${JSON.stringify(res)}`);
+    }
+
+    return res;
+}

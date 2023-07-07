@@ -13,6 +13,7 @@ import {
     getStructure,
     getOverview,
     getGettingStarted,
+    deploy,
 } from "@/api";
 
 const program = new Command();
@@ -38,7 +39,7 @@ async function waitProgress(docId: string, type: "references" | "folders") {
                 clearInterval(interval);
                 res();
             }
-        }, 1000);
+        }, 300);
     });
     progressBar.stop();
 }
@@ -70,14 +71,22 @@ program
     .command("docs")
     .description("Generate documentation for a project")
     .argument("<folder>", "The path of the folder to generate doc from")
+    .option("-n, --name <doc_name>", "The name of the doc (default to id)")
+    .option("-d, --deploy <subdomain>", "The docs will be deployed to the subdomain provided")
+    .option(
+        "--doc_id <doc_id>",
+        "If the doc_id has already been generated, you can send it in argument here",
+    )
     .option(
         "-o, --output <output_folder>",
         'The path to the doc folder that will be created (default "./docs")',
     )
-    .action(async (folder, { output }) => {
+    .action(async (folder, { output, name, deploy: subdomain, doc_id: docId }) => {
         const folderJson = await getJSONFolderRepresentation(folder);
 
-        const { docs_id: docId } = await generateReferences(folderJson);
+        if (!docId) {
+            const { docs_id: docId } = await generateReferences(folderJson);
+        }
 
         console.log(`Generating references for ${docId}...`);
         await waitProgress(docId, "references");
@@ -97,6 +106,16 @@ program
         await generate(docId, "getting-started");
         console.log(`Generating getting started for ${docId}...`);
         await waitSimpleGeneration(docId, getGettingStarted);
+
+        if (!name) {
+            name = docId;
+        }
+
+        if (subdomain) {
+            console.log("Deploying...");
+            const { domain: deployedDomain } = await deploy(docId, name, subdomain);
+            console.log(`Deployement started. The docs will be deployed to "${deployedDomain}"`);
+        }
     });
 
 program.parse();
