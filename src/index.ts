@@ -85,7 +85,7 @@ program
         const folderJson = await getJSONFolderRepresentation(folder);
 
         if (!docId) {
-            const { docs_id: docId } = await generateReferences(folderJson);
+            ({ docs_id: docId } = await generateReferences(folderJson));
         }
 
         console.log(`Generating references for ${docId}...`);
