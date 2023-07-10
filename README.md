@@ -6,11 +6,11 @@
 
 To install polyfact-node, you'll need Node.js installed on your computer. 
 
-To install globally from your command line:
+To install globally:
 ```bash
 yarn global add polyfact
 ```
-Or
+or
 ```bash
 npm install -g polyfact
 ```
