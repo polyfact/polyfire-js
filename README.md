@@ -1,32 +1,48 @@
-# polyfact-node
+# Polyfact
 
-`polyfact-node` is a CLI nodejs package aimed at assisting developers in creating project using AI. This bundle of dev-tools is currently under active development, with documentation autogeneration as its functional feature at this stage.
+`polyfact` is a nodejs package aimed at assisting developers in creating project using AI.
+The package is split into 2 parts:
+  -  The [**SDK**](#sdk) that can be imported in any nodejs project and provides the basic building blocks for AI tool developement
+  -  The [**CLI**](#cli) which is a bundle of dev-tools currently under active development, with documentation autogeneration as its functional feature at this stage.
 
-## Installation
+## SDK
 
-To install polyfact-node, you'll need Node.js installed on your computer. 
+### Installation
 
-To install globally:
+To install polyfact into your repository:
 ```bash
-yarn global add polyfact
-```
-or
-```bash
-npm install -g polyfact
-```
-
-You can verify the installation with the following command:
-
-```bash
-polyfact --version
+npm install polyfact
 ```
 
-## Command
+Get your your polyfact token by signing up with github here: https://app.polyfact.com
+Add your Polyfact Token in the `POLYFACT_TOKEN` environment variable:
+```bash
+export POLYFACT_TOKEN= # The token displayed on https://app.polyfact.com
+```
 
-`polyfact-node` uses the following command structure for documentation generation:
+### Usage
+
+You can now use Polyfact in your nodejs project:
+```js
+import { generateWithType } from "polyfact";
+import * as t from "io-ts";
+
+(async () => {
+    const result = await generateWithType("Count from 1 to 5", t.type({ result: t.array(t.number) }));
+
+    console.log(result);
+})();
+```
+```bash
+{ result: [1, 2, 3, 4, 5] }
+```
+
+## CLI
+
+`polyfact` uses the following command structure for documentation generation:
 
 ```bash
-polyfact docs <folder> [options]
+npx polyfact docs <folder> [options]
 ```
 
 ### Arguments
@@ -45,15 +61,15 @@ polyfact docs <folder> [options]
 
 ```bash
 # Generate documentation from the src folder with the default parameters
-polyfact docs ./src 
+npx polyfact docs ./src 
 
 # Generate documentation with a specific name from the src folder and output to a specific folder
-polyfact docs ./src --name "my-documentation"
+npx polyfact docs ./src --name "my-documentation"
 
 # Generate documentation and deploy it to a specific subdomain
-polyfact docs ./src --deploy my-subdomain
+npx polyfact docs ./src --deploy my-subdomain
 ```
 
 ## Future Enhancements
 
-`polyfact-node` is planned to support more dev-tools features in the near future. Stay tuned for more enhancements that would aid you with AI features.
+`polyfact` is planned to support more dev-tools features in the near future. Stay tuned for more enhancements that would aid you with AI features.
