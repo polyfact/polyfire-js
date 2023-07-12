@@ -1,18 +1,16 @@
 {
     "name": "polyfact",
-    "version": "0.1.3",
-    "main": "src/index.js",
+    "version": "0.1.4",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
     "license": "MIT",
     "bin": "build/polyfact",
     "dependencies": {
-        "cli-progress": "^3.12.0",
-        "commander": "^11.0.0",
         "fp-ts": "^2.16.0",
         "io-ts": "^2.2.20",
         "node-fetch": "^2.6.1",
-        "ts-node": "^10.9.1",
-        "esbuild": "0.15.10"
+        "ts-node": "^10.9.1"
     },
     "devDependencies": {
         "@types/cli-progress": "^3.11.0",
@@ -30,13 +28,17 @@
         "husky": "8.0.1",
         "koumu": "0.1.0",
         "prettier": "^2.2.1",
-        "typescript": "^4.6.2"
+        "typescript": "^4.6.2",
+        "esbuild": "0.15.10",
+        "cli-progress": "^3.12.0",
+        "commander": "^11.0.0"
     },
     "scripts": {
-        "prepare": "husky install && koumu setup --copy-into-husky",
-        "start": "ts-node src/index.ts",
-        "lint": "prettier --check src/ ; eslint src/",
-        "lint:fix": "prettier --write src/ ; eslint --fix src/",
-        "build": "esbuild src/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo -n '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp"
+        "start": "ts-node cmd/index.ts",
+        "lint": "prettier --check lib/ cmd/ ; eslint lib/ cmd/",
+        "lint:fix": "prettier --write lib/ cmd/ ; eslint --fix lib/ cmd/",
+        "cmd:build": "esbuild cmd/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo -n '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp",
+        "build": "tsc lib/index.ts --declaration --outDir dist",
+        "install": "yarn build"
     }
 }

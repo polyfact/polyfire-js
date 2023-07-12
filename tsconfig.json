@@ -1,25 +1,24 @@
 {
     "compilerOptions": {
-        "target": "es2019",
+        "target": "es2021",
+        "lib": ["es2021"],
+        "module": "commonjs",
         "strict": true,
         "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
+        "allowJs": false,
         "noImplicitAny": true,
         "noImplicitReturns": true,
-        "allowJs": false,
-        "moduleResolution": "node",
-        "resolveJsonModule": true,
+        "strictNullChecks": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "baseUrl": "./",
-        "noEmit": true,
+        "resolveJsonModule": true,
         "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "declaration": true,
+        "outDir": "./dist",
+        "baseUrl": "src/",
         "paths": {
-            "@/*": ["src/*"],
-            "?/*": ["tests/*"],
-            "@config/*": ["config/*"],
-        },
-        "typeRoots": ["./types", "./node_modules/@types"]
-    },
-    "exclude": ["node_modules", "types"]
+            "@/*": ["*"]
+        }
+    }
 }
