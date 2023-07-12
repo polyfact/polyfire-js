@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import * as t from "io-ts";
 
-const API_URL = "http://localhost:8080";
+const API_URL = "https://api2.polyfact.com";
 const { POLYFACT_TOKEN = "" } = process.env;
 
 function internalTsio2JSON(type: any): any {
