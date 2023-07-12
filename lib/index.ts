@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import * as t from "io-ts";
 
-const API_URL = "https://api2.polyfact.com";
+const API_URL = "http://localhost:8080";
 const { POLYFACT_TOKEN = "" } = process.env;
 
 function internalTsio2JSON(type: any): any {
@@ -62,10 +62,18 @@ class GenerationError extends Error {
     }
 }
 
-async function generateWithType<T extends t.Props>(
+const ResultType = t.type({
+    result: t.any,
+    token_usage: t.type({
+        input: t.number,
+        output: t.number,
+    }),
+});
+
+async function generateWithTypeWithTokenUsage<T extends t.Props>(
     task: string,
     type: t.TypeC<T>,
-): Promise<t.TypeOf<t.TypeC<T>>> {
+): Promise<{ result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }> {
     const res = await fetch(`${API_URL}/generate`, {
         method: "POST",
         headers: {
@@ -75,14 +83,28 @@ async function generateWithType<T extends t.Props>(
         body: JSON.stringify({ task, return_type: tsio2JSON(type) }),
     }).then((res) => res.json());
 
-    if (!type.is(res)) {
-        if (ErrorType.is(res)) {
-            throw new GenerationError(res.error);
+    if (!ResultType.is(res)) {
+        console.log(res);
+        throw new GenerationError();
+    }
+
+    if (!type.is(res.result)) {
+        if (ErrorType.is(res.result)) {
+            throw new GenerationError(res.result.error);
         }
         throw new GenerationError();
     }
 
-    return res;
+    return { result: res.result, tokenUsage: res.token_usage };
 }
 
-export { generateWithType };
+async function generateWithType<T extends t.Props>(
+    task: string,
+    type: t.TypeC<T>,
+): Promise<t.TypeOf<t.TypeC<T>>> {
+    const res = await generateWithTypeWithTokenUsage(task, type);
+
+    return res.result;
+}
+
+export { generateWithType, generateWithTypeWithTokenUsage };
