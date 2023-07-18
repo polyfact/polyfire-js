@@ -2,23 +2,55 @@ import * as t from "io-ts";
 import fetch from "node-fetch";
 import { generate, generateWithTokenUsage } from "../index";
 
-function internalTsio2JSON(type: any, indent: number): string {
-    if (type._tag === "InterfaceType") {
-        const leftpad0 = Array(2 * indent)
-            .fill(" ")
-            .join("");
-        const leftpad1 = Array(2 * (indent + 1))
-            .fill(" ")
-            .join("");
-        return `{${Object.entries(type.props)
-            .map(([key, value]) => [key, internalTsio2JSON(value, indent + 1)])
+function typePartial2String(entries: [string, any][], indent: number, partial: boolean): string {
+    const leftpad = Array(2 * (indent + 1))
+        .fill(" ")
+        .join("");
+    return (
+        entries
+            // eslint-disable-next-line no-use-before-define
+            .map(([key, value]) => [key, internalTsio2String(value, indent + 1)])
             .reduce(
-                (prev, curr) => `${prev}\n${leftpad1}"${curr[0]}": ${curr[1]},`,
+                (prev, curr) =>
+                    `${prev}\n${leftpad}${JSON.stringify(curr[0])}${partial ? "?" : ""}: ${
+                        curr[1]
+                    },`,
                 "",
-            )}\n${leftpad0}}`;
+            )
+    );
+}
+
+function internalTsio2String(type: any, indent: number): string {
+    const leftpad = Array(2 * indent)
+        .fill(" ")
+        .join("");
+    if (type._tag === "InterfaceType") {
+        return `{${typePartial2String(Object.entries(type.props), indent + 1, false)}\n${leftpad}}`;
+    }
+    if (type._tag === "IntersectionType") {
+        let res = "";
+        for (const t in type.types) {
+            if (type.types[t]._tag === "InterfaceType" || type.types[t]._tag === "PartialType") {
+                res += typePartial2String(
+                    Object.entries(type.types[t].props),
+                    indent + 1,
+                    type.types[t]._tag === "PartialType",
+                );
+            }
+        }
+        return `{${res}\n${leftpad}}`;
+    }
+    if (type._tag === "KeyofType") {
+        return type.name;
+    }
+    if (type._tag === "UnionType") {
+        return type.types.map((t: any) => internalTsio2String(t, indent + 1)).join(" | ");
+    }
+    if (type._tag === "LiteralType") {
+        return JSON.stringify(type.value);
     }
     if (type._tag === "ArrayType") {
-        return `[${internalTsio2JSON(type.type, indent)}]`;
+        return `[${internalTsio2String(type.type, indent)}]`;
     }
     if (type._tag === "NumberType") {
         return "number";
@@ -31,14 +63,14 @@ function internalTsio2JSON(type: any, indent: number): string {
     }
 
     throw new Error(
-        `Unsupported type "${type}".\nPlease use one of:\n\t- InterfaceType (t.type)\n\t- ArrayType (t.array)\n\t- NumberType (t.number)\n\t- StringType (t.string)\n\t- BooleanType (t.boolean)`,
+        `Unsupported type "${type._tag}".\nPlease use one of:\n\t- InterfaceType (t.type)\n\t- ArrayType (t.array)\n\t- NumberType (t.number)\n\t- StringType (t.string)\n\t- BooleanType (t.boolean)`,
     );
 }
 
 function tsio2String(type: t.TypeC<any>): string {
     const res = JSON.parse(JSON.stringify(type));
 
-    return internalTsio2JSON(res, 0);
+    return internalTsio2String(res, 0);
 }
 
 function generateTypedPrompt(typeFormat: string, task: string) {
