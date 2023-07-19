@@ -31,7 +31,9 @@ const ResultType = t.type({
     }),
 });
 
-async function generateWithTokenUsage(task: string): Promise<t.TypeOf<typeof ResultType>> {
+async function generateWithTokenUsage(
+    task: string,
+): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
     const res = await fetch(`${POLYFACT_ENDPOINT}/generate`, {
         method: "POST",
         headers: {
@@ -45,7 +47,7 @@ async function generateWithTokenUsage(task: string): Promise<t.TypeOf<typeof Res
         throw new GenerationError();
     }
 
-    return res;
+    return { result: res.result, tokenUsage: res.token_usage };
 }
 
 async function generate(task: string): Promise<string> {
