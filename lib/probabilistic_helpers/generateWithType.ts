@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import * as t from "io-ts";
 import fetch from "node-fetch";
 import { generate, generateWithTokenUsage } from "../index";
@@ -6,18 +7,19 @@ function typePartial2String(entries: [string, any][], indent: number, partial: b
     const leftpad = Array(2 * (indent + 1))
         .fill(" ")
         .join("");
-    return (
-        entries
-            // eslint-disable-next-line no-use-before-define
-            .map(([key, value]) => [key, internalTsio2String(value, indent + 1)])
-            .reduce(
-                (prev, curr) =>
-                    `${prev}\n${leftpad}${JSON.stringify(curr[0])}${partial ? "?" : ""}: ${
-                        curr[1]
-                    },`,
-                "",
-            )
-    );
+    return entries
+        .map(([key, value]) => [
+            key,
+            internalTsio2String(value, indent + 1),
+            value._desc ? ` // ${value._desc}` : "",
+        ])
+        .reduce(
+            (prev, curr) =>
+                `${prev}\n${leftpad}${JSON.stringify(curr[0])}${partial ? "?" : ""}: ${curr[1]},${
+                    curr[2]
+                }`,
+            "",
+        );
 }
 
 function internalTsio2String(type: any, indent: number): string {
@@ -84,7 +86,7 @@ export async function generateWithTypeWithTokenUsage<T extends t.Props>(
     const typeFormat = tsio2String(type);
     const tokenUsage = { input: 0, output: 0 };
     for (let tryCount = 0; tryCount < 5; tryCount++) {
-        const { result: resultJson, token_usage: tu } = await generateWithTokenUsage(
+        const { result: resultJson, tokenUsage: tu } = await generateWithTokenUsage(
             generateTypedPrompt(typeFormat, task),
         );
 
@@ -93,7 +95,12 @@ export async function generateWithTypeWithTokenUsage<T extends t.Props>(
 
         let result;
         try {
-            result = JSON.parse(resultJson);
+            result = JSON.parse(
+                resultJson
+                    .replace("\n", "")
+                    .replace(/^```((json)|(JSON))?/, "")
+                    .replace(/```$/, ""),
+            );
         } catch (e) {
             continue;
         }
