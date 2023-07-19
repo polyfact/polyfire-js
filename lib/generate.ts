@@ -25,7 +25,7 @@ class GenerationError extends Error {
 
 const ResultType = t.type({
     result: t.string,
-    token_usage: t.type({
+    tokenUsage: t.type({
         input: t.number,
         output: t.number,
     }),
