@@ -1,7 +1,6 @@
 /* eslint-disable no-use-before-define */
 import * as t from "io-ts";
-import fetch from "node-fetch";
-import { generate, generateWithTokenUsage, GenerationOptions } from "../index";
+import { generateWithTokenUsage, GenerationOptions } from "../index";
 
 function typePartial2String(entries: [string, any][], indent: number, partial: boolean): string {
     const leftpad = Array(2 * (indent + 1))

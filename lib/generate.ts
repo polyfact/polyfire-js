@@ -33,6 +33,7 @@ const ResultType = t.type({
 
 export type GenerationOptions = {
     provider?: "openai" | "cohere";
+    memoryId?: string;
 };
 
 async function generateWithTokenUsage(
@@ -44,13 +45,20 @@ async function generateWithTokenUsage(
             "Please put your polyfact token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfact.com",
         );
     }
+    const requestBody: {
+        task: string;
+        // eslint-disable-next-line camelcase
+        memory_id?: string;
+        provider: GenerationOptions["provider"];
+    } = { task, provider: options?.provider || "openai", memory_id: options?.memoryId || "" };
+
     const res = await fetch(`${POLYFACT_ENDPOINT}/generate`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-Access-Token": POLYFACT_TOKEN,
         },
-        body: JSON.stringify({ task, provider: options.provider || "openai" }),
+        body: JSON.stringify(requestBody),
     }).then((res) => res.json());
 
     if (!ResultType.is(res)) {
