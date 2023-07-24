@@ -21,6 +21,7 @@ type newT<T extends typeof tNoDesc> = {
     string: ConstantWithDescription<T["string"]>;
     number: ConstantWithDescription<T["number"]>;
     boolean: ConstantWithDescription<T["boolean"]>;
+    null: ConstantWithDescription<T["null"]>;
     keyof: FunctionWithDescription<T["keyof"]>;
     literal: FunctionWithDescription<T["literal"]>;
     union: FunctionWithDescription<T["union"]>;
@@ -45,6 +46,7 @@ function extendsT(iots: typeof tNoDesc): newT<typeof tNoDesc> {
     sorry.string.description = description;
     sorry.number.description = description;
     sorry.boolean.description = description;
+    sorry.null.description = description;
     sorry.keyof = addDescriptionToFunction(sorry.keyof);
     sorry.literal = addDescriptionToFunction(sorry.literal);
     sorry.union = addDescriptionToFunction(sorry.union);
