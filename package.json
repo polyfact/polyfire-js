@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.9",
+    "version": "0.1.10",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
@@ -40,6 +40,6 @@
         "lint": "prettier --check lib/ cmd/ ; eslint lib/ cmd/",
         "lint:fix": "prettier --write lib/ cmd/ ; eslint --fix lib/ cmd/",
         "cmd:build": "esbuild cmd/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo -n '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp",
-        "build": "tsc lib/index.ts --declaration --outDir dist"
+        "build": "tsc -p tsconfig.json --declaration --outDir dist"
     }
 }
