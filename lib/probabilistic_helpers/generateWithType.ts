@@ -89,6 +89,7 @@ export async function generateWithTypeWithTokenUsage<T extends t.Props>(
     for (let tryCount = 0; tryCount < 5; tryCount++) {
         const { result: resultJson, tokenUsage: tu } = await generateWithTokenUsage(
             generateTypedPrompt(typeFormat, task),
+            options,
         );
 
         tokenUsage.output += tu.output;
@@ -121,7 +122,7 @@ export async function generateWithType<T extends t.Props>(
     type: t.TypeC<T>,
     options: GenerationOptions = {},
 ): Promise<t.TypeOf<t.TypeC<T>>> {
-    const res = await generateWithTypeWithTokenUsage(task, type);
+    const res = await generateWithTypeWithTokenUsage(task, type, options);
 
     return res.result;
 }

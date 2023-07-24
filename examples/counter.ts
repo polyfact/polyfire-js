@@ -20,6 +20,9 @@ import { generateWithType, t } from "../lib/index";
                     }),
                 ]),
             }),
+            {
+                provider: "cohere",
+            },
         ),
     );
 })();
