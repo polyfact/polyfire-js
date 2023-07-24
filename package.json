@@ -7,6 +7,7 @@
     "license": "MIT",
     "bin": "build/polyfact",
     "dependencies": {
+        "form-data": "^4.0.0",
         "fp-ts": "^2.16.0",
         "io-ts": "^2.2.20",
         "js-tiktoken": "^1.0.7",
