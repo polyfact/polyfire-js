@@ -17,8 +17,7 @@
         "declaration": true,
         "outDir": "./dist",
         "baseUrl": "lib/",
-        "paths": {
-            "@/*": ["*"]
-        }
-    }
+        "rootDir": "lib/"
+    },
+    "include": ["lib/**/*"],
 }
