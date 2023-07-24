@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 import * as t from "io-ts";
 import fetch from "node-fetch";
-import { generate, generateWithTokenUsage } from "../index";
+import { generate, generateWithTokenUsage, GenerationOptions } from "../index";
 
 function typePartial2String(entries: [string, any][], indent: number, partial: boolean): string {
     const leftpad = Array(2 * (indent + 1))
@@ -82,12 +82,14 @@ function generateTypedPrompt(typeFormat: string, task: string) {
 export async function generateWithTypeWithTokenUsage<T extends t.Props>(
     task: string,
     type: t.TypeC<T>,
+    options: GenerationOptions = {},
 ): Promise<{ result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }> {
     const typeFormat = tsio2String(type);
     const tokenUsage = { input: 0, output: 0 };
     for (let tryCount = 0; tryCount < 5; tryCount++) {
         const { result: resultJson, tokenUsage: tu } = await generateWithTokenUsage(
             generateTypedPrompt(typeFormat, task),
+            options,
         );
 
         tokenUsage.output += tu.output;
@@ -118,8 +120,9 @@ export async function generateWithTypeWithTokenUsage<T extends t.Props>(
 export async function generateWithType<T extends t.Props>(
     task: string,
     type: t.TypeC<T>,
+    options: GenerationOptions = {},
 ): Promise<t.TypeOf<t.TypeC<T>>> {
-    const res = await generateWithTypeWithTokenUsage(task, type);
+    const res = await generateWithTypeWithTokenUsage(task, type, options);
 
     return res.result;
 }
