@@ -63,6 +63,9 @@ function internalTsio2String(type: any, indent: number): string {
     if (type._tag === "BooleanType") {
         return "boolean";
     }
+    if (type._tag === "NullType") {
+        return "null";
+    }
 
     throw new Error(
         `Unsupported type "${type._tag}".\nPlease use one of:\n\t- InterfaceType (t.type)\n\t- ArrayType (t.array)\n\t- NumberType (t.number)\n\t- StringType (t.string)\n\t- BooleanType (t.boolean)`,
