@@ -1,4 +1,4 @@
-import { generate, generateWithTokenUsage } from "./generate";
+import { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
 import {
     generateWithType,
     generateWithTypeWithTokenUsage,
@@ -13,4 +13,5 @@ export {
     generateWithTypeWithTokenUsage,
     splitString,
     t,
+    GenerationOptions,
 };
