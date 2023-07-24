@@ -3,6 +3,7 @@ import {
     generateWithType,
     generateWithTypeWithTokenUsage,
 } from "./probabilistic_helpers/generateWithType";
+import { transcribe } from "./transcribe";
 import { t } from "./probabilistic_helpers/types";
 import { splitString } from "./split";
 
@@ -14,4 +15,5 @@ export {
     splitString,
     t,
     GenerationOptions,
+    transcribe,
 };
