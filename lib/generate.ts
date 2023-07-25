@@ -1,8 +1,8 @@
 import fetch from "node-fetch";
 import * as t from "io-ts";
+import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
 
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com" } = process.env;
-const { POLYFACT_TOKEN = "" } = process.env;
+const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
 
 class GenerationError extends Error {
     errorType?: string;
@@ -40,11 +40,7 @@ async function generateWithTokenUsage(
     task: string,
     options: GenerationOptions = {},
 ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
-    if (!POLYFACT_TOKEN) {
-        throw new Error(
-            "Please put your polyfact token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfact.com",
-        );
-    }
+    ensurePolyfactToken();
     const requestBody: {
         task: string;
         // eslint-disable-next-line camelcase

@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
+import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
 
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com" } = process.env;
-const { POLYFACT_TOKEN = "" } = process.env;
+const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
 
 class MemoryError extends Error {
     errorType?: string;
@@ -19,6 +19,8 @@ class MemoryError extends Error {
 }
 
 async function createMemory(): Promise<{ id: string }> {
+    ensurePolyfactToken();
+
     try {
         const res = await fetch(`${POLYFACT_ENDPOINT}/memory`, {
             method: "POST",
@@ -38,6 +40,8 @@ async function createMemory(): Promise<{ id: string }> {
 }
 
 async function updateMemory(id: string, input: string): Promise<{ success: boolean }> {
+    ensurePolyfactToken();
+
     try {
         const res = await fetch(`${POLYFACT_ENDPOINT}/memory`, {
             method: "PUT",
@@ -61,6 +65,8 @@ async function updateMemory(id: string, input: string): Promise<{ success: boole
 }
 
 async function getAllMemories(): Promise<{ ids: string[] }> {
+    ensurePolyfactToken();
+
     try {
         const res = await fetch(`${POLYFACT_ENDPOINT}/memories`, {
             method: "GET",
