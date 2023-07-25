@@ -17,7 +17,7 @@ type FunctionWithDescription<T extends (...args: any[]) => any> = ReplaceReturnT
     ReturnType<T> & { description: typeof description }
 >;
 
-type newT<T extends typeof tNoDesc> = {
+type newT<T extends typeof tNoDesc> = T & {
     string: ConstantWithDescription<T["string"]>;
     number: ConstantWithDescription<T["number"]>;
     boolean: ConstantWithDescription<T["boolean"]>;
