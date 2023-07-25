@@ -169,6 +169,37 @@ import { generate } from "polyfact";
 ```
 The `"<prompt>"` should be replaced with the task or question you want to generate a response for. If a `"<memory-id>"` is provided, the AI will consider the embedded data in the specified memory when generating the response.
 
+### Defining Types for Structured Responses
+
+In order to structure the responses from the PolyFact AI, you can define a custom type using the `io-ts` package included in polyfact. This package provides a `t` object, from which you can access different functions to define your custom types. You can chain these functions with `.description()` method to provide an explanation to the AI about what information should be included in each field.
+
+Below is a hypothetical example of a Book Review type:
+
+```js
+import { t } from "polyfact";
+
+const AuthorType = t.type({
+  name: t.string.description("The name of the author of the book."),
+  nationality: t.string.description("The nationality of the author."),
+});
+
+const BookReviewType = t.type({
+  title: t.string.description("The title of the book being reviewed."),
+  author: AuthorType,
+  review: t.string.description("A brief review of the book."),
+  rating: t.number.description("A rating for the book from 1 to 5."),
+  recommend: t.boolean.description("Would you recommend this book to others?"),
+});
+
+const ResponseBookReview = BookReviewType;
+```
+
+In this example, `BookReviewType` is a custom type that represents a book review. It includes the title of the book, the author's information (which is another custom type `AuthorType`), a brief review of the book, a numerical rating, and a recommendation.
+
+By defining a type with `t.type()`, you specify the shape of the response that you want from the AI. You then pass this type to `generateWithType()` function along with the prompt. The AI will then return a response that fits the format of the defined type. 
+
+This feature allows for more structure in the data that you receive from the AI, making it easier to handle and use in your application.
+
 ### Full Example
 
 In this example, we'll demonstrate how to create a new memory, update it with some data, retrieve all memories, and generate a response using a memory.
