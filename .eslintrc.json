@@ -5,9 +5,7 @@
         "es6": true,
         "jest": true
     },
-    "plugins": [
-      "eslint-plugin-tsdoc"
-    ],
+    "plugins": ["eslint-plugin-tsdoc"],
     "extends": [
         "airbnb-base",
         "eslint:recommended",
@@ -40,14 +38,7 @@
 
         "import/no-unresolved": "off",
         "import/prefer-default-export": "off",
-        "import/extensions": [
-           "error",
-           "ignorePackages",
-           {
-             "js": "never",
-             "ts": "never"
-           }
-        ],
+        "import/extensions": "off",
 
         "no-unused-vars": "off",
         "no-restricted-imports": [

@@ -2,20 +2,23 @@
 
 `polyfact` is a nodejs package aimed at assisting developers in creating project using AI.
 The package is split into 2 parts:
-  -  The [**SDK**](#sdk) that can be imported in any nodejs project and provides the basic building blocks for AI tool developement
-  -  The [**CLI**](#cli) which is a bundle of dev-tools currently under active development, with documentation autogeneration as its functional feature at this stage.
+
+-   The [**SDK**](#sdk) that can be imported in any nodejs project and provides the basic building blocks for AI tool developement
+-   The [**CLI**](#cli) which is a bundle of dev-tools currently under active development, with documentation autogeneration as its functional feature at this stage.
 
 ## SDK
 
 ### Installation
 
 To install polyfact into your repository:
+
 ```bash
 npm install polyfact
 ```
 
 Get your your polyfact token by signing up with github here: https://app.polyfact.com
 Add your Polyfact Token in the `POLYFACT_TOKEN` environment variable:
+
 ```bash
 export POLYFACT_TOKEN= # The token displayed on https://app.polyfact.com
 ```
@@ -28,7 +31,7 @@ Polyfact allows you to generate AI responses with or without structured data. Th
 
 #### With Structured Data
 
-The `generateWithType` function generates a response that matches a certain format or "type". This "type" is defined using the `io-ts` package, which allows you to define the shape of the response you want. 
+The `generateWithType` function generates a response that matches a certain format or "type". This "type" is defined using the `io-ts` package, which allows you to define the shape of the response you want.
 
 To use `generateWithType`, you need to:
 
@@ -44,13 +47,16 @@ import { generateWithType } from "polyfact";
 import * as t from "io-ts";
 
 (async () => {
-    const result = await generateWithType("Count from 1 to 5", t.type({ result: t.array(t.number) }));
+    const result = await generateWithType(
+        "Count from 1 to 5",
+        t.type({ result: t.array(t.number) }),
+    );
 
     console.log(result);
 })();
 ```
 
-In this example, `t.type({ result: t.array(t.number) })` defines the shape of the response we want. We want a JSON object with a key `result` and an array of numbers as its value. 
+In this example, `t.type({ result: t.array(t.number) })` defines the shape of the response we want. We want a JSON object with a key `result` and an array of numbers as its value.
 
 The result will be a structured JSON data:
 
@@ -102,9 +108,9 @@ These functions provide a great deal of flexibility in how you generate and hand
 
 ### Creating a new memory
 
-Creating a new memory involves generating a unique memory ID that will be used to store embedded data. 
+Creating a new memory involves generating a unique memory ID that will be used to store embedded data.
 
-This process is abstracted by the SDK and requires no parameters. 
+This process is abstracted by the SDK and requires no parameters.
 
 ```typescript
 import { createMemory } from "polyfact";
@@ -119,14 +125,14 @@ The resulting memory object contains a unique id that represents the new memory.
 
 ### Updating an existing memory
 
-Updating an existing memory involves adding embedded data to a previously created memory. 
+Updating an existing memory involves adding embedded data to a previously created memory.
 
 To do this, you'll need the unique memory ID that was generated when the memory was created.
 
 The `updateMemory` function takes two parameters:
 
 1. The unique memory id.
-2. The data to be embedded into the memory. 
+2. The data to be embedded into the memory.
 
 ```typescript
 import { updateMemory } from "polyfact";
@@ -136,7 +142,8 @@ import { updateMemory } from "polyfact";
     console.log(result); // Outputs: { success: true }
 })();
 ```
-The `"<input-data>"` should be replaced with the actual data you want to embed into the memory. 
+
+The `"<input-data>"` should be replaced with the actual data you want to embed into the memory.
 
 The function returns an object that contains a `success` boolean property indicating whether the operation was successful.
 
@@ -167,6 +174,7 @@ import { generate } from "polyfact";
     console.log(response); // Outputs: '...'
 })();
 ```
+
 The `"<prompt>"` should be replaced with the task or question you want to generate a response for. If a `"<memory-id>"` is provided, the AI will consider the embedded data in the specified memory when generating the response.
 
 ### Defining Types for Structured Responses
@@ -179,16 +187,16 @@ Below is a hypothetical example of a Book Review type:
 import { t } from "polyfact";
 
 const AuthorType = t.type({
-  name: t.string.description("The name of the author of the book."),
-  nationality: t.string.description("The nationality of the author."),
+    name: t.string.description("The name of the author of the book."),
+    nationality: t.string.description("The nationality of the author."),
 });
 
 const BookReviewType = t.type({
-  title: t.string.description("The title of the book being reviewed."),
-  author: AuthorType,
-  review: t.string.description("A brief review of the book."),
-  rating: t.number.description("A rating for the book from 1 to 5."),
-  recommend: t.boolean.description("Would you recommend this book to others?"),
+    title: t.string.description("The title of the book being reviewed."),
+    author: AuthorType,
+    review: t.string.description("A brief review of the book."),
+    rating: t.number.description("A rating for the book from 1 to 5."),
+    recommend: t.boolean.description("Would you recommend this book to others?"),
 });
 
 const ResponseBookReview = BookReviewType;
@@ -196,7 +204,7 @@ const ResponseBookReview = BookReviewType;
 
 In this example, `BookReviewType` is a custom type that represents a book review. It includes the title of the book, the author's information (which is another custom type `AuthorType`), a brief review of the book, a numerical rating, and a recommendation.
 
-By defining a type with `t.type()`, you specify the shape of the response that you want from the AI. You then pass this type to `generateWithType()` function along with the prompt. The AI will then return a response that fits the format of the defined type. 
+By defining a type with `t.type()`, you specify the shape of the response that you want from the AI. You then pass this type to `generateWithType()` function along with the prompt. The AI will then return a response that fits the format of the defined type.
 
 This feature allows for more structure in the data that you receive from the AI, making it easier to handle and use in your application.
 
@@ -232,21 +240,21 @@ npx polyfact docs <folder> [options]
 
 ### Arguments
 
-- `<folder>`: This is the path of the folder from which to generate the documentation. This argument is mandatory.
+-   `<folder>`: This is the path of the folder from which to generate the documentation. This argument is mandatory.
 
 ### Options
 
-- `-n, --name <doc_name>`: This is the name of the documentation. If not provided, it defaults to 'id'.
+-   `-n, --name <doc_name>`: This is the name of the documentation. If not provided, it defaults to 'id'.
 
-- `-d, --deploy <subdomain>`: This option allows you to provide a subdomain to which the generated documentation will be deployed.
+-   `-d, --deploy <subdomain>`: This option allows you to provide a subdomain to which the generated documentation will be deployed.
 
-- `--doc_id <doc_id>`: If the doc_id has already been generated, you can send it as an argument here.
+-   `--doc_id <doc_id>`: If the doc_id has already been generated, you can send it as an argument here.
 
 ## Examples
 
 ```bash
 # Generate documentation from the src folder with the default parameters
-npx polyfact docs ./src 
+npx polyfact docs ./src
 
 # Generate documentation with a specific name from the src folder and output to a specific folder
 npx polyfact docs ./src --name "my-documentation"

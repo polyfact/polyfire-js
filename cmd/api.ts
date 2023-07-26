@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import fetch from "isomorphic-fetch";
 import * as t from "io-ts";
 
 import { File } from "./folder_to_json";
@@ -21,7 +21,7 @@ export async function generateReferences(
             "X-Access-Token": token,
         },
         body: JSON.stringify({ files_list: files }),
-    }).then((res) => res.json());
+    }).then((res: any) => res.json());
 
     if (!GenerateResponse.is(res)) {
         throw new Error(`Unexpected response type in generateReferences: ${JSON.stringify(res)}`);
@@ -47,7 +47,7 @@ export async function getProgress(
         headers: {
             "X-Access-Token": token,
         },
-    }).then((res) => res.json());
+    }).then((res: any) => res.json());
 
     if (!ProgressResponse.is(res)) {
         throw new Error(`Unexpected response type in getProgress: ${JSON.stringify(res)}`);
@@ -68,7 +68,7 @@ export async function generate(
             "X-Access-Token": token,
         },
         body: JSON.stringify({ doc_id: docId }),
-    }).then((res) => res.json());
+    }).then((res: any) => res.json());
 
     if (!GenerateResponse.is(res)) {
         throw new Error(`Unexpected response type in generate: ${JSON.stringify(res)}`);
@@ -90,7 +90,7 @@ export async function getStructure(
         headers: {
             "X-Access-Token": token,
         },
-    }).then((res) => res.json());
+    }).then((res: any) => res.json());
 
     if (!StructureResponse.is(res)) {
         throw new Error(`Unexpected response type in getStructure: ${JSON.stringify(res)}`);
@@ -112,7 +112,7 @@ export async function getOverview(
         headers: {
             "X-Access-Token": token,
         },
-    }).then((res) => res.json());
+    }).then((res: any) => res.json());
 
     if (!OverviewResponse.is(res)) {
         throw new Error(`Unexpected response type in getOverview: ${JSON.stringify(res)}`);
@@ -134,7 +134,7 @@ export async function getGettingStarted(
         headers: {
             "X-Access-Token": token,
         },
-    }).then((res) => res.json());
+    }).then((res: any) => res.json());
 
     if (!GettingStartedResponse.is(res)) {
         throw new Error(`Unexpected response type in getGettingStarted: ${JSON.stringify(res)}`);
@@ -167,7 +167,7 @@ export async function deploy(
             "X-Access-Token": token,
         },
         body: JSON.stringify({ doc_id: docId, name, domain }),
-    }).then((res) => res.json());
+    }).then((res: any) => res.json());
 
     if (!DeployResponse.is(res)) {
         throw new Error(`Unexpected response type in deploy: ${JSON.stringify(res)}`);

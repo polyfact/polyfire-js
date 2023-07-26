@@ -1,8 +1,8 @@
 import fetch from "isomorphic-fetch";
 import * as t from "io-ts";
+import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
 
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com" } = process.env;
-const { POLYFACT_TOKEN = "" } = process.env;
+const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
 
 class GenerationError extends Error {
     errorType?: string;
@@ -33,25 +33,33 @@ const ResultType = t.type({
 
 export type GenerationOptions = {
     provider?: "openai" | "cohere";
+    memoryId?: string;
 };
 
 async function generateWithTokenUsage(
     task: string,
     options: GenerationOptions = {},
 ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
-    if (!POLYFACT_TOKEN) {
-        throw new Error(
-            "Please put your polyfact token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfact.com",
-        );
-    }
-    const res = await fetch(`${POLYFACT_ENDPOINT}/generate`, {
+    ensurePolyfactToken();
+    const requestBody: {
+        task: string;
+        // eslint-disable-next-line camelcase
+        memory_id?: string;
+        provider: GenerationOptions["provider"];
+    } = { task, provider: options?.provider || "openai", memory_id: options?.memoryId || "" };
+
+    const resJSON = await fetch(`${POLYFACT_ENDPOINT}/generate`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-Access-Token": POLYFACT_TOKEN,
         },
-        body: JSON.stringify({ task, provider: options.provider || "openai" }),
-    }).then((res: any) => res.json());
+        body: JSON.stringify(requestBody),
+    }).then((res: any) => res.text());
+
+    console.log(resJSON);
+
+    const res = JSON.parse(resJSON);
 
     if (!ResultType.is(res)) {
         throw new GenerationError();

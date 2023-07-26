@@ -6,6 +6,7 @@ import {
 import { transcribe } from "./transcribe";
 import { t } from "./probabilistic_helpers/types";
 import { splitString } from "./split";
+import { createMemory, updateMemory, getAllMemories } from "./memory";
 
 export {
     generate,
@@ -16,4 +17,7 @@ export {
     t,
     GenerationOptions,
     transcribe,
+    createMemory,
+    updateMemory,
+    getAllMemories,
 };
