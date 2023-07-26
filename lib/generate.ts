@@ -34,6 +34,7 @@ const ResultType = t.type({
 export type GenerationOptions = {
     provider?: "openai" | "cohere";
     memoryId?: string;
+    chatId?: string;
 };
 
 async function generateWithTokenUsage(
@@ -45,21 +46,24 @@ async function generateWithTokenUsage(
         task: string;
         // eslint-disable-next-line camelcase
         memory_id?: string;
+        // eslint-disable-next-line camelcase
+        chat_id?: string;
         provider: GenerationOptions["provider"];
-    } = { task, provider: options?.provider || "openai", memory_id: options?.memoryId || "" };
+    } = {
+        task,
+        provider: options?.provider || "openai",
+        memory_id: options?.memoryId || "",
+        chat_id: options?.chatId || "",
+    };
 
-    const resJSON = await fetch(`${POLYFACT_ENDPOINT}/generate`, {
+    const res = await fetch(`${POLYFACT_ENDPOINT}/generate`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-Access-Token": POLYFACT_TOKEN,
         },
         body: JSON.stringify(requestBody),
-    }).then((res: any) => res.text());
-
-    console.log(resJSON);
-
-    const res = JSON.parse(resJSON);
+    }).then((res: any) => res.json());
 
     if (!ResultType.is(res)) {
         throw new GenerationError();

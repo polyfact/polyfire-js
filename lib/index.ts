@@ -7,6 +7,7 @@ import { transcribe } from "./transcribe";
 import { t } from "./probabilistic_helpers/types";
 import { splitString } from "./split";
 import { createMemory, updateMemory, getAllMemories } from "./memory";
+import { Chat } from "./chats";
 
 export {
     generate,
@@ -20,4 +21,5 @@ export {
     createMemory,
     updateMemory,
     getAllMemories,
+    Chat,
 };
