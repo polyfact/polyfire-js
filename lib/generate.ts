@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import fetch from "isomorphic-fetch";
 import * as t from "io-ts";
 
 const { POLYFACT_ENDPOINT = "https://api2.polyfact.com" } = process.env;
@@ -51,7 +51,7 @@ async function generateWithTokenUsage(
             "X-Access-Token": POLYFACT_TOKEN,
         },
         body: JSON.stringify({ task, provider: options.provider || "openai" }),
-    }).then((res) => res.json());
+    }).then((res: any) => res.json());
 
     if (!ResultType.is(res)) {
         throw new GenerationError();

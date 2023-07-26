@@ -1,4 +1,4 @@
-import fetch, { Blob } from "node-fetch";
+import fetch from "isomorphic-fetch";
 import FormData from "form-data";
 import { Readable } from "stream";
 import * as t from "io-ts";
@@ -10,7 +10,7 @@ const ResultType = t.type({
     text: t.string,
 });
 
-export async function transcribe(file: Blob | Buffer | Readable): Promise<string> {
+export async function transcribe(file: Buffer | Readable): Promise<string> {
     if (!POLYFACT_TOKEN) {
         throw new Error(
             "Please put your polyfact token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfact.com",
@@ -28,8 +28,8 @@ export async function transcribe(file: Blob | Buffer | Readable): Promise<string
         headers: {
             "X-Access-Token": POLYFACT_TOKEN,
         },
-        body: formData,
-    }).then((res) => res.json());
+        body: formData as any,
+    }).then((res: any) => res.json());
 
     if (ResultType.is(res)) {
         return res.text;

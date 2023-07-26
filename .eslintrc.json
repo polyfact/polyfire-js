@@ -23,6 +23,9 @@
         "sourceType": "module",
         "project": "tsconfig.json"
     },
+    "globals": {
+      "fetch": true
+    },
     "rules": {
         "@typescript-eslint/explicit-module-boundary-types": ["warn"],
         "@typescript-eslint/ban-types": ["warn"],

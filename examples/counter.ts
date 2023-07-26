@@ -21,7 +21,7 @@ import { generateWithType, t } from "../lib/index";
                 ]),
             }),
             {
-                provider: "cohere",
+                provider: "openai",
             },
         ),
     );
