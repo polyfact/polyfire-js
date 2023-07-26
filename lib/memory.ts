@@ -39,7 +39,11 @@ async function createMemory(): Promise<{ id: string }> {
     }
 }
 
-async function updateMemory(id: string, input: string): Promise<{ success: boolean }> {
+async function updateMemory(
+    id: string,
+    input: string,
+    maxToken = 0,
+): Promise<{ success: boolean }> {
     ensurePolyfactToken();
 
     try {
@@ -52,6 +56,7 @@ async function updateMemory(id: string, input: string): Promise<{ success: boole
             body: JSON.stringify({
                 id,
                 input,
+                max_token: maxToken,
             }),
         }).then((res: any) => res.json());
 
