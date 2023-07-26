@@ -3,6 +3,10 @@ import { Chat } from "../lib/index";
 async function main() {
     const chat = new Chat({ provider: "cohere" });
 
+    console.log(await chat.chatId);
+
+    console.log(await chat.getMessages());
+
     let prompt = "Who is the first person to have walked on the moon?";
     console.log(prompt);
 
@@ -20,6 +24,8 @@ async function main() {
 
     result = await chat.sendMessage(prompt);
     console.log(result);
+
+    console.log(await chat.getMessages());
 }
 
 main();
