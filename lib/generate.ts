@@ -1,4 +1,4 @@
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 import * as t from "polyfact-io-ts";
 import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
 import { Memory } from "./memory";
@@ -44,6 +44,7 @@ async function generateWithTokenUsage(
     options: GenerationOptions = {},
 ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
     ensurePolyfactToken();
+
     const requestBody: {
         task: string;
         // eslint-disable-next-line camelcase
@@ -58,20 +59,27 @@ async function generateWithTokenUsage(
         chat_id: options?.chatId || "",
     };
 
-    const res = await fetch(`${POLYFACT_ENDPOINT}/generate`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Access-Token": POLYFACT_TOKEN,
-        },
-        body: JSON.stringify(requestBody),
-    }).then((res: any) => res.json());
+    try {
+        const res = await axios.post(`${POLYFACT_ENDPOINT}/generate`, requestBody, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Access-Token": POLYFACT_TOKEN,
+            },
+        });
 
-    if (!ResultType.is(res)) {
-        throw new GenerationError();
+        const responseData = res.data;
+
+        if (!ResultType.is(responseData)) {
+            throw new GenerationError();
+        }
+
+        return { result: responseData.result, tokenUsage: responseData.token_usage };
+    } catch (e) {
+        if (e instanceof Error) {
+            throw new GenerationError(e.name);
+        }
+        throw e;
     }
-
-    return { result: res.result, tokenUsage: res.token_usage };
 }
 
 async function generate(task: string, options: GenerationOptions = {}): Promise<string> {
