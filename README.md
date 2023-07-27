@@ -8,7 +8,7 @@
 
 <p align="center">⚡ A lightweight and simple way to create tools using AI 🪶</p>
 
-Polyfact's goal is to make it possible to code every AI tool/Chatbot you could want in only a couple of lines of code without the need for complex abstractions or to have to deploy anything.
+Polyfact's goal is to make it possible to code every AI tool/Chatbot you could want in only a couple of lines of code without the need for complex abstractions and to have to deploy anything.
 
 <p align="center"><img src="demo.gif" /></p>
 
@@ -16,8 +16,8 @@ Polyfact's goal is to make it possible to code every AI tool/Chatbot you could w
 - **[Generate](https://github.com/polyfact/polyfact-node/wiki/generate)**: Answer to simple requests as text
 - **[Chat](https://github.com/polyfact/polyfact-node/wiki/chat)**: Easily create chatbots
 - **[Transcribe](https://github.com/polyfact/polyfact-node/wiki/transcribe)**: Transcribe audio files to text
-- **[Memory](https://github.com/polyfact/polyfact-node/wiki/memory)**: Easily create a long term memory and simple use of extracted information
-- **[Type checked generation](https://github.com/polyfact/polyfact-node/wiki/generateWithType)**: Answer to simple requests with a type you defined *(🎲 probabilistic function)*
+- **[Memory](https://github.com/polyfact/polyfact-node/wiki/memory)**: Easily create a long term memory and simplify use of large amount of information
+- **[Type checked generation](https://github.com/polyfact/polyfact-node/wiki/generateWithType)**: Answer simple requests with a type you defined *(🎲 probabilistic function)*
 
 ## 📚 Documentation
 
@@ -40,7 +40,7 @@ export POLYFACT_TOKEN= # The token displayed on https://app.polyfact.com
 
 ### 💡 Examples
 
-There's more examples and tutorial in the [Documentation](https://github.com/polyfact/polyfact-node/wiki) but here's a simple chatbot to get you started:
+There's more examples and tutorials in the [Documentation](https://github.com/polyfact/polyfact-node/wiki) but here's a simple chatbot to get you started:
 
 ```js
 import * as readline from "node:readline/promises";
