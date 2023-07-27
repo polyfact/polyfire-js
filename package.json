@@ -16,7 +16,7 @@
     },
     "devDependencies": {
         "@types/cli-progress": "^3.11.0",
-        "@types/node": "^14.14.31",
+        "@types/node": "^20.4.5",
         "@types/isomorphic-fetch": "^0.0.36",
         "@typescript-eslint/eslint-plugin": "^4.14.1",
         "@typescript-eslint/parser": "^4.14.1",
