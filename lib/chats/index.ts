@@ -5,14 +5,18 @@ import { generateWithTokenUsage } from "../generate";
 
 const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
 
-async function createChat(): Promise<string> {
+async function createChat(systemPrompt?: string): Promise<string> {
     ensurePolyfactToken();
 
     const response = await fetch(`${POLYFACT_ENDPOINT}/chats`, {
         method: "POST",
         headers: {
             "X-Access-Token": POLYFACT_TOKEN,
+            "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+            system_prompt: systemPrompt,
+        }),
     }).then((res: any) => res.json());
 
     return response.id;
@@ -31,8 +35,8 @@ export class Chat {
 
     provider: "openai" | "cohere";
 
-    constructor(options: { provider?: "openai" | "cohere" } = {}) {
-        this.chatId = createChat();
+    constructor(options: { provider?: "openai" | "cohere"; systemPrompt?: string } = {}) {
+        this.chatId = createChat(options.systemPrompt);
         this.provider = options.provider || "openai";
     }
 
