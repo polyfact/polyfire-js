@@ -1,4 +1,4 @@
-# Polyfact
+# PolyFact
 
 `polyfact` is a nodejs package aimed at assisting developers in creating project using AI.
 The package is split into 2 parts:
