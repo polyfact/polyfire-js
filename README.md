@@ -1,4 +1,4 @@
-<h1 align="center">🏭 Polyfact</h1>
+<h1 align="center">🏭 PolyFact</h1>
 
 <h4 align="center">
     <a href="https://github.com/polyfact/polyfact-node/wiki">Documentation</a> |
@@ -8,7 +8,7 @@
 
 <p align="center">⚡ A lightweight and simple way to create tools using AI 🪶</p>
 
-Polyfact's goal is to make it possible to code every AI tool/Chatbot you could want in only a couple of lines of code without the need for complex abstractions and to have to deploy anything.
+PolyFact's goal is to make it possible to code every AI tool/Chatbot you could want in only a couple of lines of code without the need for complex abstractions and to have to deploy anything.
 
 <p align="center"><img src="demo.gif" /></p>
 
@@ -21,7 +21,7 @@ Polyfact's goal is to make it possible to code every AI tool/Chatbot you could w
 
 ## 📚 Documentation
 
-You can consult Polyfact's documentation at https://github.com/polyfact/polyfact-node/wiki
+You can consult PolyFact's documentation at https://github.com/polyfact/polyfact-node/wiki
 
 ## 🚀 Getting started
 
@@ -32,7 +32,7 @@ npm install polyfact
 ```
 
 Get your your polyfact token by signing up with github here: https://app.polyfact.com<br/>
-Add your Polyfact Token in the `POLYFACT_TOKEN` environment variable:
+Add your PolyFact Token in the `POLYFACT_TOKEN` environment variable:
 
 ```bash
 export POLYFACT_TOKEN= # The token displayed on https://app.polyfact.com
@@ -68,4 +68,4 @@ We are striving for feedbacks and want to understand everyone's needs, you can h
 
 ## 🧑‍💻 Contributing
 
-Polyfact is opensource ! You can contribute to this package or to the [API](https://github.com/polyfact/polyfact-api-go) by opening an issue or a PR !
+PolyFact is opensource ! You can contribute to this package or to the [API](https://github.com/polyfact/polyfact-api-go) by opening an issue or a PR !
