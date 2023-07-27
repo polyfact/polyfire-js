@@ -17,7 +17,20 @@ type FunctionWithDescription<T extends (...args: any[]) => any> = ReplaceReturnT
     ReturnType<T> & { description: typeof description }
 >;
 
-type newT<T extends typeof tNoDesc> = T & {
+type newT<T extends typeof tNoDesc> = Omit<
+    T,
+    | "string"
+    | "number"
+    | "boolean"
+    | "null"
+    | "keyof"
+    | "literal"
+    | "union"
+    | "intersection"
+    | "type"
+    | "partial"
+    | "array"
+> & {
     string: ConstantWithDescription<T["string"]>;
     number: ConstantWithDescription<T["number"]>;
     boolean: ConstantWithDescription<T["boolean"]>;
@@ -40,20 +53,38 @@ function addDescriptionToFunction(fn: any): any {
     };
 }
 
+function defineDescriptionConst(obj: any, descriptionF: any, key: string) {
+    const old = obj[key];
+    Object.defineProperty(old, "description", {
+        get: () => descriptionF,
+    });
+
+    Object.defineProperty(obj, key, {
+        get: () => old,
+    });
+}
+
+function defineDescriptionFn(obj: any, key: string) {
+    const old = obj[key];
+    Object.defineProperty(obj, key, {
+        get: () => addDescriptionToFunction(old),
+    });
+}
+
 function extendsT(iots: typeof tNoDesc): newT<typeof tNoDesc> {
     const sorry = iots as any;
 
-    sorry.string.description = description;
-    sorry.number.description = description;
-    sorry.boolean.description = description;
-    sorry.null.description = description;
-    sorry.keyof = addDescriptionToFunction(sorry.keyof);
-    sorry.literal = addDescriptionToFunction(sorry.literal);
-    sorry.union = addDescriptionToFunction(sorry.union);
-    sorry.intersection = addDescriptionToFunction(sorry.intersection);
-    sorry.type = addDescriptionToFunction(sorry.type);
-    sorry.partial = addDescriptionToFunction(sorry.partial);
-    sorry.array = addDescriptionToFunction(sorry.array);
+    defineDescriptionConst(sorry, description, "string");
+    defineDescriptionConst(sorry, description, "number");
+    defineDescriptionConst(sorry, description, "boolean");
+    defineDescriptionConst(sorry, description, "null");
+    defineDescriptionFn(sorry, "keyof");
+    defineDescriptionFn(sorry, "literal");
+    defineDescriptionFn(sorry, "union");
+    defineDescriptionFn(sorry, "intersection");
+    defineDescriptionFn(sorry, "type");
+    defineDescriptionFn(sorry, "partial");
+    defineDescriptionFn(sorry, "array");
 
     return sorry as newT<typeof tNoDesc>;
 }
