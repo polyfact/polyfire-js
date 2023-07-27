@@ -1,5 +1,5 @@
 import fetch from "isomorphic-fetch";
-import * as t from "io-ts";
+import * as t from "polyfact-io-ts";
 
 import { File } from "./folder_to_json";
 

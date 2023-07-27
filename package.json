@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.17",
+    "version": "0.1.19",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
@@ -9,7 +9,7 @@
     "dependencies": {
         "form-data": "^4.0.0",
         "fp-ts": "^2.16.0",
-        "io-ts": "^2.2.20",
+        "polyfact-io-ts": "^2.2.20",
         "isomorphic-fetch": "^3.0.0",
         "js-tiktoken": "^1.0.7",
         "ts-node": "^10.9.1"

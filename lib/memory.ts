@@ -90,4 +90,21 @@ async function getAllMemories(): Promise<{ ids: string[] }> {
     }
 }
 
-export { createMemory, updateMemory, getAllMemories };
+type MemoryAddOptions = {
+    maxToken?: number;
+};
+
+class Memory {
+    memoryId: Promise<string>;
+
+    constructor() {
+        this.memoryId = createMemory().then((res) => res.id);
+    }
+
+    async add(input: string, { maxToken = 0 }: MemoryAddOptions = {}): Promise<void> {
+        const id = await this.memoryId;
+        await updateMemory(id, input, maxToken);
+    }
+}
+
+export { createMemory, updateMemory, getAllMemories, Memory };

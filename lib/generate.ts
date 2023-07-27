@@ -1,6 +1,7 @@
 import fetch from "isomorphic-fetch";
-import * as t from "io-ts";
+import * as t from "polyfact-io-ts";
 import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
+import { Memory } from "./memory";
 
 const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
 
@@ -33,8 +34,9 @@ const ResultType = t.type({
 
 export type GenerationOptions = {
     provider?: "openai" | "cohere";
-    memoryId?: string;
     chatId?: string;
+    memory?: Memory;
+    memoryId?: string;
 };
 
 async function generateWithTokenUsage(
@@ -52,7 +54,7 @@ async function generateWithTokenUsage(
     } = {
         task,
         provider: options?.provider || "openai",
-        memory_id: options?.memoryId || "",
+        memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
         chat_id: options?.chatId || "",
     };
 

@@ -1,7 +1,7 @@
 import fetch from "isomorphic-fetch";
 import FormData from "form-data";
 import { Readable } from "stream";
-import * as t from "io-ts";
+import * as t from "polyfact-io-ts";
 
 const { POLYFACT_ENDPOINT = "https://api2.polyfact.com" } = process.env;
 const { POLYFACT_TOKEN = "" } = process.env;
