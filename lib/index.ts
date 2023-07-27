@@ -4,7 +4,7 @@ import {
     generateWithTypeWithTokenUsage,
 } from "./probabilistic_helpers/generateWithType";
 import { transcribe } from "./transcribe";
-import { t } from "./probabilistic_helpers/types";
+import * as t from "polyfact-io-ts";
 import { splitString } from "./split";
 import { createMemory, updateMemory, getAllMemories } from "./memory";
 import { Chat } from "./chats";

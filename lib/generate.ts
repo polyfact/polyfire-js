@@ -1,5 +1,5 @@
 import fetch from "isomorphic-fetch";
-import * as t from "io-ts";
+import * as t from "polyfact-io-ts";
 import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
 
 const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;

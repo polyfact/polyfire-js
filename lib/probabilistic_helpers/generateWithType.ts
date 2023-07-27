@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define */
-import * as t from "io-ts";
+import * as t from "polyfact-io-ts";
 import { generateWithTokenUsage, GenerationOptions } from "../index";
 
 function typePartial2String(entries: [string, any][], indent: number, partial: boolean): string {

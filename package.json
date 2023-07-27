@@ -9,7 +9,7 @@
     "dependencies": {
         "form-data": "^4.0.0",
         "fp-ts": "^2.16.0",
-        "io-ts": "^2.2.20",
+        "polyfact-io-ts": "^2.2.20",
         "isomorphic-fetch": "^3.0.0",
         "js-tiktoken": "^1.0.7",
         "ts-node": "^10.9.1"
