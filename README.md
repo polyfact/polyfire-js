@@ -12,6 +12,13 @@ Polyfact's goal is to make it possible to code every AI tool/Chatbot you could w
 
 <p align="center"><img src="demo.gif" /></p>
 
+## ✨ Features
+- **[Generate](https://github.com/polyfact/polyfact-node/wiki/generate)**: Answer to simple requests as text
+- **[Chat](https://github.com/polyfact/polyfact-node/wiki/chat)**: Easily create chatbots
+- **[Transcribe](https://github.com/polyfact/polyfact-node/wiki/transcribe)**: Transcribe audio files to text
+- **[Memory](https://github.com/polyfact/polyfact-node/wiki/memory)**: Easily create a long term memory and simple use of extracted information
+- **[Type checked generation](https://github.com/polyfact/polyfact-node/wiki/generateWithType)**: Answer to simple requests with a type you defined *(🎲 probabilistic function)*
+
 ## 📚 Documentation
 
 You can consult Polyfact's documentation at https://github.com/polyfact/polyfact-node/wiki
