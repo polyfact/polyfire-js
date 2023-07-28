@@ -8,6 +8,7 @@ import { transcribe } from "./transcribe";
 import { splitString } from "./split";
 import { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
 import { Chat } from "./chats";
+import * as kv from "./kv";
 
 export {
     generate,
@@ -23,4 +24,5 @@ export {
     getAllMemories,
     Chat,
     Memory,
+    kv,
 };
