@@ -1,6 +1,7 @@
 /* eslint-disable no-use-before-define */
 import * as t from "polyfact-io-ts";
 import { generateWithTokenUsage, GenerationOptions } from "../index";
+import { ClientOptions } from "../clientOpts";
 
 function typePartial2String(entries: [string, any][], indent: number, partial: boolean): string {
     const leftpad = Array(2 * (indent + 1))
@@ -85,6 +86,7 @@ export async function generateWithTypeWithTokenUsage<T extends t.Props>(
     task: string,
     type: t.TypeC<T>,
     options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
 ): Promise<{ result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }> {
     const typeFormat = tsio2String(type);
     const tokenUsage = { input: 0, output: 0 };
@@ -92,6 +94,7 @@ export async function generateWithTypeWithTokenUsage<T extends t.Props>(
         const { result: resultJson, tokenUsage: tu } = await generateWithTokenUsage(
             generateTypedPrompt(typeFormat, task),
             options,
+            clientOptions,
         );
 
         tokenUsage.output += tu.output;
@@ -123,8 +126,24 @@ export async function generateWithType<T extends t.Props>(
     task: string,
     type: t.TypeC<T>,
     options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
 ): Promise<t.TypeOf<t.TypeC<T>>> {
-    const res = await generateWithTypeWithTokenUsage(task, type, options);
+    const res = await generateWithTypeWithTokenUsage(task, type, options, clientOptions);
 
     return res.result;
+}
+
+export default function client(clientOptions: Partial<ClientOptions> = {}) {
+    return {
+        generateWithTypeWithTokenUsage: <T extends t.Props>(
+            task: string,
+            type: t.TypeC<T>,
+            options: GenerationOptions = {},
+        ) => generateWithTypeWithTokenUsage(task, type, options, clientOptions),
+        generateWithType: <T extends t.Props>(
+            task: string,
+            type: t.TypeC<T>,
+            options: GenerationOptions = {},
+        ) => generateWithType(task, type, options, clientOptions),
+    };
 }
