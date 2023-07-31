@@ -9,6 +9,12 @@ import chatClient, { Chat } from "./chats";
 import memoryClient, { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
 import { splitString, tokenCount } from "./split";
 import { ClientOptions } from "./clientOpts";
+import kvClient, { get as KVGet, set as KVSet } from "./kv";
+
+const kv = {
+    get: KVGet,
+    set: KVSet,
+};
 
 export {
     generate,
@@ -25,6 +31,7 @@ export {
     getAllMemories,
     Chat,
     Memory,
+    kv,
 };
 
 export default function client(clientOptions: Partial<ClientOptions>) {
@@ -34,5 +41,6 @@ export default function client(clientOptions: Partial<ClientOptions>) {
         ...transcribeClient(clientOptions),
         ...memoryClient(clientOptions),
         ...chatClient(clientOptions),
+        kv: kvClient(clientOptions),
     };
 }
