@@ -30,7 +30,7 @@ export async function generateReferences(
     const { data } = res;
 
     if (!GenerateResponse.is(data)) {
-        throw new Error(`Unexpected response type in generateReferences: ${JSON.stringify(res)}`);
+        throw new Error(`Unexpected response type in generateReferences: ${JSON.stringify(data)}`);
     }
 
     return data;
@@ -58,7 +58,7 @@ export async function getProgress(
     const { data } = res;
 
     if (!ProgressResponse.is(data)) {
-        throw new Error(`Unexpected response type in getProgress: ${JSON.stringify(res)}`);
+        throw new Error(`Unexpected response type in getProgress: ${JSON.stringify(data)}`);
     }
 
     return data;
@@ -85,7 +85,7 @@ export async function generate(
     const { data } = res;
 
     if (!GenerateResponse.is(data)) {
-        throw new Error(`Unexpected response type in generate: ${JSON.stringify(res)}`);
+        throw new Error(`Unexpected response type in generate: ${JSON.stringify(data)}`);
     }
 
     return data;
@@ -109,7 +109,7 @@ export async function getStructure(
     const { data } = res;
 
     if (!StructureResponse.is(data)) {
-        throw new Error(`Unexpected response type in getStructure: ${JSON.stringify(res)}`);
+        throw new Error(`Unexpected response type in getStructure: ${JSON.stringify(data)}`);
     }
 
     return data;
@@ -132,7 +132,7 @@ export async function getOverview(
     const { data } = res;
 
     if (!OverviewResponse.is(data)) {
-        throw new Error(`Unexpected response type in getOverview: ${JSON.stringify(res)}`);
+        throw new Error(`Unexpected response type in getOverview: ${JSON.stringify(data)}`);
     }
 
     return data;
@@ -156,7 +156,7 @@ export async function getGettingStarted(
     const { data } = res;
 
     if (!GettingStartedResponse.is(data)) {
-        throw new Error(`Unexpected response type in getGettingStarted: ${JSON.stringify(res)}`);
+        throw new Error(`Unexpected response type in getGettingStarted: ${JSON.stringify(data)}`);
     }
 
     return data;
@@ -193,7 +193,7 @@ export async function deploy(
     const { data } = res;
 
     if (!DeployResponse.is(data)) {
-        throw new Error(`Unexpected response type in deploy: ${JSON.stringify(res)}`);
+        throw new Error(`Unexpected response type in deploy: ${JSON.stringify(data)}`);
     }
 
     return data;
