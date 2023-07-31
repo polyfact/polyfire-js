@@ -5,7 +5,7 @@ import {
     generateWithTypeWithTokenUsage,
 } from "./probabilistic_helpers/generateWithType";
 import { transcribe } from "./transcribe";
-import { splitString } from "./split";
+import { splitString, tokenCount } from "./split";
 import { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
 import { Chat } from "./chats";
 
@@ -15,6 +15,7 @@ export {
     generateWithType,
     generateWithTypeWithTokenUsage,
     splitString,
+    tokenCount,
     t,
     GenerationOptions,
     transcribe,
