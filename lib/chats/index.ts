@@ -1,4 +1,4 @@
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 import * as t from "polyfact-io-ts";
 import { ensurePolyfactToken } from "../helpers/ensurePolyfactToken";
 import { generateWithTokenUsage } from "../generate";
@@ -8,18 +8,17 @@ const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } =
 async function createChat(systemPrompt?: string): Promise<string> {
     ensurePolyfactToken();
 
-    const response = await fetch(`${POLYFACT_ENDPOINT}/chats`, {
-        method: "POST",
-        headers: {
-            "X-Access-Token": POLYFACT_TOKEN,
-            "Content-Type": "application/json",
+    const response = await axios.post(
+        `${POLYFACT_ENDPOINT}/chats`,
+        { system_prompt: systemPrompt },
+        {
+            headers: {
+                "X-Access-Token": POLYFACT_TOKEN,
+            },
         },
-        body: JSON.stringify({
-            system_prompt: systemPrompt,
-        }),
-    }).then((res: any) => res.json());
+    );
 
-    return response.id;
+    return response?.data?.id;
 }
 
 const Message = t.type({
@@ -57,14 +56,13 @@ export class Chat {
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {
-        const response = await fetch(`${POLYFACT_ENDPOINT}/chat/${await this.chatId}/history`, {
-            method: "GET",
+        const response = await axios.get(`${POLYFACT_ENDPOINT}/chat/${await this.chatId}/history`, {
             headers: {
                 "X-Access-Token": POLYFACT_TOKEN,
             },
-        }).then((res: any) => res.json());
+        });
 
-        return response.filter((message: any): message is t.TypeOf<typeof Message> =>
+        return response?.data?.filter((message: any): message is t.TypeOf<typeof Message> =>
             Message.is(message),
         );
     }

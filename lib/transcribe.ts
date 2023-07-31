@@ -1,4 +1,4 @@
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 import FormData from "form-data";
 import { Readable } from "stream";
 import * as t from "polyfact-io-ts";
@@ -23,17 +23,17 @@ export async function transcribe(file: Buffer | Readable): Promise<string> {
         filename: "file.mp3",
     });
 
-    const res = await fetch(`${POLYFACT_ENDPOINT}/transcribe`, {
-        method: "POST",
+    const res = await axios.post(`${POLYFACT_ENDPOINT}/transcribe`, formData, {
         headers: {
             "X-Access-Token": POLYFACT_TOKEN,
         },
-        body: formData as any,
-    }).then((res: any) => res.json());
+    });
 
-    if (ResultType.is(res)) {
-        return res.text;
+    const { data } = res;
+
+    if (ResultType.is(data)) {
+        return data.text;
     }
 
-    throw new Error(`Unexpected response from polyfact: ${JSON.stringify(res, null, 2)}`);
+    throw new Error(`Unexpected response from polyfact: ${JSON.stringify(data, null, 2)}`);
 }

@@ -1,4 +1,4 @@
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 import * as t from "polyfact-io-ts";
 
 import { File } from "./folder_to_json";
@@ -14,20 +14,26 @@ export async function generateReferences(
     files: File[],
     token: string,
 ): Promise<t.TypeOf<typeof GenerateResponse>> {
-    const res = await fetch(`${API_URL}/reference`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Access-Token": token,
+    const res = await axios.post(
+        `${API_URL}/reference`,
+        {
+            files_list: files,
         },
-        body: JSON.stringify({ files_list: files }),
-    }).then((res: any) => res.json());
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Access-Token": token,
+            },
+        },
+    );
 
-    if (!GenerateResponse.is(res)) {
+    const { data } = res;
+
+    if (!GenerateResponse.is(data)) {
         throw new Error(`Unexpected response type in generateReferences: ${JSON.stringify(res)}`);
     }
 
-    return res;
+    return data;
 }
 
 const ProgressResponse = t.type({
@@ -43,17 +49,19 @@ export async function getProgress(
     type: "references" | "folders",
     token: string,
 ): Promise<t.TypeOf<typeof ProgressResponse>> {
-    const res = await fetch(`${API_URL}/progress/${docId}/${type}`, {
+    const res = await axios.get(`${API_URL}/progress/${docId}/${type}`, {
         headers: {
             "X-Access-Token": token,
         },
-    }).then((res: any) => res.json());
+    });
 
-    if (!ProgressResponse.is(res)) {
+    const { data } = res;
+
+    if (!ProgressResponse.is(data)) {
         throw new Error(`Unexpected response type in getProgress: ${JSON.stringify(res)}`);
     }
 
-    return res;
+    return data;
 }
 
 export async function generate(
@@ -61,20 +69,26 @@ export async function generate(
     type: "folders" | "structure" | "overview" | "getting-started",
     token: string,
 ): Promise<t.TypeOf<typeof GenerateResponse>> {
-    const res = await fetch(`${API_URL}/${type}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Access-Token": token,
+    const res = await axios.post(
+        `${API_URL}/${type}`,
+        {
+            doc_id: docId,
         },
-        body: JSON.stringify({ doc_id: docId }),
-    }).then((res: any) => res.json());
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Access-Token": token,
+            },
+        },
+    );
 
-    if (!GenerateResponse.is(res)) {
+    const { data } = res;
+
+    if (!GenerateResponse.is(data)) {
         throw new Error(`Unexpected response type in generate: ${JSON.stringify(res)}`);
     }
 
-    return res;
+    return data;
 }
 
 const StructureResponse = t.type({
@@ -86,17 +100,19 @@ export async function getStructure(
     docId: string,
     token: string,
 ): Promise<t.TypeOf<typeof StructureResponse>> {
-    const res = await fetch(`${API_URL}/structure/${docId}`, {
+    const res = await axios.get(`${API_URL}/structure/${docId}`, {
         headers: {
             "X-Access-Token": token,
         },
-    }).then((res: any) => res.json());
+    });
 
-    if (!StructureResponse.is(res)) {
+    const { data } = res;
+
+    if (!StructureResponse.is(data)) {
         throw new Error(`Unexpected response type in getStructure: ${JSON.stringify(res)}`);
     }
 
-    return res;
+    return data;
 }
 
 const OverviewResponse = t.type({
@@ -108,17 +124,18 @@ export async function getOverview(
     docId: string,
     token: string,
 ): Promise<t.TypeOf<typeof OverviewResponse>> {
-    const res = await fetch(`${API_URL}/overview/${docId}`, {
+    const res = await axios.get(`${API_URL}/overview/${docId}`, {
         headers: {
             "X-Access-Token": token,
         },
-    }).then((res: any) => res.json());
+    });
+    const { data } = res;
 
-    if (!OverviewResponse.is(res)) {
+    if (!OverviewResponse.is(data)) {
         throw new Error(`Unexpected response type in getOverview: ${JSON.stringify(res)}`);
     }
 
-    return res;
+    return data;
 }
 
 const GettingStartedResponse = t.type({
@@ -130,17 +147,19 @@ export async function getGettingStarted(
     docId: string,
     token: string,
 ): Promise<t.TypeOf<typeof GettingStartedResponse>> {
-    const res = await fetch(`${API_URL}/getting-started/${docId}`, {
+    const res = await axios.get(`${API_URL}/getting-started/${docId}`, {
         headers: {
             "X-Access-Token": token,
         },
-    }).then((res: any) => res.json());
+    });
 
-    if (!GettingStartedResponse.is(res)) {
+    const { data } = res;
+
+    if (!GettingStartedResponse.is(data)) {
         throw new Error(`Unexpected response type in getGettingStarted: ${JSON.stringify(res)}`);
     }
 
-    return res;
+    return data;
 }
 
 export interface GetResult {
@@ -160,18 +179,22 @@ export async function deploy(
     domain: string,
     token: string,
 ): Promise<t.TypeOf<typeof DeployResponse>> {
-    const res = await fetch(`${API_URL}/deploy`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Access-Token": token,
+    const res = await axios.post(
+        `${API_URL}/deploy`,
+        { doc_id: docId, name, domain },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Access-Token": token,
+            },
         },
-        body: JSON.stringify({ doc_id: docId, name, domain }),
-    }).then((res: any) => res.json());
+    );
 
-    if (!DeployResponse.is(res)) {
+    const { data } = res;
+
+    if (!DeployResponse.is(data)) {
         throw new Error(`Unexpected response type in deploy: ${JSON.stringify(res)}`);
     }
 
-    return res;
+    return data;
 }

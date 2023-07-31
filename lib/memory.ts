@@ -1,4 +1,4 @@
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
 
 const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
@@ -8,7 +8,6 @@ class MemoryError extends Error {
 
     constructor(errorType?: string) {
         // TODO: proper error handling once the api is up and running
-
         switch (errorType) {
             default:
                 super("An unknown error occured");
@@ -22,17 +21,21 @@ async function createMemory(): Promise<{ id: string }> {
     ensurePolyfactToken();
 
     try {
-        const res = await fetch(`${POLYFACT_ENDPOINT}/memory`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Access-Token": POLYFACT_TOKEN,
+        const res = await axios.post(
+            `${POLYFACT_ENDPOINT}/memory`,
+            {},
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Access-Token": POLYFACT_TOKEN,
+                },
             },
-        }).then((res: any) => res.json());
+        );
 
-        return res;
+        return res.data;
     } catch (e) {
         if (e instanceof Error) {
+            console.log("\n\n\n", e, "\n\n\n");
             throw new MemoryError(e.name);
         }
         throw e;
@@ -47,20 +50,22 @@ async function updateMemory(
     ensurePolyfactToken();
 
     try {
-        const res = await fetch(`${POLYFACT_ENDPOINT}/memory`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Access-Token": POLYFACT_TOKEN,
-            },
-            body: JSON.stringify({
+        const res = await axios.put(
+            `${POLYFACT_ENDPOINT}/memory`,
+            {
                 id,
                 input,
                 max_token: maxToken,
-            }),
-        }).then((res: any) => res.json());
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Access-Token": POLYFACT_TOKEN,
+                },
+            },
+        );
 
-        return res;
+        return res.data;
     } catch (e) {
         if (e instanceof Error) {
             throw new MemoryError(e.name);
@@ -73,15 +78,14 @@ async function getAllMemories(): Promise<{ ids: string[] }> {
     ensurePolyfactToken();
 
     try {
-        const res = await fetch(`${POLYFACT_ENDPOINT}/memories`, {
-            method: "GET",
+        const res = await axios.get(`${POLYFACT_ENDPOINT}/memories`, {
             headers: {
                 "Content-Type": "application/json",
                 "X-Access-Token": POLYFACT_TOKEN,
             },
-        }).then((res: any) => res.json());
+        });
 
-        return res;
+        return res.data;
     } catch (e) {
         if (e instanceof Error) {
             throw new MemoryError(e.name);

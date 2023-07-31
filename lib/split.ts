@@ -48,7 +48,7 @@ function binarySplit(s: string) {
     return [s.slice(0, maxScoreI), s.slice(maxScoreI)];
 }
 
-function tokenCount(s: string, model: TiktokenEncoding = "cl100k_base"): number {
+export function tokenCount(s: string, model: TiktokenEncoding = "cl100k_base"): number {
     const enc = getEncoding(model);
     return enc.encode(s).length;
 }
