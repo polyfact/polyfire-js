@@ -1,4 +1,4 @@
-import { generateWithType, t } from "../lib/index";
+import { kv, generateWithType, t } from "../lib/index";
 
 const functionDescriptionType = t.type({
     functionName: t.string,
@@ -14,6 +14,8 @@ const functionDescriptionType = t.type({
 });
 
 (async () => {
+    await kv.set("abc", "");
+    console.log(await kv.get("abc"));
     const { returnType } = await generateWithType(
         "function add(a, b, c) { return a + b + c }",
         functionDescriptionType,

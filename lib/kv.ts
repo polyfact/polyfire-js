@@ -37,9 +37,11 @@ export async function get(
                 "Content-Type": "application/json",
             },
         })
-        .then((res: any) => res.text());
+        .catch(() => ({
+            data: "",
+        }));
 
-    return response;
+    return response.data;
 }
 
 export default function client(clientOptions: Partial<ClientOptions> = {}) {
