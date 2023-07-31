@@ -3,7 +3,7 @@ import { stdin as input, stdout as output } from "node:process";
 import { Chat } from "../lib/index";
 
 async function main() {
-    const chat = new Chat();
+    const chat = new Chat({ autoMemory: true });
 
     const rl = readline.createInterface({ input, output });
 

@@ -1,7 +1,8 @@
 import axios from "axios";
 import * as t from "polyfact-io-ts";
-import { generateWithTokenUsage } from "../generate";
+import { generateWithTokenUsage, GenerationOptions } from "../generate";
 import { ClientOptions, defaultOptions } from "../clientOpts";
+import { Memory } from "../memory";
 
 const Message = t.type({
     id: t.string,
@@ -36,27 +37,50 @@ export class Chat {
 
     clientOptions: ClientOptions;
 
+    autoMemory?: Memory;
+
     constructor(
-        options: { provider?: "openai" | "cohere"; systemPrompt?: string } = {},
+        options: {
+            provider?: "openai" | "cohere";
+            systemPrompt?: string;
+            autoMemory?: boolean;
+        } = {},
         clientOptions: Partial<ClientOptions> = {},
     ) {
         this.clientOptions = defaultOptions(clientOptions);
         this.chatId = createChat(options.systemPrompt, this.clientOptions);
         this.provider = options.provider || "openai";
+        if (options.autoMemory) {
+            this.autoMemory = new Memory(this.clientOptions);
+        }
     }
 
     async sendMessageWithTokenUsage(
         message: string,
+        options: GenerationOptions = {},
     ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
         const chatId = await this.chatId;
 
-        const result = await generateWithTokenUsage(message, { chatId });
+        if (this.autoMemory && !options.memory && !options.memoryId) {
+            options.memory = this.autoMemory;
+        }
+
+        const result = await generateWithTokenUsage(
+            message,
+            { ...options, chatId },
+            this.clientOptions,
+        );
+
+        if (this.autoMemory) {
+            this.autoMemory.add(`Human: ${message}`);
+            this.autoMemory.add(`AI: ${result.result}`);
+        }
 
         return result;
     }
 
-    async sendMessage(message: string): Promise<string> {
-        const result = await this.sendMessageWithTokenUsage(message);
+    async sendMessage(message: string, options: GenerationOptions = {}): Promise<string> {
+        const result = await this.sendMessageWithTokenUsage(message, options);
 
         return result.result;
     }

@@ -105,8 +105,8 @@ class Memory {
     clientOptions: ClientOptions;
 
     constructor(clientOptions: Partial<ClientOptions> = {}) {
-        this.memoryId = createMemory().then((res) => res.id);
         this.clientOptions = defaultOptions(clientOptions);
+        this.memoryId = createMemory(this.clientOptions).then((res) => res.id);
     }
 
     async add(input: string, { maxToken = 0 }: MemoryAddOptions = {}): Promise<void> {
