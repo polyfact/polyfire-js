@@ -1,21 +1,18 @@
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 import FormData from "form-data";
 import { Readable } from "stream";
 import * as t from "polyfact-io-ts";
-
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com" } = process.env;
-const { POLYFACT_TOKEN = "" } = process.env;
+import { ClientOptions, defaultOptions } from "./clientOpts";
 
 const ResultType = t.type({
     text: t.string,
 });
 
-export async function transcribe(file: Buffer | Readable): Promise<string> {
-    if (!POLYFACT_TOKEN) {
-        throw new Error(
-            "Please put your polyfact token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfact.com",
-        );
-    }
+export async function transcribe(
+    file: Buffer | Readable,
+    clientOptions: Partial<ClientOptions> = {},
+): Promise<string> {
+    const { token, endpoint } = defaultOptions(clientOptions);
 
     const formData = new FormData();
     formData.append("file", file, {
@@ -23,17 +20,22 @@ export async function transcribe(file: Buffer | Readable): Promise<string> {
         filename: "file.mp3",
     });
 
-    const res = await fetch(`${POLYFACT_ENDPOINT}/transcribe`, {
-        method: "POST",
+    const res = await axios.post(`${endpoint}/transcribe`, formData, {
         headers: {
-            "X-Access-Token": POLYFACT_TOKEN,
+            "X-Access-Token": token,
         },
-        body: formData as any,
-    }).then((res: any) => res.json());
+    });
 
-    if (ResultType.is(res)) {
-        return res.text;
+    const { data } = res;
+
+    if (ResultType.is(data)) {
+        return data.text;
     }
 
-    throw new Error(`Unexpected response from polyfact: ${JSON.stringify(res, null, 2)}`);
+    throw new Error(`Unexpected response from polyfact: ${JSON.stringify(data, null, 2)}`);
+}
+export default function client(clientOptions: Partial<ClientOptions> = {}) {
+    return {
+        transcribe: (file: Buffer | Readable) => transcribe(file, clientOptions),
+    };
 }

@@ -1,34 +1,50 @@
-import fetch from "isomorphic-fetch";
-import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
+import axios from "axios";
+import { ClientOptions, defaultOptions } from "./clientOpts";
 
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
+export async function set(
+    key: string,
+    value: string,
+    clientOptions: Partial<ClientOptions> = {},
+): Promise<void> {
+    const { token, endpoint } = defaultOptions(clientOptions);
 
-export async function set(key: string, value: string): Promise<void> {
-    ensurePolyfactToken();
-
-    await fetch(`${POLYFACT_ENDPOINT}/kv`, {
-        method: "PUT",
-        headers: {
-            "X-Access-Token": POLYFACT_TOKEN,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+    await axios.put(
+        `${endpoint}/kv`,
+        {
             key,
             value,
-        }),
-    });
+        },
+        {
+            headers: {
+                "X-Access-Token": token,
+                "Content-Type": "application/json",
+            },
+        },
+    );
 }
 
-export async function get(key: string): Promise<string> {
-    ensurePolyfactToken();
+export async function get(
+    key: string,
+    clientOptions: Partial<ClientOptions> = {},
+): Promise<string> {
+    const { token, endpoint } = defaultOptions(clientOptions);
 
-    const response = await fetch(`${POLYFACT_ENDPOINT}/kv?key=${key}`, {
-        method: "GET",
-        headers: {
-            "X-Access-Token": POLYFACT_TOKEN,
-            "Content-Type": "application/json",
-        },
-    }).then((res: any) => res.text());
+    const response = await axios
+        .get(`${endpoint}/kv?key=${key}`, {
+            method: "GET",
+            headers: {
+                "X-Access-Token": token,
+                "Content-Type": "application/json",
+            },
+        })
+        .then((res: any) => res.text());
 
     return response;
+}
+
+export default function client(clientOptions: Partial<ClientOptions> = {}) {
+    return {
+        get: (key: string) => get(key, clientOptions),
+        set: (key: string, value: string) => set(key, value, clientOptions),
+    };
 }

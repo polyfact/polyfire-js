@@ -1,9 +1,7 @@
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 import * as t from "polyfact-io-ts";
-import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
+import { ClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
-
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
 
 class GenerationError extends Error {
     errorType?: string;
@@ -37,13 +35,15 @@ export type GenerationOptions = {
     chatId?: string;
     memory?: Memory;
     memoryId?: string;
+    stop?: string[];
 };
 
-async function generateWithTokenUsage(
+export async function generateWithTokenUsage(
     task: string,
     options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
 ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
-    ensurePolyfactToken();
+    const { token, endpoint } = defaultOptions(clientOptions);
     const requestBody: {
         task: string;
         // eslint-disable-next-line camelcase
@@ -51,33 +51,53 @@ async function generateWithTokenUsage(
         // eslint-disable-next-line camelcase
         chat_id?: string;
         provider: GenerationOptions["provider"];
+        stop: GenerationOptions["stop"];
     } = {
         task,
         provider: options?.provider || "openai",
         memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
         chat_id: options?.chatId || "",
+        stop: options?.stop || [],
     };
 
-    const res = await fetch(`${POLYFACT_ENDPOINT}/generate`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Access-Token": POLYFACT_TOKEN,
-        },
-        body: JSON.stringify(requestBody),
-    }).then((res: any) => res.json());
+    try {
+        const res = await axios.post(`${endpoint}/generate`, requestBody, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Access-Token": token,
+            },
+        });
 
-    if (!ResultType.is(res)) {
-        throw new GenerationError();
+        const responseData = res.data;
+
+        if (!ResultType.is(responseData)) {
+            throw new GenerationError();
+        }
+
+        return { result: responseData.result, tokenUsage: responseData.token_usage };
+    } catch (e) {
+        if (e instanceof Error) {
+            throw new GenerationError(e.name);
+        }
+        throw e;
     }
-
-    return { result: res.result, tokenUsage: res.token_usage };
 }
 
-async function generate(task: string, options: GenerationOptions = {}): Promise<string> {
-    const res = await generateWithTokenUsage(task, options);
+export async function generate(
+    task: string,
+    options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
+): Promise<string> {
+    const res = await generateWithTokenUsage(task, options, clientOptions);
 
     return res.result;
 }
 
-export { generate, generateWithTokenUsage };
+export default function client(clientOptions: Partial<ClientOptions> = {}) {
+    return {
+        generateWithTokenUsage: (task: string, options: GenerationOptions = {}) =>
+            generateWithTokenUsage(task, options, clientOptions),
+        generate: (task: string, options: GenerationOptions = {}) =>
+            generate(task, options, clientOptions),
+    };
+}

@@ -1,14 +1,11 @@
-import fetch from "isomorphic-fetch";
-import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
-
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
+import axios from "axios";
+import { ClientOptions, defaultOptions } from "./clientOpts";
 
 class MemoryError extends Error {
     errorType?: string;
 
     constructor(errorType?: string) {
         // TODO: proper error handling once the api is up and running
-
         switch (errorType) {
             default:
                 super("An unknown error occured");
@@ -18,21 +15,25 @@ class MemoryError extends Error {
     }
 }
 
-async function createMemory(): Promise<{ id: string }> {
-    ensurePolyfactToken();
+async function createMemory(clientOptions: Partial<ClientOptions> = {}): Promise<{ id: string }> {
+    const { token, endpoint } = defaultOptions(clientOptions);
 
     try {
-        const res = await fetch(`${POLYFACT_ENDPOINT}/memory`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Access-Token": POLYFACT_TOKEN,
+        const res = await axios.post(
+            `${endpoint}/memory`,
+            {},
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Access-Token": token,
+                },
             },
-        }).then((res: any) => res.json());
+        );
 
-        return res;
+        return res.data;
     } catch (e) {
         if (e instanceof Error) {
+            console.log("\n\n\n", e, "\n\n\n");
             throw new MemoryError(e.name);
         }
         throw e;
@@ -43,24 +44,27 @@ async function updateMemory(
     id: string,
     input: string,
     maxToken = 0,
+    clientOptions: Partial<ClientOptions> = {},
 ): Promise<{ success: boolean }> {
-    ensurePolyfactToken();
+    const { token, endpoint } = defaultOptions(clientOptions);
 
     try {
-        const res = await fetch(`${POLYFACT_ENDPOINT}/memory`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Access-Token": POLYFACT_TOKEN,
-            },
-            body: JSON.stringify({
+        const res = await axios.put(
+            `${endpoint}/memory`,
+            {
                 id,
                 input,
                 max_token: maxToken,
-            }),
-        }).then((res: any) => res.json());
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Access-Token": token,
+                },
+            },
+        );
 
-        return res;
+        return res.data;
     } catch (e) {
         if (e instanceof Error) {
             throw new MemoryError(e.name);
@@ -69,19 +73,20 @@ async function updateMemory(
     }
 }
 
-async function getAllMemories(): Promise<{ ids: string[] }> {
-    ensurePolyfactToken();
+async function getAllMemories(
+    clientOptions: Partial<ClientOptions> = {},
+): Promise<{ ids: string[] }> {
+    const { token, endpoint } = defaultOptions(clientOptions);
 
     try {
-        const res = await fetch(`${POLYFACT_ENDPOINT}/memories`, {
-            method: "GET",
+        const res = await axios.get(`${endpoint}/memories`, {
             headers: {
                 "Content-Type": "application/json",
-                "X-Access-Token": POLYFACT_TOKEN,
+                "X-Access-Token": token,
             },
-        }).then((res: any) => res.json());
+        });
 
-        return res;
+        return res.data;
     } catch (e) {
         if (e instanceof Error) {
             throw new MemoryError(e.name);
@@ -97,14 +102,27 @@ type MemoryAddOptions = {
 class Memory {
     memoryId: Promise<string>;
 
-    constructor() {
-        this.memoryId = createMemory().then((res) => res.id);
+    clientOptions: ClientOptions;
+
+    constructor(clientOptions: Partial<ClientOptions> = {}) {
+        this.clientOptions = defaultOptions(clientOptions);
+        this.memoryId = createMemory(this.clientOptions).then((res) => res.id);
     }
 
     async add(input: string, { maxToken = 0 }: MemoryAddOptions = {}): Promise<void> {
         const id = await this.memoryId;
-        await updateMemory(id, input, maxToken);
+        await updateMemory(id, input, maxToken, this.clientOptions);
     }
 }
 
 export { createMemory, updateMemory, getAllMemories, Memory };
+
+export default function client(clientOptions: Partial<ClientOptions> = {}) {
+    return {
+        createMemory: () => createMemory(clientOptions),
+        updateMemory: (id: string, input: string, maxToken?: number) =>
+            updateMemory(id, input, maxToken, clientOptions),
+        getAllMemories: () => getAllMemories(clientOptions),
+        Memory: () => new Memory(clientOptions),
+    };
+}

@@ -1,14 +1,20 @@
 import * as t from "polyfact-io-ts";
-import { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
-import {
+import generateClient, { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
+import generateWithTypeClient, {
     generateWithType,
     generateWithTypeWithTokenUsage,
 } from "./probabilistic_helpers/generateWithType";
-import { transcribe } from "./transcribe";
-import { splitString } from "./split";
-import { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
-import { Chat } from "./chats";
-import * as kv from "./kv";
+import transcribeClient, { transcribe } from "./transcribe";
+import chatClient, { Chat } from "./chats";
+import memoryClient, { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
+import { splitString, tokenCount } from "./split";
+import { ClientOptions } from "./clientOpts";
+import kvClient, { get as KVGet, set as KVSet } from "./kv";
+
+const kv = {
+    get: KVGet,
+    set: KVSet,
+};
 
 export {
     generate,
@@ -16,6 +22,7 @@ export {
     generateWithType,
     generateWithTypeWithTokenUsage,
     splitString,
+    tokenCount,
     t,
     GenerationOptions,
     transcribe,
@@ -26,3 +33,14 @@ export {
     Memory,
     kv,
 };
+
+export default function client(clientOptions: Partial<ClientOptions>) {
+    return {
+        ...generateClient(clientOptions),
+        ...generateWithTypeClient(clientOptions),
+        ...transcribeClient(clientOptions),
+        ...memoryClient(clientOptions),
+        ...chatClient(clientOptions),
+        kv: kvClient(clientOptions),
+    };
+}

@@ -1,26 +1,8 @@
-import fetch from "isomorphic-fetch";
+import axios from "axios";
 import * as t from "polyfact-io-ts";
-import { ensurePolyfactToken } from "../helpers/ensurePolyfactToken";
-import { generateWithTokenUsage } from "../generate";
-
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
-
-async function createChat(systemPrompt?: string): Promise<string> {
-    ensurePolyfactToken();
-
-    const response = await fetch(`${POLYFACT_ENDPOINT}/chats`, {
-        method: "POST",
-        headers: {
-            "X-Access-Token": POLYFACT_TOKEN,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            system_prompt: systemPrompt,
-        }),
-    }).then((res: any) => res.json());
-
-    return response.id;
-}
+import { generateWithTokenUsage, GenerationOptions } from "../generate";
+import { ClientOptions, defaultOptions } from "../clientOpts";
+import { Memory } from "../memory";
 
 const Message = t.type({
     id: t.string,
@@ -29,43 +11,100 @@ const Message = t.type({
     content: t.string,
     created_at: t.string,
 });
+export async function createChat(
+    systemPrompt?: string,
+    options: Partial<ClientOptions> = {},
+): Promise<string> {
+    const { token, endpoint } = defaultOptions(options);
+
+    const response = await axios.post(
+        `${endpoint}/chats`,
+        { system_prompt: systemPrompt },
+        {
+            headers: {
+                "X-Access-Token": token,
+            },
+        },
+    );
+
+    return response?.data?.id;
+}
 
 export class Chat {
     chatId: Promise<string>;
 
     provider: "openai" | "cohere";
 
-    constructor(options: { provider?: "openai" | "cohere"; systemPrompt?: string } = {}) {
-        this.chatId = createChat(options.systemPrompt);
+    clientOptions: ClientOptions;
+
+    autoMemory?: Memory;
+
+    constructor(
+        options: {
+            provider?: "openai" | "cohere";
+            systemPrompt?: string;
+            autoMemory?: boolean;
+        } = {},
+        clientOptions: Partial<ClientOptions> = {},
+    ) {
+        this.clientOptions = defaultOptions(clientOptions);
+        this.chatId = createChat(options.systemPrompt, this.clientOptions);
         this.provider = options.provider || "openai";
+        if (options.autoMemory) {
+            this.autoMemory = new Memory(this.clientOptions);
+        }
     }
 
     async sendMessageWithTokenUsage(
         message: string,
+        options: GenerationOptions = {},
     ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
         const chatId = await this.chatId;
 
-        const result = await generateWithTokenUsage(message, { chatId });
+        if (this.autoMemory && !options.memory && !options.memoryId) {
+            options.memory = this.autoMemory;
+        }
+
+        const result = await generateWithTokenUsage(
+            message,
+            { ...options, chatId },
+            this.clientOptions,
+        );
+
+        if (this.autoMemory) {
+            this.autoMemory.add(`Human: ${message}`);
+            this.autoMemory.add(`AI: ${result.result}`);
+        }
 
         return result;
     }
 
-    async sendMessage(message: string): Promise<string> {
-        const result = await this.sendMessageWithTokenUsage(message);
+    async sendMessage(message: string, options: GenerationOptions = {}): Promise<string> {
+        const result = await this.sendMessageWithTokenUsage(message, options);
 
         return result.result;
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {
-        const response = await fetch(`${POLYFACT_ENDPOINT}/chat/${await this.chatId}/history`, {
-            method: "GET",
-            headers: {
-                "X-Access-Token": POLYFACT_TOKEN,
+        const response = await axios.get(
+            `${this.clientOptions.endpoint}/chat/${await this.chatId}/history`,
+            {
+                headers: {
+                    "X-Access-Token": this.clientOptions.token,
+                },
             },
-        }).then((res: any) => res.json());
+        );
 
-        return response.filter((message: any): message is t.TypeOf<typeof Message> =>
+        return response?.data?.filter((message: any): message is t.TypeOf<typeof Message> =>
             Message.is(message),
         );
     }
+}
+
+export default function client(clientOptions: Partial<ClientOptions> = {}) {
+    return {
+        createChat: (systemPrompt?: string) => createChat(systemPrompt, clientOptions),
+        Chat: (options?: { provider?: "openai" | "cohere"; systemPrompt?: string }) =>
+            new Chat(options, clientOptions),
+    };
 }
