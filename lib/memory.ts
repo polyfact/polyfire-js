@@ -1,7 +1,5 @@
 import axios from "axios";
-import { ensurePolyfactToken } from "./helpers/ensurePolyfactToken";
-
-const { POLYFACT_ENDPOINT = "https://api2.polyfact.com", POLYFACT_TOKEN = "" } = process.env;
+import { ClientOptions, defaultOptions } from "./clientOpts";
 
 class MemoryError extends Error {
     errorType?: string;
@@ -17,17 +15,17 @@ class MemoryError extends Error {
     }
 }
 
-async function createMemory(): Promise<{ id: string }> {
-    ensurePolyfactToken();
+async function createMemory(clientOptions: Partial<ClientOptions> = {}): Promise<{ id: string }> {
+    const { token, endpoint } = defaultOptions(clientOptions);
 
     try {
         const res = await axios.post(
-            `${POLYFACT_ENDPOINT}/memory`,
+            `${endpoint}/memory`,
             {},
             {
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Access-Token": POLYFACT_TOKEN,
+                    "X-Access-Token": token,
                 },
             },
         );
@@ -46,12 +44,13 @@ async function updateMemory(
     id: string,
     input: string,
     maxToken = 0,
+    clientOptions: Partial<ClientOptions> = {},
 ): Promise<{ success: boolean }> {
-    ensurePolyfactToken();
+    const { token, endpoint } = defaultOptions(clientOptions);
 
     try {
         const res = await axios.put(
-            `${POLYFACT_ENDPOINT}/memory`,
+            `${endpoint}/memory`,
             {
                 id,
                 input,
@@ -60,7 +59,7 @@ async function updateMemory(
             {
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Access-Token": POLYFACT_TOKEN,
+                    "X-Access-Token": token,
                 },
             },
         );
@@ -74,14 +73,16 @@ async function updateMemory(
     }
 }
 
-async function getAllMemories(): Promise<{ ids: string[] }> {
-    ensurePolyfactToken();
+async function getAllMemories(
+    clientOptions: Partial<ClientOptions> = {},
+): Promise<{ ids: string[] }> {
+    const { token, endpoint } = defaultOptions(clientOptions);
 
     try {
-        const res = await axios.get(`${POLYFACT_ENDPOINT}/memories`, {
+        const res = await axios.get(`${endpoint}/memories`, {
             headers: {
                 "Content-Type": "application/json",
-                "X-Access-Token": POLYFACT_TOKEN,
+                "X-Access-Token": token,
             },
         });
 
@@ -101,14 +102,27 @@ type MemoryAddOptions = {
 class Memory {
     memoryId: Promise<string>;
 
-    constructor() {
+    clientOptions: ClientOptions;
+
+    constructor(clientOptions: Partial<ClientOptions> = {}) {
         this.memoryId = createMemory().then((res) => res.id);
+        this.clientOptions = defaultOptions(clientOptions);
     }
 
     async add(input: string, { maxToken = 0 }: MemoryAddOptions = {}): Promise<void> {
         const id = await this.memoryId;
-        await updateMemory(id, input, maxToken);
+        await updateMemory(id, input, maxToken, this.clientOptions);
     }
 }
 
 export { createMemory, updateMemory, getAllMemories, Memory };
+
+export default function client(clientOptions: Partial<ClientOptions> = {}) {
+    return {
+        createMemory: () => createMemory(clientOptions),
+        updateMemory: (id: string, input: string, maxToken?: number) =>
+            updateMemory(id, input, maxToken, clientOptions),
+        getAllMemories: () => getAllMemories(clientOptions),
+        Memory: () => new Memory(clientOptions),
+    };
+}
