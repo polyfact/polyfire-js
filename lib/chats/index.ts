@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as t from "polyfact-io-ts";
-import { generateWithTokenUsage, GenerationOptions } from "../generate";
+import { Readable, PassThrough } from "stream";
+import { generateStream, generateWithTokenUsage, GenerationOptions } from "../generate";
 import { ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
 
@@ -83,6 +84,39 @@ export class Chat {
         const result = await this.sendMessageWithTokenUsage(message, options);
 
         return result.result;
+    }
+
+    sendMessageStream(message: string, options: GenerationOptions = {}): Readable {
+        const resultStream = new PassThrough();
+
+        (async () => {
+            const chatId = await this.chatId;
+
+            if (this.autoMemory && !options.memory && !options.memoryId) {
+                options.memory = this.autoMemory;
+            }
+
+            const result = generateStream(message, { ...options, chatId }, this.clientOptions);
+
+            result.pipe(resultStream);
+
+            const bufs: Buffer[] = [];
+            const totalResult = await new Promise((res, _rej) => {
+                result.on("data", (d) => {
+                    bufs.push(d);
+                });
+                result.on("end", () => {
+                    res(Buffer.concat(bufs).toString("utf8"));
+                });
+            });
+
+            if (this.autoMemory) {
+                this.autoMemory.add(`Human: ${message}`);
+                this.autoMemory.add(`AI: ${totalResult}`);
+            }
+        })();
+
+        return resultStream;
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {

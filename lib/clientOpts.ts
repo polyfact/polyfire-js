@@ -11,7 +11,7 @@ export function defaultOptions(opts: Partial<ClientOptions>): ClientOptions {
     }
 
     return {
-        endpoint: "https://api2.polyfact.com",
+        endpoint: process?.env.POLYFACT_ENDPOINT || "https://api2.polyfact.com",
         token: process?.env?.POLYFACT_TOKEN || "",
         ...opts,
     };

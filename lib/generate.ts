@@ -1,5 +1,7 @@
 import axios from "axios";
 import * as t from "polyfact-io-ts";
+import { Readable } from "stream";
+import WebSocket from "isomorphic-ws";
 import { ClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
 
@@ -93,11 +95,58 @@ export async function generate(
     return res.result;
 }
 
+export function generateStream(
+    task: string,
+    options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
+): Readable {
+    const resultStream = new Readable({
+        read() {},
+    });
+    (async () => {
+        const requestBody: {
+            task: string;
+            // eslint-disable-next-line camelcase
+            memory_id?: string;
+            // eslint-disable-next-line camelcase
+            chat_id?: string;
+            provider: GenerationOptions["provider"];
+            stop: GenerationOptions["stop"];
+        } = {
+            task,
+            provider: options?.provider || "openai",
+            memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
+            chat_id: options?.chatId || "",
+            stop: options?.stop || [],
+        };
+
+        const { token, endpoint } = defaultOptions(clientOptions);
+        const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream`, {
+            headers: {
+                "X-Access-Token": token,
+            },
+        });
+
+        ws.onopen = () => ws.send(JSON.stringify(requestBody));
+
+        ws.onmessage = (data: any) => {
+            if (data.data === "") {
+                resultStream.push(null);
+            } else {
+                resultStream.push(data.data);
+            }
+        };
+    })();
+    return resultStream;
+}
+
 export default function client(clientOptions: Partial<ClientOptions> = {}) {
     return {
         generateWithTokenUsage: (task: string, options: GenerationOptions = {}) =>
             generateWithTokenUsage(task, options, clientOptions),
         generate: (task: string, options: GenerationOptions = {}) =>
             generate(task, options, clientOptions),
+        generateStream: (task: string, options: GenerationOptions = {}) =>
+            generateStream(task, options, clientOptions),
     };
 }
