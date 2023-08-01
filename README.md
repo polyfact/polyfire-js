@@ -8,7 +8,7 @@
 
 <p align="center">⚡ A lightweight and simple way to create tools using AI 🪶</p>
 
-PolyFact's goal is to make it possible to code every AI tool/Chatbot you could want in only a couple of lines of code without the need for complex abstractions and to have to deploy anything.
+PolyFact's goal is to make it possible to code every AI tool/Chatbot you could want in only a couple of lines of code without the need for complex abstractions and having to deploy anything.
 
 <p align="center"><img src="demo.gif" /></p>
 
@@ -16,7 +16,7 @@ PolyFact's goal is to make it possible to code every AI tool/Chatbot you could w
 - **[Generate](https://github.com/polyfact/polyfact-node/wiki/generate)**: Answer to simple requests as text
 - **[Chat](https://github.com/polyfact/polyfact-node/wiki/chat)**: Easily create chatbots
 - **[Transcribe](https://github.com/polyfact/polyfact-node/wiki/transcribe)**: Transcribe audio files to text
-- **[Memory](https://github.com/polyfact/polyfact-node/wiki/memory)**: Easily create a long term memory and simplify use of large amount of information
+- **[Memory](https://github.com/polyfact/polyfact-node/wiki/memory)**: Easily create a long-term memory and simplify the use of large amounts of information
 - **[Type checked generation](https://github.com/polyfact/polyfact-node/wiki/generateWithType)**: Answer simple requests with a type you defined *(🎲 probabilistic function)*
 
 ## 📚 Documentation
@@ -31,7 +31,7 @@ To install polyfact into your repository:
 npm install polyfact
 ```
 
-Get your your polyfact token by signing up with github here: https://app.polyfact.com<br/>
+Get your polyfact token by signing up with GitHub here: https://app.polyfact.com<br/>
 Add your PolyFact Token in the `POLYFACT_TOKEN` environment variable:
 
 ```bash
@@ -40,7 +40,7 @@ export POLYFACT_TOKEN= # The token displayed on https://app.polyfact.com
 
 ### 💡 Examples
 
-There's more examples and tutorials in the [Documentation](https://github.com/polyfact/polyfact-node/wiki) but here's a simple chatbot to get you started:
+There are more examples and tutorials in the [Documentation](https://github.com/polyfact/polyfact-node/wiki) but here's a simple chatbot to get you started:
 
 ```js
 import * as readline from "node:readline/promises";
@@ -64,8 +64,8 @@ chatREPL()
 
 ## 📫 Contact us
 
-We are striving for feedbacks and want to understand everyone's needs, you can hang out with us on [Discord](https://discord.gg/8mkBfDXNTM) !
+We strive for feedback and want to understand everyone's needs, and you can hang out with us on [Discord](https://discord.gg/8mkBfDXNTM)!
 
 ## 🧑‍💻 Contributing
 
-PolyFact is opensource ! You can contribute to this package or to the [API](https://github.com/polyfact/polyfact-api-go) by opening an issue or a PR !
+PolyFact is open-source! You can contribute to this package or the [API](https://github.com/polyfact/polyfact-api-go) by opening an issue or a PR!
