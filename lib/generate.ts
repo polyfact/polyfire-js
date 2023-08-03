@@ -4,7 +4,6 @@ import { Readable } from "stream";
 import WebSocket from "isomorphic-ws";
 import { ClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
-import { option } from "fp-ts";
 
 class GenerationError extends Error {
     errorType?: string;
@@ -98,12 +97,8 @@ export async function generate(
     task: string,
     options: GenerationOptions = {},
     clientOptions: Partial<ClientOptions> = {},
-): Promise<string | t.TypeOf<typeof ResultType>> {
+): Promise<string> {
     const res = await generateWithTokenUsage(task, options, clientOptions);
-
-    if (options.infos) {
-        return res
-    
 
     return res.result;
 }

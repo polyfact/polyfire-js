@@ -1,5 +1,11 @@
 import * as t from "polyfact-io-ts";
-import generateClient, { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
+import generateClient, {
+    generateWithInfo,
+    generateStreamWithInfos,
+    generate,
+    generateWithTokenUsage,
+    GenerationOptions,
+} from "./generate";
 import generateWithTypeClient, {
     generateWithType,
     generateWithTypeWithTokenUsage,
@@ -21,6 +27,8 @@ export {
     generateWithTokenUsage,
     generateWithType,
     generateWithTypeWithTokenUsage,
+    generateWithInfo,
+    generateStreamWithInfos,
     splitString,
     tokenCount,
     t,
