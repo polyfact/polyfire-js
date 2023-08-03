@@ -33,7 +33,6 @@ async function createMemory(clientOptions: Partial<ClientOptions> = {}): Promise
         return res.data;
     } catch (e) {
         if (e instanceof Error) {
-            console.log("\n\n\n", e, "\n\n\n");
             throw new MemoryError(e.name);
         }
         throw e;

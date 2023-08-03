@@ -107,7 +107,7 @@ export class Chat {
 
             const result = generateStreamWithInfos(
                 message,
-                { ...options, chatId, infos: true },
+                { ...options, chatId },
                 this.clientOptions,
             );
 

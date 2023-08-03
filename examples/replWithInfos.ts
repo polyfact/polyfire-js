@@ -10,7 +10,7 @@ async function main() {
     while (true) {
         const userInput = await rl.question("> ");
 
-        const chatStream = chat.sendMessageStreamWithInfos(userInput, { infos: true });
+        const chatStream = chat.sendMessageStreamWithInfos(userInput);
 
         chatStream.pipe(output);
 

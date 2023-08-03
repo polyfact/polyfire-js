@@ -1,7 +1,7 @@
 import { Chat } from "../lib/index";
 
 async function main() {
-    const chat = new Chat({ provider: "openai", autoMemory: true });
+    const chat = new Chat({ provider: "cohere" });
 
     console.log(await chat.chatId);
 

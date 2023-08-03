@@ -24,14 +24,19 @@ class GenerationError extends Error {
     }
 }
 
-const ResultType = t.type({
+const PartialResultType = t.partial({
+    ressources: t.array(t.type({ id: t.string, content: t.string, similarity: t.number })),
+});
+
+const Required = t.type({
     result: t.string,
     tokenUsage: t.type({
         input: t.number,
         output: t.number,
     }),
-    ressources: t.array(t.unknown),
 });
+
+const ResultType = t.intersection([Required, PartialResultType]);
 
 export type GenerationOptions = {
     provider?: "openai" | "cohere";
@@ -39,14 +44,17 @@ export type GenerationOptions = {
     memory?: Memory;
     memoryId?: string;
     stop?: string[];
-    infos?: boolean;
 };
+
+export type GenerationOptionsWithInfos = GenerationOptions & { infos?: boolean };
+
+export type ResponseData = t.TypeOf<typeof ResultType>;
 
 export async function generateWithTokenUsage(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationOptionsWithInfos = {},
     clientOptions: Partial<ClientOptions> = {},
-): Promise<{ result: string; tokenUsage: { input: number; output: number }; ressources: any[] }> {
+): Promise<ResponseData> {
     const { token, endpoint } = defaultOptions(clientOptions);
     const requestBody: {
         task: string;
@@ -56,14 +64,14 @@ export async function generateWithTokenUsage(
         chat_id?: string;
         provider: GenerationOptions["provider"];
         stop: GenerationOptions["stop"];
-        infos: GenerationOptions["infos"];
+        infos: boolean;
     } = {
         task,
         provider: options?.provider || "openai",
         memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
         chat_id: options?.chatId || "",
         stop: options?.stop || [],
-        infos: options?.infos,
+        infos: options?.infos || false,
     };
 
     try {
@@ -74,10 +82,10 @@ export async function generateWithTokenUsage(
             },
         });
 
-        const responseData = {
+        const responseData: ResponseData = {
             result: res.data.result,
-            tokenUsage: res.data.token_usage,
-            ressources: res.data.ressources,
+            tokenUsage: res.data?.token_usage,
+            ressources: res.data?.ressources,
         };
 
         if (!ResultType.is(responseData)) {
@@ -105,18 +113,20 @@ export async function generate(
 
 export async function generateWithInfo(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationOptionsWithInfos = {},
     clientOptions: Partial<ClientOptions> = {},
 ): Promise<t.TypeOf<typeof ResultType>> {
+    options.infos = true;
     const res = await generateWithTokenUsage(task, options, clientOptions);
 
     return res;
 }
 
-export function generateStreamWithInfos(
+function stream(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationOptionsWithInfos = {},
     clientOptions: Partial<ClientOptions> = {},
+    onMessage: (data: any, resultStream: Readable) => void,
 ): Readable {
     const resultStream = new Readable({
         read() {},
@@ -137,7 +147,7 @@ export function generateStreamWithInfos(
             memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
             chat_id: options?.chatId || "",
             stop: options?.stop || [],
-            infos: options?.infos,
+            infos: options?.infos || false,
         };
 
         const { token, endpoint } = defaultOptions(clientOptions);
@@ -148,14 +158,26 @@ export function generateStreamWithInfos(
         });
 
         ws.onopen = () => ws.send(JSON.stringify(requestBody));
+        ws.onmessage = (data: any) => onMessage(data, resultStream);
+    })();
+    return resultStream;
+}
 
-        ws.onmessage = (data: any) => {
+export function generateStreamWithInfos(
+    task: string,
+    options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
+): Readable {
+    return stream(
+        task,
+        { ...options, infos: true },
+        clientOptions,
+        (data: any, resultStream: Readable) => {
             if (data.data === "") {
                 resultStream.push(null);
             } else if (data.data.startsWith("[INFOS]:")) {
                 try {
                     const potentialRessources = JSON.parse(data.data.replace("[INFOS]:", ""));
-
                     resultStream.emit("infos", potentialRessources);
                 } catch (e) {
                     resultStream.push("");
@@ -163,54 +185,22 @@ export function generateStreamWithInfos(
             } else {
                 resultStream.push(data.data);
             }
-        };
-    })();
-    return resultStream;
+        },
+    );
 }
 
 export function generateStream(
     task: string,
-    options: Omit<GenerationOptions, "infos"> = {},
+    options: GenerationOptions = {},
     clientOptions: Partial<ClientOptions> = {},
 ): Readable {
-    const resultStream = new Readable({
-        read() {},
+    return stream(task, options, clientOptions, (data: any, resultStream: Readable) => {
+        if (data.data === "") {
+            resultStream.push(null);
+        } else {
+            resultStream.push(data.data);
+        }
     });
-    (async () => {
-        const requestBody: {
-            task: string;
-            // eslint-disable-next-line camelcase
-            memory_id?: string;
-            // eslint-disable-next-line camelcase
-            chat_id?: string;
-            provider: GenerationOptions["provider"];
-            stop: GenerationOptions["stop"];
-        } = {
-            task,
-            provider: options?.provider || "openai",
-            memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
-            chat_id: options?.chatId || "",
-            stop: options?.stop || [],
-        };
-
-        const { token, endpoint } = defaultOptions(clientOptions);
-        const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream`, {
-            headers: {
-                "X-Access-Token": token,
-            },
-        });
-
-        ws.onopen = () => ws.send(JSON.stringify(requestBody));
-
-        ws.onmessage = (data: any) => {
-            if (data.data === "") {
-                resultStream.push(null);
-            } else {
-                resultStream.push(data.data);
-            }
-        };
-    })();
-    return resultStream;
 }
 
 export default function client(clientOptions: Partial<ClientOptions> = {}) {
