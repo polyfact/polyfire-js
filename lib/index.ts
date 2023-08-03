@@ -1,3 +1,5 @@
+import axios from "axios";
+import { createClient } from "@supabase/supabase-js";
 import * as t from "polyfact-io-ts";
 import generateClient, { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
 import generateWithTypeClient, {
@@ -8,7 +10,7 @@ import transcribeClient, { transcribe } from "./transcribe";
 import chatClient, { Chat } from "./chats";
 import memoryClient, { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
 import { splitString, tokenCount } from "./split";
-import { ClientOptions } from "./clientOpts";
+import { ClientOptions, defaultOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet } from "./kv";
 
 const kv = {
@@ -34,7 +36,9 @@ export {
     kv,
 };
 
-export default function client(clientOptions: Partial<ClientOptions>) {
+function client(co: Partial<ClientOptions>) {
+    const clientOptions = defaultOptions(co);
+
     return {
         ...generateClient(clientOptions),
         ...generateWithTypeClient(clientOptions),
@@ -44,3 +48,99 @@ export default function client(clientOptions: Partial<ClientOptions>) {
         kv: kvClient(clientOptions),
     };
 }
+
+const supabaseDefaultClient = {
+    supabaseUrl: "https://hqyxaayiizqwlknddokk.supabase.co",
+    supabaseKey:
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxeXhhYXlpaXpxd2xrbmRkb2trIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODk4NjIyODksImV4cCI6MjAwNTQzODI4OX0.Ae1eJU6C3e1FO5X7ES1eStnbTM87IljnuuujZ83wwzM",
+};
+
+export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof client>> {
+    private buildQueue: (() => Promise<void>)[] = [];
+
+    private clientOptions: Partial<ClientOptions> = {
+        endpoint: process?.env.POLYFACT_ENDPOINT || "https://api2.polyfact.com",
+    };
+
+    private authToken: Promise<string>;
+
+    private authTokenResolve: (authToken: string) => void;
+
+    private isAuthTokenSetSync: boolean;
+
+    private supabaseClient: ReturnType<typeof createClient>;
+
+    constructor(
+        supabaseClient: { supabaseUrl: string; supabaseKey: string } = supabaseDefaultClient,
+    ) {
+        let resolve: (authToken: string) => void;
+        this.authToken = new Promise<string>((res) => {
+            resolve = res;
+        });
+        this.authTokenResolve = resolve!;
+        this.isAuthTokenSetSync = false;
+        this.supabaseClient = createClient(supabaseClient.supabaseUrl, supabaseClient.supabaseKey, {
+            auth: { persistSession: false },
+        });
+    }
+
+    async then<T1 = never, T2 = never>(
+        res?: null | ((c: ReturnType<typeof client>) => T1 | Promise<T1>),
+        _rej?: null | ((e: Error) => T2 | Promise<T2>),
+    ): Promise<T1 | T2> {
+        if (!this.isAuthTokenSetSync && process?.env?.POLYFACT_TOKEN) {
+            this.authTokenResolve(process.env.POLYFACT_TOKEN);
+            this.isAuthTokenSetSync = true;
+        }
+
+        if (!this.isAuthTokenSetSync) {
+            throw new Error(
+                "You must use at least one signing method when initializing polyfact or set the POLYFACT_TOKEN environment variable.",
+            );
+        }
+
+        await Promise.all(this.buildQueue.map((e) => e()));
+
+        if (res) {
+            return res(client(this.clientOptions));
+        }
+
+        throw new Error("Missing function in then");
+    }
+
+    signInWithToken(token: string): PolyfactClientBuilder {
+        this.isAuthTokenSetSync = true;
+        this.authTokenResolve(token);
+        return this;
+    }
+
+    signInWithPassword(credentials: { email: string; password: string }): PolyfactClientBuilder {
+        this.isAuthTokenSetSync = true;
+        this.buildQueue.push(async () => {
+            const data = await this.supabaseClient.auth.signInWithPassword(credentials);
+
+            if (!data?.data?.session?.access_token) {
+                console.log(data);
+                throw new Error("signInWithPassword failed");
+            }
+
+            this.authTokenResolve(data.data.session.access_token);
+        });
+        return this;
+    }
+
+    project(projectId: string): PolyfactClientBuilder {
+        this.buildQueue.push(async () => {
+            if (projectId) {
+                const { data } = await axios.get(
+                    `${this.clientOptions.endpoint}/project/${projectId}/auth/token`,
+                    { headers: { Authorization: `Bearer ${await this.authToken}` } },
+                );
+                this.clientOptions.token = data;
+            }
+        });
+        return this;
+    }
+}
+
+export default new PolyfactClientBuilder();

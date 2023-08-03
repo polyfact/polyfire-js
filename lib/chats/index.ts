@@ -31,6 +31,12 @@ export async function createChat(
     return response?.data?.id;
 }
 
+type ChatOptions = {
+    provider?: "openai" | "cohere";
+    systemPrompt?: string;
+    autoMemory?: boolean;
+};
+
 export class Chat {
     chatId: Promise<string>;
 
@@ -40,14 +46,7 @@ export class Chat {
 
     autoMemory?: Memory;
 
-    constructor(
-        options: {
-            provider?: "openai" | "cohere";
-            systemPrompt?: string;
-            autoMemory?: boolean;
-        } = {},
-        clientOptions: Partial<ClientOptions> = {},
-    ) {
+    constructor(options: ChatOptions = {}, clientOptions: Partial<ClientOptions> = {}) {
         this.clientOptions = defaultOptions(clientOptions);
         this.chatId = createChat(options.systemPrompt, this.clientOptions);
         this.provider = options.provider || "openai";
@@ -138,7 +137,10 @@ export class Chat {
 export default function client(clientOptions: Partial<ClientOptions> = {}) {
     return {
         createChat: (systemPrompt?: string) => createChat(systemPrompt, clientOptions),
-        Chat: (options?: { provider?: "openai" | "cohere"; systemPrompt?: string }) =>
-            new Chat(options, clientOptions),
+        Chat: class C extends Chat {
+            constructor(options: ChatOptions = {}) {
+                super(options, clientOptions);
+            }
+        },
     };
 }
