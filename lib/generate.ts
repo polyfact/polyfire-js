@@ -4,6 +4,7 @@ import { Readable } from "stream";
 import WebSocket from "isomorphic-ws";
 import { ClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
+import { option } from "fp-ts";
 
 class GenerationError extends Error {
     errorType?: string;
@@ -26,10 +27,11 @@ class GenerationError extends Error {
 
 const ResultType = t.type({
     result: t.string,
-    token_usage: t.type({
+    tokenUsage: t.type({
         input: t.number,
         output: t.number,
     }),
+    ressources: t.array(t.unknown),
 });
 
 export type GenerationOptions = {
@@ -38,13 +40,14 @@ export type GenerationOptions = {
     memory?: Memory;
     memoryId?: string;
     stop?: string[];
+    infos?: boolean;
 };
 
 export async function generateWithTokenUsage(
     task: string,
     options: GenerationOptions = {},
     clientOptions: Partial<ClientOptions> = {},
-): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
+): Promise<{ result: string; tokenUsage: { input: number; output: number }; ressources: any[] }> {
     const { token, endpoint } = defaultOptions(clientOptions);
     const requestBody: {
         task: string;
@@ -54,12 +57,14 @@ export async function generateWithTokenUsage(
         chat_id?: string;
         provider: GenerationOptions["provider"];
         stop: GenerationOptions["stop"];
+        infos: GenerationOptions["infos"];
     } = {
         task,
         provider: options?.provider || "openai",
         memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
         chat_id: options?.chatId || "",
         stop: options?.stop || [],
+        infos: options?.infos,
     };
 
     try {
@@ -70,13 +75,17 @@ export async function generateWithTokenUsage(
             },
         });
 
-        const responseData = res.data;
+        const responseData = {
+            result: res.data.result,
+            tokenUsage: res.data.token_usage,
+            ressources: res.data.ressources,
+        };
 
         if (!ResultType.is(responseData)) {
             throw new GenerationError();
         }
 
-        return { result: responseData.result, tokenUsage: responseData.token_usage };
+        return responseData;
     } catch (e) {
         if (e instanceof Error) {
             throw new GenerationError(e.name);
@@ -89,15 +98,84 @@ export async function generate(
     task: string,
     options: GenerationOptions = {},
     clientOptions: Partial<ClientOptions> = {},
-): Promise<string> {
+): Promise<string | t.TypeOf<typeof ResultType>> {
     const res = await generateWithTokenUsage(task, options, clientOptions);
+
+    if (options.infos) {
+        return res
+    
 
     return res.result;
 }
 
-export function generateStream(
+export async function generateWithInfo(
     task: string,
     options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
+): Promise<t.TypeOf<typeof ResultType>> {
+    const res = await generateWithTokenUsage(task, options, clientOptions);
+
+    return res;
+}
+
+export function generateStreamWithInfos(
+    task: string,
+    options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
+): Readable {
+    const resultStream = new Readable({
+        read() {},
+    });
+    (async () => {
+        const requestBody: {
+            task: string;
+            // eslint-disable-next-line camelcase
+            memory_id?: string;
+            // eslint-disable-next-line camelcase
+            chat_id?: string;
+            provider: GenerationOptions["provider"];
+            stop: GenerationOptions["stop"];
+            infos?: boolean;
+        } = {
+            task,
+            provider: options?.provider || "openai",
+            memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
+            chat_id: options?.chatId || "",
+            stop: options?.stop || [],
+            infos: options?.infos,
+        };
+
+        const { token, endpoint } = defaultOptions(clientOptions);
+        const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream`, {
+            headers: {
+                "X-Access-Token": token,
+            },
+        });
+
+        ws.onopen = () => ws.send(JSON.stringify(requestBody));
+
+        ws.onmessage = (data: any) => {
+            if (data.data === "") {
+                resultStream.push(null);
+            } else if (data.data.startsWith("[INFOS]:")) {
+                try {
+                    const potentialRessources = JSON.parse(data.data.replace("[INFOS]:", ""));
+
+                    resultStream.emit("infos", potentialRessources);
+                } catch (e) {
+                    resultStream.push("");
+                }
+            } else {
+                resultStream.push(data.data);
+            }
+        };
+    })();
+    return resultStream;
+}
+
+export function generateStream(
+    task: string,
+    options: Omit<GenerationOptions, "infos"> = {},
     clientOptions: Partial<ClientOptions> = {},
 ): Readable {
     const resultStream = new Readable({

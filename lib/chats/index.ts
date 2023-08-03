@@ -1,7 +1,12 @@
 import axios from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable, PassThrough } from "stream";
-import { generateStream, generateWithTokenUsage, GenerationOptions } from "../generate";
+import {
+    generateStream,
+    generateStreamWithInfos,
+    generateWithTokenUsage,
+    GenerationOptions,
+} from "../generate";
 import { ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
 
@@ -84,6 +89,47 @@ export class Chat {
         const result = await this.sendMessageWithTokenUsage(message, options);
 
         return result.result;
+    }
+
+    sendMessageStreamWithInfos(message: string, options: GenerationOptions = {}): Readable {
+        const resultStream = new Readable({
+            read() {},
+            objectMode: true,
+        });
+        const bufs: Buffer[] = [];
+
+        (async () => {
+            const chatId = await this.chatId;
+
+            if (this.autoMemory && !options.memory && !options.memoryId) {
+                options.memory = this.autoMemory;
+            }
+
+            const result = generateStreamWithInfos(
+                message,
+                { ...options, chatId, infos: true },
+                this.clientOptions,
+            );
+
+            result.on("infos", (data) => {
+                resultStream.emit("infos", data);
+            });
+
+            result.on("data", (d) => {
+                bufs.push(d);
+                resultStream.push(d);
+            });
+            result.on("end", () => {
+                resultStream.push(null);
+                if (this.autoMemory) {
+                    const totalResult = Buffer.concat(bufs).toString("utf8");
+                    this.autoMemory.add(`Human: ${message}`);
+                    this.autoMemory.add(`AI: ${totalResult}`);
+                }
+            });
+        })();
+
+        return resultStream;
     }
 
     sendMessageStream(message: string, options: GenerationOptions = {}): Readable {
