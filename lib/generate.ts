@@ -151,11 +151,7 @@ function stream(
         };
 
         const { token, endpoint } = defaultOptions(clientOptions);
-        console.log(`${endpoint.replace("http", "ws")}/stream?token=${token}`);
-        const ws = new WebSocket(
-            `${endpoint.replace("http", "ws")}/stream?token=${token}`,
-            "stream-completion",
-        );
+        const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream?token=${token}`);
 
         ws.onopen = () => ws.send(JSON.stringify(requestBody));
         ws.onmessage = (data: any) => onMessage(data, resultStream);
