@@ -11,7 +11,7 @@ import transcribeClient, { transcribe } from "./transcribe";
 import chatClient, { Chat } from "./chats";
 import memoryClient, { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
 import { splitString, tokenCount } from "./split";
-import { ClientOptions, defaultOptions, InputClientOptions } from "./clientOpts";
+import { InputClientOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet } from "./kv";
 
 const kv = {
@@ -203,7 +203,15 @@ export default Polyfact;
 
 declare const window: any;
 
-export function usePolyfact({ provider, project }: { provider: "github"; project: string }) {
+export function usePolyfact({
+    provider,
+    project,
+    endpoint,
+}: {
+    provider: "github";
+    project: string;
+    endpoint?: string;
+}): ReturnType<typeof client> {
     if (typeof window === "undefined") {
         throw new Error("usePolyfact not usable outside of the browser environment");
     }
@@ -223,7 +231,7 @@ export function usePolyfact({ provider, project }: { provider: "github"; project
     }
 
     if (token) {
-        const p = Polyfact.endpoint("http://localhost:8080")
+        const p = Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
             .project(project)
             .signInWithToken(token)
             .exec();
@@ -231,7 +239,7 @@ export function usePolyfact({ provider, project }: { provider: "github"; project
 
         return p;
     }
-    const p = Polyfact.endpoint("http://localhost:8080")
+    const p = Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
         .project(project)
         .signInWithOAuth({ provider })
         .exec();
