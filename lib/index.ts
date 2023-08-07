@@ -48,6 +48,8 @@ function client(co: InputClientOptions) {
     };
 }
 
+type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
+
 const supabaseDefaultClient = {
     supabaseUrl: "https://hqyxaayiizqwlknddokk.supabase.co",
     supabaseKey:
@@ -166,6 +168,20 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
         return this;
     }
 
+    signInWithOAuth(
+        credentials: Awaited<
+            Parameters<ReturnType<typeof createClient>["auth"]["signInWithOAuth"]>[0]
+        >,
+    ): PolyfactClientBuilder {
+        this.isAuthTokenSetSync = true;
+        this.buildQueue.push(async () => {
+            const data = await this.supabaseClient.auth.signInWithOAuth(credentials);
+
+            console.log(data);
+        });
+        return this;
+    }
+
     project(projectId: string): PolyfactClientBuilder {
         this.buildQueue.push(async () => {
             if (projectId) {
@@ -180,4 +196,39 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
     }
 }
 
-export default new PolyfactClientBuilder();
+const Polyfact = new PolyfactClientBuilder();
+
+export default Polyfact;
+
+declare const window: any;
+
+export function usePolyfact({ provider, project }: { provider: "github"; project: string }) {
+    if (typeof window === "undefined") {
+        throw new Error("usePolyfact not usable outside of the browser environment");
+    }
+
+    const react = require("react"); // eslint-disable-line
+    const [polyfact, setPolyfact] = react.useState();
+    const token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get("access_token");
+
+    if (polyfact) {
+        return polyfact;
+    }
+
+    if (token) {
+        const p = Polyfact.endpoint("http://localhost:8080")
+            .project(project)
+            .signInWithToken(token)
+            .exec();
+        setPolyfact(p);
+
+        return p;
+    }
+    const p = Polyfact.endpoint("http://localhost:8080")
+        .project(project)
+        .signInWithOAuth({ provider })
+        .exec();
+    setPolyfact(p);
+
+    return p;
+}
