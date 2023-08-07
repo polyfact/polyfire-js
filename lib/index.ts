@@ -179,6 +179,7 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
 
             console.log(data);
         });
+        this.buildQueue.push(() => new Promise<void>(() => {})); // Since it should redirect to another page, the promise shouldn't resolve.
         return this;
     }
 
@@ -209,10 +210,16 @@ export function usePolyfact({ provider, project }: { provider: "github"; project
 
     const react = require("react"); // eslint-disable-line
     const [polyfact, setPolyfact] = react.useState();
-    const token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get("access_token");
+    let token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get("access_token");
 
     if (polyfact) {
         return polyfact;
+    }
+
+    if (!token && window.localStorage.getItem("polyfact_token")) {
+        token = window.localStorage.getItem("polyfact_token");
+    } else if (token) {
+        window.localStorage.setItem("polyfact_token", token);
     }
 
     if (token) {
