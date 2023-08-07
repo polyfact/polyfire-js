@@ -6,6 +6,7 @@ import {
     generateStreamWithInfos,
     generateWithTokenUsage,
     GenerationOptions,
+    ResponseData,
 } from "../generate";
 import { ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
@@ -64,7 +65,7 @@ export class Chat {
     async sendMessageWithTokenUsage(
         message: string,
         options: GenerationOptions = {},
-    ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
+    ): Promise<ResponseData> {
         const chatId = await this.chatId;
 
         if (this.autoMemory && !options.memory && !options.memoryId) {

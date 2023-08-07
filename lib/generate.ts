@@ -30,7 +30,7 @@ const PartialResultType = t.partial({
 
 const Required = t.type({
     result: t.string,
-    tokenUsage: t.type({
+    token_usage: t.type({
         input: t.number,
         output: t.number,
     }),
@@ -82,17 +82,11 @@ export async function generateWithTokenUsage(
             },
         });
 
-        const responseData: ResponseData = {
-            result: res.data.result,
-            tokenUsage: res.data?.token_usage,
-            ressources: res.data?.ressources,
-        };
-
-        if (!ResultType.is(responseData)) {
+        if (!ResultType.is(res)) {
             throw new GenerationError();
         }
 
-        return responseData;
+        return res;
     } catch (e) {
         if (e instanceof Error) {
             throw new GenerationError(e.name);
