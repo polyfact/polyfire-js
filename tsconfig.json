@@ -1,11 +1,10 @@
 {
     "compilerOptions": {
-        "target": "es2021",
+        "target": "es5",
         "lib": [
-            "es2021",
+            "es5",
             "DOM",
         ],
-        "module": "commonjs",
         "strict": true,
         "esModuleInterop": true,
         "allowJs": false,

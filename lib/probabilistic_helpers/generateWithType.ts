@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 import * as t from "polyfact-io-ts";
 import { generateWithTokenUsage, GenerationOptions } from "../index";
-import { ClientOptions } from "../clientOpts";
+import { ClientOptions, InputClientOptions } from "../clientOpts";
 
 function typePartial2String(entries: [string, any][], indent: number, partial: boolean): string {
     const leftpad = Array(2 * (indent + 1))
@@ -86,7 +86,7 @@ export async function generateWithTypeWithTokenUsage<T extends t.Props>(
     task: string,
     type: t.TypeC<T>,
     options: GenerationOptions = {},
-    clientOptions: Partial<ClientOptions> = {},
+    clientOptions: InputClientOptions = {},
 ): Promise<{ result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }> {
     const typeFormat = tsio2String(type);
     const tokenUsage = { input: 0, output: 0 };
@@ -126,14 +126,14 @@ export async function generateWithType<T extends t.Props>(
     task: string,
     type: t.TypeC<T>,
     options: GenerationOptions = {},
-    clientOptions: Partial<ClientOptions> = {},
+    clientOptions: InputClientOptions = {},
 ): Promise<t.TypeOf<t.TypeC<T>>> {
     const res = await generateWithTypeWithTokenUsage(task, type, options, clientOptions);
 
     return res.result;
 }
 
-export default function client(clientOptions: Partial<ClientOptions> = {}) {
+export default function client(clientOptions: InputClientOptions = {}) {
     return {
         generateWithTypeWithTokenUsage: <T extends t.Props>(
             task: string,

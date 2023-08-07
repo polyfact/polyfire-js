@@ -1,8 +1,8 @@
 import axios from "axios";
 import * as t from "polyfact-io-ts";
-import { Readable } from "stream";
+import { Readable } from "readable-stream";
 import WebSocket from "isomorphic-ws";
-import { ClientOptions, defaultOptions } from "./clientOpts";
+import { ClientOptions, InputClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
 
 class GenerationError extends Error {
@@ -33,7 +33,7 @@ const ResultType = t.type({
 });
 
 export type GenerationOptions = {
-    provider?: "openai" | "cohere";
+    provider?: "openai" | "cohere" | "llama";
     chatId?: string;
     memory?: Memory;
     memoryId?: string;
@@ -43,9 +43,9 @@ export type GenerationOptions = {
 export async function generateWithTokenUsage(
     task: string,
     options: GenerationOptions = {},
-    clientOptions: Partial<ClientOptions> = {},
+    clientOptions: InputClientOptions = {},
 ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
-    const { token, endpoint } = defaultOptions(clientOptions);
+    const { token, endpoint } = await defaultOptions(clientOptions);
     const requestBody: {
         task: string;
         // eslint-disable-next-line camelcase
@@ -88,7 +88,7 @@ export async function generateWithTokenUsage(
 export async function generate(
     task: string,
     options: GenerationOptions = {},
-    clientOptions: Partial<ClientOptions> = {},
+    clientOptions: InputClientOptions = {},
 ): Promise<string> {
     const res = await generateWithTokenUsage(task, options, clientOptions);
 
@@ -98,7 +98,7 @@ export async function generate(
 export function generateStream(
     task: string,
     options: GenerationOptions = {},
-    clientOptions: Partial<ClientOptions> = {},
+    clientOptions: InputClientOptions = {},
 ): Readable {
     const resultStream = new Readable({
         read() {},
@@ -120,12 +120,8 @@ export function generateStream(
             stop: options?.stop || [],
         };
 
-        const { token, endpoint } = defaultOptions(clientOptions);
-        const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream`, {
-            headers: {
-                "X-Access-Token": token,
-            },
-        });
+        const { token, endpoint } = await defaultOptions(clientOptions);
+        const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream?token=${token}`);
 
         ws.onopen = () => ws.send(JSON.stringify(requestBody));
 
@@ -140,7 +136,7 @@ export function generateStream(
     return resultStream;
 }
 
-export default function client(clientOptions: Partial<ClientOptions> = {}) {
+export default function client(clientOptions: InputClientOptions = {}) {
     return {
         generateWithTokenUsage: (task: string, options: GenerationOptions = {}) =>
             generateWithTokenUsage(task, options, clientOptions),

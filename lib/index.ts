@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
 import * as t from "polyfact-io-ts";
+import { POLYFACT_TOKEN, POLYFACT_ENDPOINT } from "./utils";
 import generateClient, { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
 import generateWithTypeClient, {
     generateWithType,
@@ -10,7 +11,7 @@ import transcribeClient, { transcribe } from "./transcribe";
 import chatClient, { Chat } from "./chats";
 import memoryClient, { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
 import { splitString, tokenCount } from "./split";
-import { ClientOptions, defaultOptions } from "./clientOpts";
+import { ClientOptions, defaultOptions, InputClientOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet } from "./kv";
 
 const kv = {
@@ -36,16 +37,14 @@ export {
     kv,
 };
 
-function client(co: Partial<ClientOptions>) {
-    const clientOptions = defaultOptions(co);
-
+function client(co: InputClientOptions) {
     return {
-        ...generateClient(clientOptions),
-        ...generateWithTypeClient(clientOptions),
-        ...transcribeClient(clientOptions),
-        ...memoryClient(clientOptions),
-        ...chatClient(clientOptions),
-        kv: kvClient(clientOptions),
+        ...generateClient(co),
+        ...generateWithTypeClient(co),
+        ...transcribeClient(co),
+        ...memoryClient(co),
+        ...chatClient(co),
+        kv: kvClient(co),
     };
 }
 
@@ -58,8 +57,8 @@ const supabaseDefaultClient = {
 export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof client>> {
     private buildQueue: (() => Promise<void>)[] = [];
 
-    private clientOptions: Partial<ClientOptions> = {
-        endpoint: process?.env.POLYFACT_ENDPOINT || "https://api2.polyfact.com",
+    private clientOptions: InputClientOptions = {
+        endpoint: POLYFACT_ENDPOINT || "https://api2.polyfact.com",
     };
 
     private authToken: Promise<string>;
@@ -88,9 +87,12 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
         res?: null | ((c: ReturnType<typeof client>) => T1 | Promise<T1>),
         _rej?: null | ((e: Error) => T2 | Promise<T2>),
     ): Promise<T1 | T2> {
-        if (!this.isAuthTokenSetSync && process?.env?.POLYFACT_TOKEN) {
-            this.authTokenResolve(process.env.POLYFACT_TOKEN);
+        if (!this.isAuthTokenSetSync && POLYFACT_TOKEN) {
             this.isAuthTokenSetSync = true;
+            this.authTokenResolve(POLYFACT_TOKEN);
+            const co = await this.clientOptions;
+            co.token = POLYFACT_TOKEN;
+            this.clientOptions = co;
         }
 
         if (!this.isAuthTokenSetSync) {
@@ -106,6 +108,41 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
         }
 
         throw new Error("Missing function in then");
+    }
+
+    exec(): ReturnType<typeof client> {
+        const co = (async () => {
+            if (!this.isAuthTokenSetSync && POLYFACT_TOKEN) {
+                this.isAuthTokenSetSync = true;
+                this.authTokenResolve(POLYFACT_TOKEN);
+                const co = await this.clientOptions;
+                co.token = POLYFACT_TOKEN;
+                this.clientOptions = co;
+            }
+
+            if (!this.isAuthTokenSetSync) {
+                throw new Error(
+                    "You must use at least one signing method when initializing polyfact or set the POLYFACT_TOKEN environment variable.",
+                );
+            }
+
+            await Promise.all(this.buildQueue.map((e) => e()));
+
+            return this.clientOptions;
+        })();
+
+        return client(co);
+    }
+
+    endpoint(endpoint: string): PolyfactClientBuilder {
+        const co = this.clientOptions;
+        this.clientOptions = (async () => {
+            const coSync = await co;
+            coSync.endpoint = endpoint;
+            return coSync;
+        })();
+
+        return this;
     }
 
     signInWithToken(token: string): PolyfactClientBuilder {
@@ -133,10 +170,10 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
         this.buildQueue.push(async () => {
             if (projectId) {
                 const { data } = await axios.get(
-                    `${this.clientOptions.endpoint}/project/${projectId}/auth/token`,
+                    `${(await this.clientOptions).endpoint}/project/${projectId}/auth/token`,
                     { headers: { Authorization: `Bearer ${await this.authToken}` } },
                 );
-                this.clientOptions.token = data;
+                (await this.clientOptions).token = data;
             }
         });
         return this;

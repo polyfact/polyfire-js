@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ClientOptions, defaultOptions } from "./clientOpts";
+import { ClientOptions, InputClientOptions, defaultOptions } from "./clientOpts";
 
 class MemoryError extends Error {
     errorType?: string;
@@ -15,8 +15,8 @@ class MemoryError extends Error {
     }
 }
 
-async function createMemory(clientOptions: Partial<ClientOptions> = {}): Promise<{ id: string }> {
-    const { token, endpoint } = defaultOptions(clientOptions);
+async function createMemory(clientOptions: InputClientOptions = {}): Promise<{ id: string }> {
+    const { token, endpoint } = await defaultOptions(clientOptions);
 
     try {
         const res = await axios.post(
@@ -44,9 +44,9 @@ async function updateMemory(
     id: string,
     input: string,
     maxToken = 0,
-    clientOptions: Partial<ClientOptions> = {},
+    clientOptions: InputClientOptions = {},
 ): Promise<{ success: boolean }> {
-    const { token, endpoint } = defaultOptions(clientOptions);
+    const { token, endpoint } = await defaultOptions(clientOptions);
 
     try {
         const res = await axios.put(
@@ -73,10 +73,8 @@ async function updateMemory(
     }
 }
 
-async function getAllMemories(
-    clientOptions: Partial<ClientOptions> = {},
-): Promise<{ ids: string[] }> {
-    const { token, endpoint } = defaultOptions(clientOptions);
+async function getAllMemories(clientOptions: InputClientOptions = {}): Promise<{ ids: string[] }> {
+    const { token, endpoint } = await defaultOptions(clientOptions);
 
     try {
         const res = await axios.get(`${endpoint}/memories`, {
@@ -102,22 +100,22 @@ type MemoryAddOptions = {
 class Memory {
     memoryId: Promise<string>;
 
-    clientOptions: ClientOptions;
+    clientOptions: Promise<ClientOptions>;
 
-    constructor(clientOptions: Partial<ClientOptions> = {}) {
+    constructor(clientOptions: InputClientOptions = {}) {
         this.clientOptions = defaultOptions(clientOptions);
-        this.memoryId = createMemory(this.clientOptions).then((res) => res.id);
+        this.memoryId = this.clientOptions.then((co) => createMemory(co)).then((res) => res.id);
     }
 
     async add(input: string, { maxToken = 0 }: MemoryAddOptions = {}): Promise<void> {
         const id = await this.memoryId;
-        await updateMemory(id, input, maxToken, this.clientOptions);
+        await updateMemory(id, input, maxToken, await this.clientOptions);
     }
 }
 
 export { createMemory, updateMemory, getAllMemories, Memory };
 
-export default function client(clientOptions: Partial<ClientOptions> = {}) {
+export default function client(clientOptions: InputClientOptions = {}) {
     return {
         createMemory: () => createMemory(clientOptions),
         updateMemory: (id: string, input: string, maxToken?: number) =>
