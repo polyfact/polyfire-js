@@ -1,8 +1,7 @@
 {
     "name": "polyfact",
     "version": "0.1.25",
-    "main": "dist/index.node.js",
-    "browser": "dist/index.js",
+    "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
     "license": "MIT",
@@ -47,8 +46,6 @@
         "lint": "prettier --check lib/ cmd/ ; eslint lib/ cmd/",
         "lint:fix": "prettier --write lib/ cmd/ ; eslint --fix lib/ cmd/",
         "cmd:build": "esbuild cmd/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo -n '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp",
-        "node:build": "mkdir -p dist && esbuild lib/index.ts --bundle --platform=node --target=node18 > dist/index.node.js && tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
-        "browser:build": "mkdir -p dist && esbuild lib/index.ts --bundle '--define:process.env.NODE_ENV=\"production\"' > dist/index.browser.js && tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
         "build": "tsc -p tsconfig.json --declaration --outDir dist"
     }
 }
