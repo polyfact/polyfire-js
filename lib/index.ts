@@ -203,13 +203,11 @@ declare const window: any;
 
 const reactMutex = new Mutex();
 
-export function usePolyfact({
-    project,
-    endpoint,
-}: {
-    project: string;
-    endpoint?: string;
-}): [ReturnType<typeof client>, (input: { provider: "github" }) => Promise<void>, boolean] {
+export function usePolyfact({ project, endpoint }: { project: string; endpoint?: string }): {
+    polyfact: ReturnType<typeof client>;
+    login: (input: { provider: "github" }) => Promise<void>;
+    loading: boolean;
+} {
     if (typeof window === "undefined") {
         throw new Error("usePolyfact not usable outside of the browser environment");
     }
@@ -251,5 +249,5 @@ export function usePolyfact({
         })();
     }, []);
 
-    return [polyfact, login, loading];
+    return { polyfact, login, loading };
 }
