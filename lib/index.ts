@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
 import * as t from "polyfact-io-ts";
+import { Mutex } from "async-mutex";
 import { POLYFACT_TOKEN, POLYFACT_ENDPOINT } from "./utils";
 import generateClient, { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
 import generateWithTypeClient, {
@@ -159,7 +160,6 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
             const data = await this.supabaseClient.auth.signInWithPassword(credentials);
 
             if (!data?.data?.session?.access_token) {
-                console.log(data);
                 throw new Error("signInWithPassword failed");
             }
 
@@ -175,9 +175,7 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
     ): PolyfactClientBuilder {
         this.isAuthTokenSetSync = true;
         this.buildQueue.push(async () => {
-            const data = await this.supabaseClient.auth.signInWithOAuth(credentials);
-
-            console.log(data);
+            await this.supabaseClient.auth.signInWithOAuth(credentials);
         });
         this.buildQueue.push(() => new Promise<void>(() => {})); // Since it should redirect to another page, the promise shouldn't resolve.
         return this;
@@ -203,6 +201,8 @@ export default Polyfact;
 
 declare const window: any;
 
+const reactMutex = new Mutex();
+
 export function usePolyfact({
     provider,
     project,
@@ -211,39 +211,45 @@ export function usePolyfact({
     provider: "github";
     project: string;
     endpoint?: string;
-}): ReturnType<typeof client> {
+}): [ReturnType<typeof client>, boolean] {
     if (typeof window === "undefined") {
         throw new Error("usePolyfact not usable outside of the browser environment");
     }
 
     const react = require("react"); // eslint-disable-line
     const [polyfact, setPolyfact] = react.useState();
-    let token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get("access_token");
+    const [loading, setLoading] = react.useState(true);
 
-    if (polyfact) {
-        return polyfact;
-    }
+    react.useEffect(() => {
+        (async () => {
+            await reactMutex.acquire();
+            let token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
+                "access_token",
+            );
 
-    if (!token && window.localStorage.getItem("polyfact_token")) {
-        token = window.localStorage.getItem("polyfact_token");
-    } else if (token) {
-        window.localStorage.setItem("polyfact_token", token);
-    }
+            if (!token && window.localStorage.getItem("polyfact_token")) {
+                token = window.localStorage.getItem("polyfact_token");
+            } else if (token) {
+                window.localStorage.setItem("polyfact_token", token);
+            }
 
-    if (token) {
-        const p = Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
-            .project(project)
-            .signInWithToken(token)
-            .exec();
-        setPolyfact(p);
+            if (token) {
+                const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
+                    .project(project)
+                    .signInWithToken(token);
+                setLoading(false);
+                setPolyfact(p);
+            } else {
+                const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
+                    .project(project)
+                    .signInWithOAuth({ provider });
+                setLoading(false);
+                setPolyfact(p);
+            }
 
-        return p;
-    }
-    const p = Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
-        .project(project)
-        .signInWithOAuth({ provider })
-        .exec();
-    setPolyfact(p);
+            reactMutex.release();
+        })();
+    }, []);
 
-    return p;
+    return [polyfact, loading];
 }
