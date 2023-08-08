@@ -1,5 +1,13 @@
 import * as t from "polyfact-io-ts";
-import generateClient, { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
+
+import generateClient, {
+    generateWithInfo,
+    generateStreamWithInfos,
+    generate,
+    generateWithTokenUsage,
+    GenerationOptions,
+} from "./generate";
+
 import generateWithTypeClient, {
     generateWithType,
     generateWithTypeWithTokenUsage,
@@ -11,16 +19,24 @@ import { splitString, tokenCount } from "./split";
 import { ClientOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet } from "./kv";
 
+// Export types and models
+export type { TokenUsage, Ressource, GenerationResult } from "./generate";
+export * from "./helpers/models";
+
+// KV operations
 const kv = {
     get: KVGet,
     set: KVSet,
 };
 
+// Export methods
 export {
     generate,
     generateWithTokenUsage,
     generateWithType,
     generateWithTypeWithTokenUsage,
+    generateWithInfo,
+    generateStreamWithInfos,
     splitString,
     tokenCount,
     t,

@@ -24,13 +24,19 @@ class GenerationError extends Error {
     }
 }
 
-const ResultType = t.type({
+const PartialResultType = t.partial({
+    ressources: t.array(t.type({ id: t.string, content: t.string, similarity: t.number })),
+});
+
+const Required = t.type({
     result: t.string,
     token_usage: t.type({
         input: t.number,
         output: t.number,
     }),
 });
+
+const GenerationAPIResponse = t.intersection([Required, PartialResultType]);
 
 export type GenerationOptions = {
     provider?: "openai" | "cohere";
@@ -40,11 +46,33 @@ export type GenerationOptions = {
     stop?: string[];
 };
 
+export type GenerationOptionsWithInfos = GenerationOptions & { infos?: boolean };
+
+export type TokenUsage = {
+    input: number;
+    output: number;
+};
+
+export type Ressource = {
+    similarity: number;
+    id: string;
+    content: string;
+};
+
+export type GenerationResult = {
+    result: string;
+    tokenUsage: {
+        input: number;
+        output: number;
+    };
+    ressources?: Ressource[];
+};
+
 export async function generateWithTokenUsage(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationOptionsWithInfos = {},
     clientOptions: Partial<ClientOptions> = {},
-): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
+): Promise<GenerationResult> {
     const { token, endpoint } = defaultOptions(clientOptions);
     const requestBody: {
         task: string;
@@ -54,12 +82,14 @@ export async function generateWithTokenUsage(
         chat_id?: string;
         provider: GenerationOptions["provider"];
         stop: GenerationOptions["stop"];
+        infos: boolean;
     } = {
         task,
         provider: options?.provider || "openai",
         memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
         chat_id: options?.chatId || "",
         stop: options?.stop || [],
+        infos: options?.infos || false,
     };
 
     try {
@@ -70,13 +100,15 @@ export async function generateWithTokenUsage(
             },
         });
 
-        const responseData = res.data;
-
-        if (!ResultType.is(responseData)) {
+        if (!GenerationAPIResponse.is(res)) {
             throw new GenerationError();
         }
 
-        return { result: responseData.result, tokenUsage: responseData.token_usage };
+        return {
+            result: res.result,
+            tokenUsage: res.token_usage,
+            ressources: res.ressources,
+        };
     } catch (e) {
         if (e instanceof Error) {
             throw new GenerationError(e.name);
@@ -95,10 +127,22 @@ export async function generate(
     return res.result;
 }
 
-export function generateStream(
+export async function generateWithInfo(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationOptionsWithInfos = {},
     clientOptions: Partial<ClientOptions> = {},
+): Promise<GenerationResult> {
+    options.infos = true;
+    const res = await generateWithTokenUsage(task, options, clientOptions);
+
+    return res;
+}
+
+function stream(
+    task: string,
+    options: GenerationOptionsWithInfos = {},
+    clientOptions: Partial<ClientOptions> = {},
+    onMessage: (data: any, resultStream: Readable) => void,
 ): Readable {
     const resultStream = new Readable({
         read() {},
@@ -112,32 +156,63 @@ export function generateStream(
             chat_id?: string;
             provider: GenerationOptions["provider"];
             stop: GenerationOptions["stop"];
+            infos?: boolean;
         } = {
             task,
             provider: options?.provider || "openai",
             memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
             chat_id: options?.chatId || "",
             stop: options?.stop || [],
+            infos: options?.infos || false,
         };
 
         const { token, endpoint } = defaultOptions(clientOptions);
-        const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream`, {
-            headers: {
-                "X-Access-Token": token,
-            },
-        });
+        const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream?token=${token}`);
 
         ws.onopen = () => ws.send(JSON.stringify(requestBody));
+        ws.onmessage = (data: any) => onMessage(data, resultStream);
+    })();
+    return resultStream;
+}
 
-        ws.onmessage = (data: any) => {
+export function generateStreamWithInfos(
+    task: string,
+    options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
+): Readable {
+    return stream(
+        task,
+        { ...options, infos: true },
+        clientOptions,
+        (data: any, resultStream: Readable) => {
             if (data.data === "") {
                 resultStream.push(null);
+            } else if (data.data.startsWith("[INFOS]:")) {
+                try {
+                    const potentialRessources = JSON.parse(data.data.replace("[INFOS]:", ""));
+                    resultStream.emit("infos", potentialRessources);
+                } catch (e) {
+                    resultStream.push("");
+                }
             } else {
                 resultStream.push(data.data);
             }
-        };
-    })();
-    return resultStream;
+        },
+    );
+}
+
+export function generateStream(
+    task: string,
+    options: GenerationOptions = {},
+    clientOptions: Partial<ClientOptions> = {},
+): Readable {
+    return stream(task, options, clientOptions, (data: any, resultStream: Readable) => {
+        if (data.data === "") {
+            resultStream.push(null);
+        } else {
+            resultStream.push(data.data);
+        }
+    });
 }
 
 export default function client(clientOptions: Partial<ClientOptions> = {}) {
