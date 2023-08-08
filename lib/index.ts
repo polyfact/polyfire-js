@@ -1,4 +1,5 @@
 import * as t from "polyfact-io-ts";
+
 import generateClient, {
     generateWithInfo,
     generateStreamWithInfos,
@@ -6,6 +7,7 @@ import generateClient, {
     generateWithTokenUsage,
     GenerationOptions,
 } from "./generate";
+
 import generateWithTypeClient, {
     generateWithType,
     generateWithTypeWithTokenUsage,
@@ -17,33 +19,17 @@ import { splitString, tokenCount } from "./split";
 import { ClientOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet } from "./kv";
 
-export type Ressource = {
-    similarity: number;
-    id: string;
-    content: string;
-};
+// Export types and models
+export type * from "./types";
+export * from "./helpers/models";
 
-export type TokenUsage = {
-    input: number;
-    output: number;
-};
-
-export type Answer = {
-    result: string;
-    // eslint-disable-next-line camelcase
-    token_usage: {
-        input: number;
-        output: number;
-    };
-    Err: unknown;
-    ressources: Ressource[];
-};
-
+// KV operations
 const kv = {
     get: KVGet,
     set: KVSet,
 };
 
+// Export methods
 export {
     generate,
     generateWithTokenUsage,
