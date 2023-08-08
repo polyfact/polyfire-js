@@ -204,14 +204,12 @@ declare const window: any;
 const reactMutex = new Mutex();
 
 export function usePolyfact({
-    provider,
     project,
     endpoint,
 }: {
-    provider: "github";
     project: string;
     endpoint?: string;
-}): [ReturnType<typeof client>, boolean] {
+}): [ReturnType<typeof client>, (input: { provider: "github" }) => Promise<void>, boolean] {
     if (typeof window === "undefined") {
         throw new Error("usePolyfact not usable outside of the browser environment");
     }
@@ -219,6 +217,7 @@ export function usePolyfact({
     const react = require("react"); // eslint-disable-line
     const [polyfact, setPolyfact] = react.useState();
     const [loading, setLoading] = react.useState(true);
+    const [login, setLogin] = react.useState();
 
     react.useEffect(() => {
         (async () => {
@@ -240,16 +239,17 @@ export function usePolyfact({
                 setLoading(false);
                 setPolyfact(p);
             } else {
-                const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
-                    .project(project)
-                    .signInWithOAuth({ provider });
+                setLogin(() => async ({ provider }: { provider: "github" }) => {
+                    await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
+                        .project(project)
+                        .signInWithOAuth({ provider });
+                });
                 setLoading(false);
-                setPolyfact(p);
             }
 
             reactMutex.release();
         })();
     }, []);
 
-    return [polyfact, loading];
+    return [polyfact, login, loading];
 }
