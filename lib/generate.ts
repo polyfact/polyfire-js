@@ -100,14 +100,14 @@ export async function generateWithTokenUsage(
             },
         });
 
-        if (!GenerationAPIResponse.is(res)) {
+        if (!GenerationAPIResponse.is(res.data)) {
             throw new GenerationError();
         }
 
         return {
-            result: res.result,
-            tokenUsage: res.token_usage,
-            ressources: res.ressources,
+            result: res.data.result,
+            tokenUsage: res.data.token_usage,
+            ressources: res.data.ressources,
         };
     } catch (e) {
         if (e instanceof Error) {
