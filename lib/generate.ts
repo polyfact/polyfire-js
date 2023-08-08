@@ -36,7 +36,7 @@ const Required = t.type({
     }),
 });
 
-const ResultType = t.intersection([Required, PartialResultType]);
+const GenerationAPIResponse = t.intersection([Required, PartialResultType]);
 
 export type GenerationOptions = {
     provider?: "openai" | "cohere";
@@ -48,13 +48,31 @@ export type GenerationOptions = {
 
 export type GenerationOptionsWithInfos = GenerationOptions & { infos?: boolean };
 
-export type ResponseData = t.TypeOf<typeof ResultType>;
+export type TokenUsage = {
+    input: number;
+    output: number;
+};
+
+export type Ressource = {
+    similarity: number;
+    id: string;
+    content: string;
+};
+
+export type GenerationResult = {
+    result: string;
+    tokenUsage: {
+        input: number;
+        output: number;
+    };
+    ressources?: Ressource[];
+};
 
 export async function generateWithTokenUsage(
     task: string,
     options: GenerationOptionsWithInfos = {},
     clientOptions: Partial<ClientOptions> = {},
-): Promise<ResponseData> {
+): Promise<GenerationResult> {
     const { token, endpoint } = defaultOptions(clientOptions);
     const requestBody: {
         task: string;
@@ -82,11 +100,15 @@ export async function generateWithTokenUsage(
             },
         });
 
-        if (!ResultType.is(res)) {
+        if (!GenerationAPIResponse.is(res)) {
             throw new GenerationError();
         }
 
-        return res;
+        return {
+            result: res.result,
+            tokenUsage: res.token_usage,
+            ressources: res.ressources,
+        };
     } catch (e) {
         if (e instanceof Error) {
             throw new GenerationError(e.name);
@@ -109,7 +131,7 @@ export async function generateWithInfo(
     task: string,
     options: GenerationOptionsWithInfos = {},
     clientOptions: Partial<ClientOptions> = {},
-): Promise<t.TypeOf<typeof ResultType>> {
+): Promise<GenerationResult> {
     options.infos = true;
     const res = await generateWithTokenUsage(task, options, clientOptions);
 

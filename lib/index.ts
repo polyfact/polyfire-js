@@ -20,7 +20,7 @@ import { ClientOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet } from "./kv";
 
 // Export types and models
-export type * from "./types";
+export type { TokenUsage, Ressource, GenerationResult } from "./generate";
 export * from "./helpers/models";
 
 // KV operations
