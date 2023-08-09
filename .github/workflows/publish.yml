@@ -22,6 +22,15 @@ jobs:
             - name: Install dependencies using Yarn
               run: yarn install
 
+            - name: Add Author identity
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+
+            - name: Check for uncommitted changes
+              run: |
+                  git diff --exit-code || (echo "Uncommitted changes found. Please ensure the working directory is clean." && exit 1)
+
             - name: Update version
               run: npm version patch
 
