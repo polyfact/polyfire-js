@@ -19,6 +19,7 @@ const functionDescriptionType = t.type({
     const { returnType } = await generateWithType(
         "function add(a, b, c) { return a + b + c }",
         functionDescriptionType,
+        {},
     );
     console.log(returnType);
 })();

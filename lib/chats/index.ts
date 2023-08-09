@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable, PassThrough } from "stream";
 import {
@@ -10,6 +10,7 @@ import {
 } from "../generate";
 import { ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
+import { ApiError, ErrorData } from "../helpers/error";
 
 const Message = t.type({
     id: t.string,
@@ -22,19 +23,26 @@ export async function createChat(
     systemPrompt?: string,
     options: Partial<ClientOptions> = {},
 ): Promise<string> {
-    const { token, endpoint } = defaultOptions(options);
+    try {
+        const { token, endpoint } = defaultOptions(options);
 
-    const response = await axios.post(
-        `${endpoint}/chats`,
-        { system_prompt: systemPrompt },
-        {
-            headers: {
-                "X-Access-Token": token,
+        const response = await axios.post(
+            `${endpoint}/chats`,
+            { system_prompt: systemPrompt },
+            {
+                headers: {
+                    "X-Access-Token": token,
+                },
             },
-        },
-    );
+        );
 
-    return response?.data?.id;
+        return response?.data?.id;
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
+        }
+        throw e;
+    }
 }
 
 export class Chat {
@@ -167,18 +175,25 @@ export class Chat {
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {
-        const response = await axios.get(
-            `${this.clientOptions.endpoint}/chat/${await this.chatId}/history`,
-            {
-                headers: {
-                    "X-Access-Token": this.clientOptions.token,
+        try {
+            const response = await axios.get(
+                `${this.clientOptions.endpoint}/chat/${await this.chatId}/history`,
+                {
+                    headers: {
+                        "X-Access-Token": this.clientOptions.token,
+                    },
                 },
-            },
-        );
+            );
 
-        return response?.data?.filter((message: any): message is t.TypeOf<typeof Message> =>
-            Message.is(message),
-        );
+            return response?.data?.filter((message: any): message is t.TypeOf<typeof Message> =>
+                Message.is(message),
+            );
+        } catch (e: unknown) {
+            if (e instanceof AxiosError) {
+                throw new ApiError(e?.response?.data as ErrorData);
+            }
+            throw e;
+        }
     }
 }
 
