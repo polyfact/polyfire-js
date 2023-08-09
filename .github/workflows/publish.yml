@@ -22,24 +22,6 @@ jobs:
             - name: Install dependencies using Yarn
               run: yarn install
 
-            - name: Commit changes to yarn.lock if any
-              run: |
-                  git config --local user.email "action@github.com"
-                  git config --local user.name "GitHub Action"
-                  git add yarn.lock
-                  git commit -m "Update yarn.lock" || echo "No changes to commit"
-
-            - name: Check for uncommitted changes
-              run: |
-                  git diff --exit-code || (echo "Uncommitted changes found. Please ensure the working directory is clean." && exit 1)
-
-            - name: Update version
-              run: npm version patch
-
-            - name: Push updated version and yarn.lock
-              run: |
-                  git push origin main
-
             - name: Build lib
               run: npm run build
 
