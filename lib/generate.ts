@@ -1,28 +1,10 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable } from "stream";
 import WebSocket from "isomorphic-ws";
 import { ClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
-
-class GenerationError extends Error {
-    errorType?: string;
-
-    constructor(errorType?: string) {
-        switch (errorType) {
-            case "llm_init_failed":
-                super("The server failed to initialize its LLM.");
-                break;
-            case "generation_failed":
-                super("The generation failed.");
-                break;
-            default:
-                super("An unknown error occured");
-                break;
-        }
-        this.errorType = errorType || "unknown_error";
-    }
-}
+import { ApiError, ErrorData } from "./helpers/error";
 
 const PartialResultType = t.partial({
     ressources: t.array(t.type({ id: t.string, content: t.string, similarity: t.number })),
@@ -101,7 +83,10 @@ export async function generateWithTokenUsage(
         });
 
         if (!GenerationAPIResponse.is(res.data)) {
-            throw new GenerationError();
+            throw new ApiError({
+                code: "mismatched_response",
+                message: "The response from the API does not match the expected format",
+            });
         }
 
         return {
@@ -109,9 +94,9 @@ export async function generateWithTokenUsage(
             tokenUsage: res.data.token_usage,
             ressources: res.data.ressources,
         };
-    } catch (e) {
-        if (e instanceof Error) {
-            throw new GenerationError(e.name);
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
     }

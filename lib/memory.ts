@@ -1,19 +1,6 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { ClientOptions, defaultOptions } from "./clientOpts";
-
-class MemoryError extends Error {
-    errorType?: string;
-
-    constructor(errorType?: string) {
-        // TODO: proper error handling once the api is up and running
-        switch (errorType) {
-            default:
-                super("An unknown error occured");
-                break;
-        }
-        this.errorType = errorType || "unknown_error";
-    }
-}
+import { ApiError, ErrorData } from "./helpers/error";
 
 async function createMemory(clientOptions: Partial<ClientOptions> = {}): Promise<{ id: string }> {
     const { token, endpoint } = defaultOptions(clientOptions);
@@ -31,10 +18,9 @@ async function createMemory(clientOptions: Partial<ClientOptions> = {}): Promise
         );
 
         return res.data;
-    } catch (e) {
-        console.log(e);
-        if (e instanceof Error) {
-            throw new MemoryError(e.name);
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
     }
@@ -65,9 +51,9 @@ async function updateMemory(
         );
 
         return res.data;
-    } catch (e) {
-        if (e instanceof Error) {
-            throw new MemoryError(e.name);
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
     }
@@ -87,9 +73,9 @@ async function getAllMemories(
         });
 
         return res.data;
-    } catch (e) {
-        if (e instanceof Error) {
-            throw new MemoryError(e.name);
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
     }
