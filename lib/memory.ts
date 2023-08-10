@@ -1,19 +1,6 @@
-import axios from "axios";
-import { ClientOptions, InputClientOptions, defaultOptions } from "./clientOpts";
-
-class MemoryError extends Error {
-    errorType?: string;
-
-    constructor(errorType?: string) {
-        // TODO: proper error handling once the api is up and running
-        switch (errorType) {
-            default:
-                super("An unknown error occured");
-                break;
-        }
-        this.errorType = errorType || "unknown_error";
-    }
-}
+import axios, { AxiosError } from "axios";
+import { InputClientOptions, defaultOptions } from "./clientOpts";
+import { ApiError, ErrorData } from "./helpers/error";
 
 async function createMemory(clientOptions: InputClientOptions = {}): Promise<{ id: string }> {
     const { token, endpoint } = await defaultOptions(clientOptions);
@@ -31,10 +18,9 @@ async function createMemory(clientOptions: InputClientOptions = {}): Promise<{ i
         );
 
         return res.data;
-    } catch (e) {
-        if (e instanceof Error) {
-            console.log("\n\n\n", e, "\n\n\n");
-            throw new MemoryError(e.name);
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
     }
@@ -65,9 +51,9 @@ async function updateMemory(
         );
 
         return res.data;
-    } catch (e) {
-        if (e instanceof Error) {
-            throw new MemoryError(e.name);
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
     }
@@ -85,9 +71,9 @@ async function getAllMemories(clientOptions: InputClientOptions = {}): Promise<{
         });
 
         return res.data;
-    } catch (e) {
-        if (e instanceof Error) {
-            throw new MemoryError(e.name);
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
     }
@@ -100,7 +86,7 @@ type MemoryAddOptions = {
 class Memory {
     memoryId: Promise<string>;
 
-    clientOptions: Promise<ClientOptions>;
+    clientOptions: InputClientOptions;
 
     constructor(clientOptions: InputClientOptions = {}) {
         this.clientOptions = defaultOptions(clientOptions);

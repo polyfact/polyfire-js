@@ -12,6 +12,7 @@ async function main() {
         const userInput = await rl.question("> ");
 
         const stream = chat.sendMessageStream(userInput);
+
         stream.pipe(output);
         await new Promise((res) => stream.on("end", res));
         output.write("\n");

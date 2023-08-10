@@ -1,44 +1,59 @@
-import axios from "axios";
-import { InputClientOptions, ClientOptions, defaultOptions } from "./clientOpts";
+import axios, { AxiosError } from "axios";
+import { InputClientOptions, defaultOptions } from "./clientOpts";
+import { ApiError, ErrorData } from "./helpers/error";
 
 export async function set(
     key: string,
     value: string,
     clientOptions: InputClientOptions = {},
 ): Promise<void> {
-    const { token, endpoint } = await defaultOptions(clientOptions);
+    try {
+        const { token, endpoint } = await defaultOptions(clientOptions);
 
-    await axios.put(
-        `${endpoint}/kv`,
-        {
-            key,
-            value,
-        },
-        {
-            headers: {
-                "X-Access-Token": token,
-                "Content-Type": "application/json",
+        await axios.put(
+            `${endpoint}/kv`,
+            {
+                key,
+                value,
             },
-        },
-    );
+            {
+                headers: {
+                    "X-Access-Token": token,
+                    "Content-Type": "application/json",
+                },
+            },
+        );
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
+        }
+        throw e;
+    }
 }
 
 export async function get(key: string, clientOptions: InputClientOptions = {}): Promise<string> {
-    const { token, endpoint } = await defaultOptions(clientOptions);
+    try {
+        const { token, endpoint } = await defaultOptions(clientOptions);
 
-    const response = await axios
-        .get(`${endpoint}/kv?key=${key}`, {
-            method: "GET",
-            headers: {
-                "X-Access-Token": token,
-                "Content-Type": "application/json",
-            },
-        })
-        .catch(() => ({
-            data: "",
-        }));
+        const response = await axios
+            .get(`${endpoint}/kv?key=${key}`, {
+                method: "GET",
+                headers: {
+                    "X-Access-Token": token,
+                    "Content-Type": "application/json",
+                },
+            })
+            .catch(() => ({
+                data: "",
+            }));
 
-    return response.data;
+        return response.data;
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
+        }
+        throw e;
+    }
 }
 
 export default function client(clientOptions: InputClientOptions = {}) {

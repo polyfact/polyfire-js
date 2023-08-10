@@ -1,9 +1,16 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable, PassThrough } from "readable-stream";
-import { generateStream, generateWithTokenUsage, GenerationOptions } from "../generate";
+import {
+    generateStream,
+    generateStreamWithInfos,
+    generateWithTokenUsage,
+    GenerationOptions,
+    GenerationResult,
+} from "../generate";
 import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
+import { ApiError, ErrorData } from "../helpers/error";
 
 const Message = t.type({
     id: t.string,
@@ -16,19 +23,26 @@ export async function createChat(
     systemPrompt?: string,
     options: InputClientOptions = {},
 ): Promise<string> {
-    const { token, endpoint } = await defaultOptions(options);
+    try {
+        const { token, endpoint } = await defaultOptions(options);
 
-    const response = await axios.post(
-        `${endpoint}/chats`,
-        { system_prompt: systemPrompt },
-        {
-            headers: {
-                "X-Access-Token": token,
+        const response = await axios.post(
+            `${endpoint}/chats`,
+            { system_prompt: systemPrompt },
+            {
+                headers: {
+                    "X-Access-Token": token,
+                },
             },
-        },
-    );
+        );
 
-    return response?.data?.id;
+        return response?.data?.id;
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
+        }
+        throw e;
+    }
 }
 
 type ChatOptions = {
@@ -58,7 +72,7 @@ export class Chat {
     async sendMessageWithTokenUsage(
         message: string,
         options: GenerationOptions = {},
-    ): Promise<{ result: string; tokenUsage: { input: number; output: number } }> {
+    ): Promise<GenerationResult> {
         const chatId = await this.chatId;
 
         if (this.autoMemory && !options.memory && !options.memoryId) {
@@ -85,6 +99,49 @@ export class Chat {
         return result.result;
     }
 
+    sendMessageStreamWithInfos(message: string, options: GenerationOptions = {}): Readable {
+        const resultStream = new Readable({
+            read() {},
+            objectMode: true,
+        });
+        const bufs: Buffer[] = [];
+
+        (async () => {
+            const chatId = await this.chatId;
+
+            if (this.autoMemory && !options.memory && !options.memoryId) {
+                options.memory = await this.autoMemory;
+            }
+
+            const result = generateStreamWithInfos(
+                message,
+                { ...options, chatId },
+                await this.clientOptions,
+            );
+
+            result.on("infos", (data) => {
+                resultStream.emit("infos", data);
+            });
+
+            result.on("data", (d) => {
+                bufs.push(d);
+                resultStream.push(d);
+            });
+            result.on("end", () => {
+                resultStream.push(null);
+                (async () => {
+                    if (this.autoMemory) {
+                        const totalResult = Buffer.concat(bufs).toString("utf8");
+                        (await this.autoMemory).add(`Human: ${message}`);
+                        (await this.autoMemory).add(`AI: ${totalResult}`);
+                    }
+                })();
+            });
+        })();
+
+        return resultStream;
+    }
+
     sendMessageStream(message: string, options: GenerationOptions = {}): Readable {
         const resultStream = new PassThrough();
 
@@ -98,7 +155,7 @@ export class Chat {
             const result = generateStream(
                 message,
                 { provider: this.provider, ...options, chatId },
-                this.clientOptions,
+                await this.clientOptions,
             );
 
             result.pipe(resultStream);
@@ -123,18 +180,25 @@ export class Chat {
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {
-        const response = await axios.get(
-            `${(await this.clientOptions).endpoint}/chat/${await this.chatId}/history`,
-            {
-                headers: {
-                    "X-Access-Token": (await this.clientOptions).token,
+        try {
+            const response = await axios.get(
+                `${(await this.clientOptions).endpoint}/chat/${await this.chatId}/history`,
+                {
+                    headers: {
+                        "X-Access-Token": (await this.clientOptions).token,
+                    },
                 },
-            },
-        );
+            );
 
-        return response?.data?.filter((message: any): message is t.TypeOf<typeof Message> =>
-            Message.is(message),
-        );
+            return response?.data?.filter((message: any): message is t.TypeOf<typeof Message> =>
+                Message.is(message),
+            );
+        } catch (e: unknown) {
+            if (e instanceof AxiosError) {
+                throw new ApiError(e?.response?.data as ErrorData);
+            }
+            throw e;
+        }
     }
 }
 
