@@ -57,6 +57,8 @@ const supabaseDefaultClient = {
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxeXhhYXlpaXpxd2xrbmRkb2trIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODk4NjIyODksImV4cCI6MjAwNTQzODI4OX0.Ae1eJU6C3e1FO5X7ES1eStnbTM87IljnuuujZ83wwzM",
 };
 
+declare const window: any;
+
 export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof client>> {
     private buildQueue: (() => Promise<void>)[] = [];
 
@@ -173,9 +175,18 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
             Parameters<ReturnType<typeof createClient>["auth"]["signInWithOAuth"]>[0]
         >,
     ): PolyfactClientBuilder {
+        if (typeof window === "undefined") {
+            throw new Error("signInWithOAuth not usable outside of the browser environment");
+        }
+        console.log({
+            options: { redirectTo: window?.location },
+        });
         this.isAuthTokenSetSync = true;
         this.buildQueue.push(async () => {
-            await this.supabaseClient.auth.signInWithOAuth(credentials);
+            await this.supabaseClient.auth.signInWithOAuth({
+                ...credentials,
+                options: { redirectTo: window?.location },
+            });
         });
         this.buildQueue.push(() => new Promise<void>(() => {})); // Since it should redirect to another page, the promise shouldn't resolve.
         return this;
@@ -199,8 +210,6 @@ const Polyfact = new PolyfactClientBuilder();
 
 export default Polyfact;
 
-declare const window: any;
-
 const reactMutex = new Mutex();
 
 export function usePolyfact({ project, endpoint }: { project: string; endpoint?: string }): {
@@ -223,14 +232,42 @@ export function usePolyfact({ project, endpoint }: { project: string; endpoint?:
             let token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
                 "access_token",
             );
+            let refreshToken = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
+                "refresh_token",
+            );
 
-            if (!token && window.localStorage.getItem("polyfact_token")) {
-                token = window.localStorage.getItem("polyfact_token");
-            } else if (token) {
-                window.localStorage.setItem("polyfact_token", token);
+            const supabase = createClient(
+                supabaseDefaultClient.supabaseUrl,
+                supabaseDefaultClient.supabaseKey,
+                {
+                    auth: { persistSession: false },
+                },
+            );
+            if (!refreshToken && window.localStorage.getItem("polyfact_refresh_token")) {
+                refreshToken = window.localStorage.getItem("polyfact_refresh_token");
+            } else if (refreshToken) {
+                window.localStorage.setItem("polyfact_refresh_token", refreshToken);
             }
 
-            if (token) {
+            if (refreshToken) {
+                if (!token) {
+                    const { data } = await supabase.auth.refreshSession({
+                        refresh_token: refreshToken,
+                    });
+
+                    token = data.session?.access_token || "";
+
+                    if (!token) {
+                        window.localStorage.removeItem("polyfact_refresh_token");
+                        window.location.reload();
+                        return;
+                    }
+
+                    window.localStorage.setItem(
+                        "polyfact_refresh_token",
+                        data.session?.refresh_token,
+                    );
+                }
                 const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
                     .project(project)
                     .signInWithToken(token);
