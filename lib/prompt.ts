@@ -3,9 +3,10 @@ import { ClientOptions, defaultOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
 export type FilterOperation = "eq" | "neq" | "gt" | "lt" | "gte" | "lte" | "like" | "ilike" | "cs";
+export type AllowedColumns = "name" | "description" | "tags";
 
 export type Filter = {
-    column: string;
+    column: AllowedColumns;
     operation: FilterOperation;
     value: string;
 };
