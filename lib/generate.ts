@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable } from "readable-stream";
@@ -29,14 +28,7 @@ export type GenerationOptions = {
     stop?: string[];
 };
 
-type Exclusive<T, U = T> =
-    | (T & Partial<Record<Exclude<keyof U, keyof T>, never>>)
-    | (U & Partial<Record<Exclude<keyof T, keyof U>, never>>);
-
-export type GenerationGlobalOptions = GenerationOptions &
-    Exclusive<{ promptId?: string }, { systemPrompt?: string }> & {
-        infos?: boolean;
-    };
+export type GenerationOptionsWithInfos = GenerationOptions & { infos?: boolean };
 
 export type TokenUsage = {
     input: number;
@@ -60,19 +52,19 @@ export type GenerationResult = {
 
 export async function generateWithTokenUsage(
     task: string,
-    options: GenerationGlobalOptions = {},
+    options: GenerationOptionsWithInfos = {},
     clientOptions: InputClientOptions = {},
 ): Promise<GenerationResult> {
     const { token, endpoint } = await defaultOptions(clientOptions);
     const requestBody: {
         task: string;
+        // eslint-disable-next-line camelcase
         memory_id?: string;
+        // eslint-disable-next-line camelcase
         chat_id?: string;
         provider: GenerationOptions["provider"];
         stop: GenerationOptions["stop"];
         infos: boolean;
-        system_prompt?: string;
-        prompt_id?: string;
     } = {
         task,
         provider: options?.provider || "openai",
@@ -80,8 +72,6 @@ export async function generateWithTokenUsage(
         chat_id: options?.chatId || "",
         stop: options?.stop || [],
         infos: options?.infos || false,
-        system_prompt: options?.systemPrompt,
-        prompt_id: options?.promptId,
     };
 
     try {
@@ -112,34 +102,30 @@ export async function generateWithTokenUsage(
     }
 }
 
-/**
- * Generates a result based on provided options.
- *
- * If `options.infos` is set to `true`, this function will return a `GenerationResult`.
- * If `options.infos` is set to `false` or left `undefined`, this function will return a `string`.
- *
- * @param task - The task string.
- * @param options - The generation options.
- * @param clientOptions - The client options.
- * @returns Either a `string` or a `GenerationResult` based on `options.infos`.
- */
 export async function generate(
     task: string,
-    options: GenerationGlobalOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
-): Promise<string | GenerationResult> {
+): Promise<string> {
     const res = await generateWithTokenUsage(task, options, clientOptions);
-
-    if (options?.infos) {
-        return res;
-    }
 
     return res.result;
 }
 
+export async function generateWithInfo(
+    task: string,
+    options: GenerationOptionsWithInfos = {},
+    clientOptions: InputClientOptions = {},
+): Promise<GenerationResult> {
+    options.infos = true;
+    const res = await generateWithTokenUsage(task, options, clientOptions);
+
+    return res;
+}
+
 function stream(
     task: string,
-    options: GenerationGlobalOptions = {},
+    options: GenerationOptionsWithInfos = {},
     clientOptions: InputClientOptions = {},
     onMessage: (data: any, resultStream: Readable) => void,
 ): Readable {
@@ -220,6 +206,8 @@ export default function client(clientOptions: InputClientOptions = {}) {
             generateWithTokenUsage(task, options, clientOptions),
         generate: (task: string, options: GenerationOptions = {}) =>
             generate(task, options, clientOptions),
+        generateWithInfo: (task: string, options: GenerationOptions = {}) =>
+            generateWithInfo(task, options, clientOptions),
         generateStream: (task: string, options: GenerationOptions = {}) =>
             generateStream(task, options, clientOptions),
         generateStreamWithInfos: (task: string, options: GenerationOptions = {}) =>

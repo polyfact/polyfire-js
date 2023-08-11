@@ -1,7 +1,10 @@
 {
     "compilerOptions": {
         "target": "es2021",
-        "lib": ["es2021", "DOM"],
+        "lib": [
+            "es2021",
+            "DOM",
+        ],
         "module": "commonjs",
         "strict": true,
         "esModuleInterop": true,
@@ -19,5 +22,5 @@
         "baseUrl": "lib/",
         "rootDir": "lib/"
     },
-    "include": ["lib/**/*"]
+    "include": ["lib/**/*"],
 }

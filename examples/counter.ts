@@ -16,10 +16,10 @@ const functionDescriptionType = t.type({
 (async () => {
     await kv.set("abc", "");
     console.log(await kv.get("abc"));
-    const res = await generateWithType(
+    const { returnType } = await generateWithType(
         "function add(a, b, c) { return a + b + c }",
         functionDescriptionType,
         {},
     );
-    console.log(res);
+    console.log(returnType);
 })();
