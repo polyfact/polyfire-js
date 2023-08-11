@@ -9,17 +9,25 @@ import generateClient, {
     generate,
     generateWithTokenUsage,
     GenerationOptions,
+    GenerationClient,
 } from "./generate";
 import generateWithTypeClient, {
     generateWithType,
     generateWithTypeWithTokenUsage,
+    GenerationWithTypeClient,
 } from "./probabilistic_helpers/generateWithType";
-import transcribeClient, { transcribe } from "./transcribe";
-import chatClient, { Chat } from "./chats";
-import memoryClient, { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
+import transcribeClient, { transcribe, TranscribeClient } from "./transcribe";
+import chatClient, { Chat, ChatClient } from "./chats";
+import memoryClient, {
+    Memory,
+    createMemory,
+    updateMemory,
+    getAllMemories,
+    MemoryClient,
+} from "./memory";
 import { splitString, tokenCount } from "./split";
 import { InputClientOptions } from "./clientOpts";
-import kvClient, { get as KVGet, set as KVSet } from "./kv";
+import kvClient, { get as KVGet, set as KVSet, KVClient } from "./kv";
 
 // Export types and models
 export type { TokenUsage, Ressource, GenerationResult } from "./generate";
@@ -52,7 +60,13 @@ export {
     kv,
 };
 
-function client(co: InputClientOptions) {
+type Client = GenerationClient &
+    GenerationWithTypeClient &
+    TranscribeClient &
+    MemoryClient &
+    ChatClient & { kv: KVClient };
+
+function client(co: InputClientOptions): Client {
     return {
         ...generateClient(co),
         ...generateWithTypeClient(co),
@@ -227,8 +241,8 @@ export default Polyfact;
 const reactMutex = new Mutex();
 
 export function usePolyfact({ project, endpoint }: { project: string; endpoint?: string }): {
-    polyfact: ReturnType<typeof client>;
-    login: (input: { provider: "github" }) => Promise<void>;
+    polyfact: Client | undefined;
+    login: ((input: { provider: "github" }) => Promise<void>) | undefined;
     loading: boolean;
 } {
     if (typeof window === "undefined") {

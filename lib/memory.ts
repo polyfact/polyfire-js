@@ -101,7 +101,14 @@ class Memory {
 
 export { createMemory, updateMemory, getAllMemories, Memory };
 
-export default function client(clientOptions: InputClientOptions = {}) {
+export type MemoryClient = {
+    createMemory: () => Promise<{ id: string }>;
+    updateMemory: (id: string, input: string, maxToken?: number) => Promise<{ success: boolean }>;
+    getAllMemories: () => Promise<{ ids: string[] }>;
+    Memory: () => Memory;
+};
+
+export default function client(clientOptions: InputClientOptions = {}): MemoryClient {
     return {
         createMemory: () => createMemory(clientOptions),
         updateMemory: (id: string, input: string, maxToken?: number) =>

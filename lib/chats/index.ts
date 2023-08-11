@@ -202,7 +202,12 @@ export class Chat {
     }
 }
 
-export default function client(clientOptions: InputClientOptions = {}) {
+export type ChatClient = {
+    createChat: (systemPrompt?: string) => Promise<string>;
+    Chat: typeof Chat;
+};
+
+export default function client(clientOptions: InputClientOptions = {}): ChatClient {
     return {
         createChat: (systemPrompt?: string) => createChat(systemPrompt, clientOptions),
         Chat: class C extends Chat {

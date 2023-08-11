@@ -43,7 +43,12 @@ export async function transcribe(
         throw e;
     }
 }
-export default function client(clientOptions: InputClientOptions = {}) {
+
+export type TranscribeClient = {
+    transcribe: (file: Buffer | Readable) => Promise<string>;
+};
+
+export default function client(clientOptions: InputClientOptions = {}): TranscribeClient {
     return {
         transcribe: (file: Buffer | Readable) => transcribe(file, clientOptions),
     };

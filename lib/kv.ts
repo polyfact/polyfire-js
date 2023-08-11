@@ -56,7 +56,12 @@ export async function get(key: string, clientOptions: InputClientOptions = {}): 
     }
 }
 
-export default function client(clientOptions: InputClientOptions = {}) {
+export type KVClient = {
+    get: (key: string) => Promise<string>;
+    set: (key: string, value: string) => Promise<void>;
+};
+
+export default function client(clientOptions: InputClientOptions = {}): KVClient {
     return {
         get: (key: string) => get(key, clientOptions),
         set: (key: string, value: string) => set(key, value, clientOptions),

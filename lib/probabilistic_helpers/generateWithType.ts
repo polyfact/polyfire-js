@@ -133,7 +133,20 @@ export async function generateWithType<T extends t.Props>(
     return res.result;
 }
 
-export default function client(clientOptions: InputClientOptions = {}) {
+export type GenerationWithTypeClient = {
+    generateWithTypeWithTokenUsage: <T extends t.Props>(
+        task: string,
+        type: t.TypeC<T>,
+        options?: GenerationOptions,
+    ) => Promise<{ result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }>;
+    generateWithType: <T extends t.Props>(
+        task: string,
+        type: t.TypeC<T>,
+        options?: GenerationOptions,
+    ) => Promise<t.TypeOf<t.TypeC<T>>>;
+};
+
+export default function client(clientOptions: InputClientOptions = {}): GenerationWithTypeClient {
     return {
         generateWithTypeWithTokenUsage: <T extends t.Props>(
             task: string,

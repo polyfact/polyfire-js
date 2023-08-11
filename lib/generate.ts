@@ -200,7 +200,18 @@ export function generateStream(
     });
 }
 
-export default function client(clientOptions: InputClientOptions = {}) {
+export type GenerationClient = {
+    generateWithTokenUsage: (
+        task: string,
+        options?: GenerationOptions,
+    ) => Promise<GenerationResult>;
+    generate: (task: string, options?: GenerationOptions) => Promise<string>;
+    generateWithInfo: (task: string, options?: GenerationOptions) => Promise<GenerationResult>;
+    generateStream: (task: string, options?: GenerationOptions) => Readable;
+    generateStreamWithInfos: (task: string, options?: GenerationOptions) => Readable;
+};
+
+export default function client(clientOptions: InputClientOptions = {}): GenerationClient {
     return {
         generateWithTokenUsage: (task: string, options: GenerationOptions = {}) =>
             generateWithTokenUsage(task, options, clientOptions),
