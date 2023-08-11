@@ -47,15 +47,24 @@ import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { Chat } from "polyfact";
 
+// We use the nodeJS readline API to extract the user inputs from the standard input of the terminal
+// It can be change to whatever interface you want the user to interact with, readline is just for
+// the example. 
 const rl = readline.createInterface({ input, output });
 
 async function chatREPL() {
+    // We initialize a new polyfact chat
     const chat = new Chat();
 
     while (true) {
+        // We retrieve the userInput from the nodeJS readline API
         const userInput = await rl.question("> ");
 
-        console.log(await chat.sendMessage(userInput));
+        // We get an answer from the polyfact API to the message the user sent
+        const aiAnswer = await chat.sendMessage(userInput);
+
+        // And we print it to the standard output
+        console.log(aiAnswer);
     }
 }
 
