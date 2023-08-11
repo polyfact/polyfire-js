@@ -1,8 +1,8 @@
 import axios, { AxiosError } from "axios";
 import FormData from "form-data";
-import { Readable } from "stream";
+import { Readable } from "readable-stream";
 import * as t from "polyfact-io-ts";
-import { ClientOptions, defaultOptions } from "./clientOpts";
+import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
 const ResultType = t.type({
@@ -11,10 +11,10 @@ const ResultType = t.type({
 
 export async function transcribe(
     file: Buffer | Readable,
-    clientOptions: Partial<ClientOptions> = {},
+    clientOptions: InputClientOptions = {},
 ): Promise<string> {
     try {
-        const { token, endpoint } = defaultOptions(clientOptions);
+        const { token, endpoint } = await defaultOptions(clientOptions);
 
         const formData = new FormData();
         formData.append("file", file, {
@@ -43,7 +43,7 @@ export async function transcribe(
         throw e;
     }
 }
-export default function client(clientOptions: Partial<ClientOptions> = {}) {
+export default function client(clientOptions: InputClientOptions = {}) {
     return {
         transcribe: (file: Buffer | Readable) => transcribe(file, clientOptions),
     };

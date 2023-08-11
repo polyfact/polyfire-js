@@ -1,9 +1,10 @@
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { Chat } from "../lib/index";
+import Polyfact from "../lib/index";
 
 async function main() {
-    const chat = new Chat({ autoMemory: true });
+    const { Chat } = Polyfact.exec();
+    const chat = new Chat({ autoMemory: true, provider: "openai" });
 
     const rl = readline.createInterface({ input, output });
 

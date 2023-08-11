@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
-import { Readable, PassThrough } from "stream";
+import { Readable, PassThrough } from "readable-stream";
 import {
     generateStream,
     generateStreamWithInfos,
@@ -8,7 +8,7 @@ import {
     GenerationOptions,
     GenerationResult,
 } from "../generate";
-import { ClientOptions, defaultOptions } from "../clientOpts";
+import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
 import { ApiError, ErrorData } from "../helpers/error";
 
@@ -21,10 +21,10 @@ const Message = t.type({
 });
 export async function createChat(
     systemPrompt?: string,
-    options: Partial<ClientOptions> = {},
+    options: InputClientOptions = {},
 ): Promise<string> {
     try {
-        const { token, endpoint } = defaultOptions(options);
+        const { token, endpoint } = await defaultOptions(options);
 
         const response = await axios.post(
             `${endpoint}/chats`,
@@ -45,28 +45,27 @@ export async function createChat(
     }
 }
 
+type ChatOptions = {
+    provider?: "openai" | "cohere" | "llama";
+    systemPrompt?: string;
+    autoMemory?: boolean;
+};
+
 export class Chat {
     chatId: Promise<string>;
 
-    provider: "openai" | "cohere";
+    provider: "openai" | "cohere" | "llama";
 
-    clientOptions: ClientOptions;
+    clientOptions: Promise<ClientOptions>;
 
-    autoMemory?: Memory;
+    autoMemory?: Promise<Memory>;
 
-    constructor(
-        options: {
-            provider?: "openai" | "cohere";
-            systemPrompt?: string;
-            autoMemory?: boolean;
-        } = {},
-        clientOptions: Partial<ClientOptions> = {},
-    ) {
+    constructor(options: ChatOptions = {}, clientOptions: InputClientOptions = {}) {
         this.clientOptions = defaultOptions(clientOptions);
         this.chatId = createChat(options.systemPrompt, this.clientOptions);
         this.provider = options.provider || "openai";
         if (options.autoMemory) {
-            this.autoMemory = new Memory(this.clientOptions);
+            this.autoMemory = this.clientOptions.then((co) => new Memory(co));
         }
     }
 
@@ -77,18 +76,18 @@ export class Chat {
         const chatId = await this.chatId;
 
         if (this.autoMemory && !options.memory && !options.memoryId) {
-            options.memory = this.autoMemory;
+            options.memory = await this.autoMemory;
         }
 
         const result = await generateWithTokenUsage(
             message,
-            { ...options, chatId },
+            { provider: this.provider, ...options, chatId },
             this.clientOptions,
         );
 
         if (this.autoMemory) {
-            this.autoMemory.add(`Human: ${message}`);
-            this.autoMemory.add(`AI: ${result.result}`);
+            (await this.autoMemory).add(`Human: ${message}`);
+            (await this.autoMemory).add(`AI: ${result.result}`);
         }
 
         return result;
@@ -111,13 +110,13 @@ export class Chat {
             const chatId = await this.chatId;
 
             if (this.autoMemory && !options.memory && !options.memoryId) {
-                options.memory = this.autoMemory;
+                options.memory = await this.autoMemory;
             }
 
             const result = generateStreamWithInfos(
                 message,
                 { ...options, chatId },
-                this.clientOptions,
+                await this.clientOptions,
             );
 
             result.on("infos", (data) => {
@@ -130,11 +129,13 @@ export class Chat {
             });
             result.on("end", () => {
                 resultStream.push(null);
-                if (this.autoMemory) {
-                    const totalResult = Buffer.concat(bufs).toString("utf8");
-                    this.autoMemory.add(`Human: ${message}`);
-                    this.autoMemory.add(`AI: ${totalResult}`);
-                }
+                (async () => {
+                    if (this.autoMemory) {
+                        const totalResult = Buffer.concat(bufs).toString("utf8");
+                        (await this.autoMemory).add(`Human: ${message}`);
+                        (await this.autoMemory).add(`AI: ${totalResult}`);
+                    }
+                })();
             });
         })();
 
@@ -148,10 +149,14 @@ export class Chat {
             const chatId = await this.chatId;
 
             if (this.autoMemory && !options.memory && !options.memoryId) {
-                options.memory = this.autoMemory;
+                options.memory = await this.autoMemory;
             }
 
-            const result = generateStream(message, { ...options, chatId }, this.clientOptions);
+            const result = generateStream(
+                message,
+                { provider: this.provider, ...options, chatId },
+                await this.clientOptions,
+            );
 
             result.pipe(resultStream);
 
@@ -166,21 +171,21 @@ export class Chat {
             });
 
             if (this.autoMemory) {
-                this.autoMemory.add(`Human: ${message}`);
-                this.autoMemory.add(`AI: ${totalResult}`);
+                (await this.autoMemory).add(`Human: ${message}`);
+                (await this.autoMemory).add(`AI: ${totalResult}`);
             }
         })();
 
-        return resultStream;
+        return resultStream as unknown as Readable;
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {
         try {
             const response = await axios.get(
-                `${this.clientOptions.endpoint}/chat/${await this.chatId}/history`,
+                `${(await this.clientOptions).endpoint}/chat/${await this.chatId}/history`,
                 {
                     headers: {
-                        "X-Access-Token": this.clientOptions.token,
+                        "X-Access-Token": (await this.clientOptions).token,
                     },
                 },
             );
@@ -197,10 +202,13 @@ export class Chat {
     }
 }
 
-export default function client(clientOptions: Partial<ClientOptions> = {}) {
+export default function client(clientOptions: InputClientOptions = {}) {
     return {
         createChat: (systemPrompt?: string) => createChat(systemPrompt, clientOptions),
-        Chat: (options?: { provider?: "openai" | "cohere"; systemPrompt?: string }) =>
-            new Chat(options, clientOptions),
+        Chat: class C extends Chat {
+            constructor(options: ChatOptions = {}) {
+                super(options, clientOptions);
+            }
+        },
     };
 }
