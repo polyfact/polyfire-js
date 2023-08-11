@@ -13,11 +13,11 @@ PolyFact's goal is to make it possible to code every AI tool/Chatbot you could w
 <p align="center"><img src="demo.gif" /></p>
 
 ## ✨ Features
-- **[Generate](https://github.com/polyfact/polyfact-node/wiki/generate)**: Answer to simple requests as text
-- **[Chat](https://github.com/polyfact/polyfact-node/wiki/chat)**: Easily create chatbots
-- **[Transcribe](https://github.com/polyfact/polyfact-node/wiki/transcribe)**: Transcribe audio files to text
-- **[Memory](https://github.com/polyfact/polyfact-node/wiki/memory)**: Easily create a long-term memory and simplify the use of large amounts of information
-- **[Type checked generation](https://github.com/polyfact/polyfact-node/wiki/generateWithType)**: Answer simple requests with a type you defined *(🎲 probabilistic function)*
+- **[Generate](https://github.com/polyfact/polyfact-node/wiki/Generate-Text)**: Answer to simple requests as text
+- **[Chat](https://github.com/polyfact/polyfact-node/wiki/Create-chatbots)**: Easily create chatbots
+- **[Transcribe](https://github.com/polyfact/polyfact-node/wiki/Transcribe-audio-files)**: Transcribe audio files to text
+- **[Memory](https://github.com/polyfact/polyfact-node/wiki/Long-term-Memory-and-Embeddings)**: Easily create a long-term memory and simplify the use of large amounts of information
+- **[Type checked generation](https://github.com/polyfact/polyfact-node/wiki/Generate-objects-following-a-type)**: Answer simple requests with a type you defined *(🎲 probabilistic function)*
 
 ## 📚 Documentation
 
