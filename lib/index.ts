@@ -20,7 +20,7 @@ import { splitString, tokenCount } from "./split";
 import { InputClientOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet } from "./kv";
 
-import promptClient, {
+import {
     getAllPrompts,
     getPromptById,
     getPromptByName,
@@ -69,22 +69,12 @@ export {
 
 function client(co: InputClientOptions) {
     return {
-<<<<<<< HEAD
         ...generateClient(co),
         ...generateWithTypeClient(co),
         ...transcribeClient(co),
         ...memoryClient(co),
         ...chatClient(co),
         kv: kvClient(co),
-=======
-        ...generateClient(clientOptions),
-        ...generateWithTypeClient(clientOptions),
-        ...transcribeClient(clientOptions),
-        ...memoryClient(clientOptions),
-        ...chatClient(clientOptions),
-        ...promptClient(clientOptions),
-        kv: kvClient(clientOptions),
->>>>>>> 30cc0b8 (✨ Add prompt management)
     };
 }
 

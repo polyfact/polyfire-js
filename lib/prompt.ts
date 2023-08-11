@@ -32,7 +32,7 @@ async function axiosWrapper<T>(
     data?: Record<string, string | string[]>,
     clientOptions: Partial<ClientOptions> = {},
 ): Promise<T> {
-    const { token, endpoint } = defaultOptions(clientOptions);
+    const { token, endpoint } = await defaultOptions(clientOptions);
     const headers = {
         "Content-Type": "application/json",
         "X-Access-Token": token,
@@ -42,8 +42,7 @@ async function axiosWrapper<T>(
         const response = await axios({ method, url: `${endpoint}${url}`, headers, data });
         return response.data;
     } catch (e: unknown) {
-        console.log(e);
-        if (e instanceof AxiosError) {
+        if (e instanceof AxiosError && e?.response?.data?.code) {
             throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;

@@ -1,4 +1,4 @@
-import client, { PromptInsert, Filter } from "../lib";
+import client, { PromptInsert, Filter } from "../lib/prompt";
 
 async function main() {
     const apiClient = client({
@@ -40,5 +40,5 @@ async function main() {
 }
 
 main().catch((error) => {
-    console.error("An error occurred:", error.message);
+    console.error("An error occurred:", error);
 });
