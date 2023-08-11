@@ -1,14 +1,14 @@
 import axios, { AxiosError } from "axios";
-import { ClientOptions, defaultOptions } from "./clientOpts";
+import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
 export async function set(
     key: string,
     value: string,
-    clientOptions: Partial<ClientOptions> = {},
+    clientOptions: InputClientOptions = {},
 ): Promise<void> {
     try {
-        const { token, endpoint } = defaultOptions(clientOptions);
+        const { token, endpoint } = await defaultOptions(clientOptions);
 
         await axios.put(
             `${endpoint}/kv`,
@@ -31,12 +31,9 @@ export async function set(
     }
 }
 
-export async function get(
-    key: string,
-    clientOptions: Partial<ClientOptions> = {},
-): Promise<string> {
+export async function get(key: string, clientOptions: InputClientOptions = {}): Promise<string> {
     try {
-        const { token, endpoint } = defaultOptions(clientOptions);
+        const { token, endpoint } = await defaultOptions(clientOptions);
 
         const response = await axios
             .get(`${endpoint}/kv?key=${key}`, {
@@ -59,7 +56,7 @@ export async function get(
     }
 }
 
-export default function client(clientOptions: Partial<ClientOptions> = {}) {
+export default function client(clientOptions: InputClientOptions = {}) {
     return {
         get: (key: string) => get(key, clientOptions),
         set: (key: string, value: string) => set(key, value, clientOptions),
