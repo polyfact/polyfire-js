@@ -9,9 +9,9 @@ export class ApiError extends Error {
     errorMessage?: string;
 
     constructor(errorData: ErrorData) {
-        super(errorData.message);
+        super(errorData?.message);
 
-        this.errorType = errorData.code || "unknown_error";
-        this.errorMessage = errorData.message || "An unknown error occured";
+        this.errorType = errorData?.code || "unknown_error";
+        this.errorMessage = errorData?.message || "An unknown error occured";
     }
 }
