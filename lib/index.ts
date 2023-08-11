@@ -4,6 +4,7 @@ import * as t from "polyfact-io-ts";
 import { Mutex } from "async-mutex";
 import { POLYFACT_TOKEN, POLYFACT_ENDPOINT } from "./utils";
 import generateClient, {
+    generateWithInfo,
     generateStreamWithInfos,
     generate,
     generateWithTokenUsage,
@@ -19,17 +20,6 @@ import memoryClient, { Memory, createMemory, updateMemory, getAllMemories } from
 import { splitString, tokenCount } from "./split";
 import { InputClientOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet } from "./kv";
-
-import {
-    getAllPrompts,
-    getPromptById,
-    getPromptByName,
-    createPrompt,
-    updatePrompt,
-    deletePrompt,
-} from "./prompt";
-
-export type { PromptInsert, PromptUpdate, Prompt, FilterOperation, Filter } from "./prompt";
 
 // Export types and models
 export type { TokenUsage, Ressource, GenerationResult } from "./generate";
@@ -47,6 +37,7 @@ export {
     generateWithTokenUsage,
     generateWithType,
     generateWithTypeWithTokenUsage,
+    generateWithInfo,
     generateStreamWithInfos,
     splitString,
     tokenCount,
@@ -59,12 +50,6 @@ export {
     Chat,
     Memory,
     kv,
-    getAllPrompts,
-    getPromptById,
-    getPromptByName,
-    createPrompt,
-    updatePrompt,
-    deletePrompt,
 };
 
 function client(co: InputClientOptions) {

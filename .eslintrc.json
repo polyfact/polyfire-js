@@ -15,7 +15,6 @@
 
         "prettier"
     ],
-    "ignorePatterns": ["examples/**/*"],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": 2020,
@@ -23,7 +22,7 @@
         "project": "tsconfig.json"
     },
     "globals": {
-        "fetch": true
+      "fetch": true
     },
     "rules": {
         "@typescript-eslint/explicit-module-boundary-types": ["warn"],

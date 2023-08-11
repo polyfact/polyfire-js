@@ -1,3 +1,4 @@
+import { generateWithInfo } from "../lib/generate";
 import { createMemory, updateMemory, getAllMemories, generate } from "../lib/index";
 
 (async () => {
@@ -10,6 +11,6 @@ import { createMemory, updateMemory, getAllMemories, generate } from "../lib/ind
     const memories = await getAllMemories();
     console.log("All memories:", memories);
 
-    const result2 = await generate("<input-data>", { memoryId: memory.id, infos: true });
+    const result2 = await generateWithInfo("<input-data>", { memoryId: memory.id, infos: true });
     console.log("Generated:", result2);
 })();
