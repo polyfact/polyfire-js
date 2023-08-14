@@ -240,9 +240,11 @@ export default Polyfact;
 
 const reactMutex = new Mutex();
 
+type Provider = "github" | "google";
+
 export function usePolyfact({ project, endpoint }: { project: string; endpoint?: string }): {
     polyfact: Client | undefined;
-    login: ((input: { provider: "github" }) => Promise<void>) | undefined;
+    login: ((input: { provider: Provider }) => Promise<void>) | undefined;
     loading: boolean;
 } {
     if (typeof window === "undefined") {
@@ -302,7 +304,7 @@ export function usePolyfact({ project, endpoint }: { project: string; endpoint?:
                 setLoading(false);
                 setPolyfact(p);
             } else {
-                setLogin(() => async ({ provider }: { provider: "github" }) => {
+                setLogin(() => async ({ provider }: { provider: Provider }) => {
                     await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
                         .project(project)
                         .signInWithOAuth({ provider });
