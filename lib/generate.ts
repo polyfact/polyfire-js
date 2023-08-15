@@ -22,6 +22,7 @@ const GenerationAPIResponse = t.intersection([Required, PartialResultType]);
 
 export type GenerationOptions = {
     provider?: "openai" | "cohere" | "llama";
+    model?: string;
     chatId?: string;
     memory?: Memory;
     memoryId?: string;
@@ -63,11 +64,13 @@ export async function generateWithTokenUsage(
         // eslint-disable-next-line camelcase
         chat_id?: string;
         provider: GenerationOptions["provider"];
+        model?: string;
         stop: GenerationOptions["stop"];
         infos: boolean;
     } = {
         task,
         provider: options?.provider || "openai",
+        model: options.model,
         memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
         chat_id: options?.chatId || "",
         stop: options?.stop || [],
@@ -140,11 +143,13 @@ function stream(
             // eslint-disable-next-line camelcase
             chat_id?: string;
             provider: GenerationOptions["provider"];
+            model?: string;
             stop: GenerationOptions["stop"];
             infos?: boolean;
         } = {
             task,
             provider: options?.provider || "openai",
+            model: options?.model,
             memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
             chat_id: options?.chatId || "",
             stop: options?.stop || [],
