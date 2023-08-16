@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.40",
+    "version": "0.1.41",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
@@ -42,6 +42,18 @@
         "prettier": "^2.2.1",
         "typescript": "^4.6.2"
     },
+    "browserslist": [
+        ">0.2%",
+        "not dead",
+        "not op_mini all",
+        "last 2 versions",
+        "last 2 Chrome versions",
+        "last 2 Firefox versions",
+        "last 2 Safari versions",
+        "last 2 Edge versions",
+        "last 2 iOS versions",
+        "last 2 ChromeAndroid versions"
+    ],
     "scripts": {
         "start": "ts-node cmd/index.ts",
         "lint": "prettier --check lib/ cmd/ ; eslint lib/ cmd/",
