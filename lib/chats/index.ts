@@ -47,6 +47,7 @@ export async function createChat(
 
 type ChatOptions = {
     provider?: "openai" | "cohere" | "llama";
+    model?: string;
     systemPrompt?: string;
     autoMemory?: boolean;
 };
@@ -56,6 +57,8 @@ export class Chat {
 
     provider: "openai" | "cohere" | "llama";
 
+    model?: string;
+
     clientOptions: Promise<ClientOptions>;
 
     autoMemory?: Promise<Memory>;
@@ -64,6 +67,7 @@ export class Chat {
         this.clientOptions = defaultOptions(clientOptions);
         this.chatId = createChat(options.systemPrompt, this.clientOptions);
         this.provider = options.provider || "openai";
+        this.model = options.model;
         if (options.autoMemory) {
             this.autoMemory = this.clientOptions.then((co) => new Memory(co));
         }
@@ -81,7 +85,7 @@ export class Chat {
 
         const result = await generateWithTokenUsage(
             message,
-            { provider: this.provider, ...options, chatId },
+            { provider: this.provider, model: this.model, ...options, chatId },
             this.clientOptions,
         );
 
@@ -154,7 +158,7 @@ export class Chat {
 
             const result = generateStream(
                 message,
-                { provider: this.provider, ...options, chatId },
+                { provider: this.provider, model: this.model, ...options, chatId },
                 await this.clientOptions,
             );
 

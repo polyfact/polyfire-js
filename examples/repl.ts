@@ -4,7 +4,7 @@ import Polyfact from "../lib/index";
 
 async function main() {
     const { Chat } = Polyfact.exec();
-    const chat = new Chat({ autoMemory: true, provider: "openai" });
+    const chat = new Chat({ autoMemory: true, provider: "openai", model: "gpt-3.5-turbo" });
 
     const rl = readline.createInterface({ input, output });
 
