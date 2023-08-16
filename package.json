@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.41",
+    "version": "0.1.42",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
@@ -19,6 +19,7 @@
         "polyfact-io-ts": "^2.2.20",
         "readable-stream": "^4.4.2",
         "ts-node": "^10.9.1",
+        "uuid": "^9.0.0",
         "ws": "^8.13.0"
     },
     "devDependencies": {

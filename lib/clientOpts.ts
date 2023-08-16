@@ -1,4 +1,3 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { POLYFACT_ENDPOINT, POLYFACT_TOKEN } from "./utils";
 
 export type ClientOptions = {
@@ -19,6 +18,7 @@ export async function defaultOptions(popts: InputClientOptions): Promise<ClientO
     return {
         endpoint: POLYFACT_ENDPOINT || "https://api2.polyfact.com",
         token: POLYFACT_TOKEN || "",
+
         ...opts,
     };
 }

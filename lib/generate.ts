@@ -1,7 +1,10 @@
+/* eslint-disable camelcase */
+
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable } from "readable-stream";
 import WebSocket from "isomorphic-ws";
+import { UUID } from "crypto";
 import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
 import { ApiError, ErrorData } from "./helpers/error";
@@ -29,7 +32,14 @@ export type GenerationOptions = {
     stop?: string[];
 };
 
-export type GenerationOptionsWithInfos = GenerationOptions & { infos?: boolean };
+export type Exclusive<T, U = T> =
+    | (T & Partial<Record<Exclude<keyof U, keyof T>, never>>)
+    | (U & Partial<Record<Exclude<keyof T, keyof U>, never>>);
+
+export type GenerationGlobalOptions = GenerationOptions &
+    Exclusive<{ systemPromptId?: UUID }, { systemPrompt?: string }> & {
+        infos?: boolean;
+    };
 
 export type TokenUsage = {
     input: number;
@@ -53,28 +63,28 @@ export type GenerationResult = {
 
 export async function generateWithTokenUsage(
     task: string,
-    options: GenerationOptionsWithInfos = {},
+    options: GenerationGlobalOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<GenerationResult> {
     const { token, endpoint } = await defaultOptions(clientOptions);
     const requestBody: {
         task: string;
-        // eslint-disable-next-line camelcase
         memory_id?: string;
-        // eslint-disable-next-line camelcase
         chat_id?: string;
         provider: GenerationOptions["provider"];
         model?: string;
         stop: GenerationOptions["stop"];
         infos: boolean;
+        system_prompt_id?: string;
     } = {
         task,
         provider: options?.provider || "openai",
         model: options.model,
-        memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
-        chat_id: options?.chatId || "",
+        memory_id: (await options?.memory?.memoryId) || options?.memoryId,
+        chat_id: options?.chatId,
         stop: options?.stop || [],
         infos: options?.infos || false,
+        system_prompt_id: options?.systemPromptId,
     };
 
     try {
@@ -105,30 +115,34 @@ export async function generateWithTokenUsage(
     }
 }
 
+/**
+ * Generates a result based on provided options.
+ *
+ * If `options.infos` is set to `true`, this function will return a `GenerationResult`.
+ * If `options.infos` is set to `false` or left `undefined`, this function will return a `string`.
+ *
+ * @param task - The task string.
+ * @param options - The generation options.
+ * @param clientOptions - The client options.
+ * @returns Either a `string` or a `GenerationResult` based on `options.infos`.
+ */
 export async function generate(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationGlobalOptions = {},
     clientOptions: InputClientOptions = {},
-): Promise<string> {
+): Promise<string | GenerationResult> {
     const res = await generateWithTokenUsage(task, options, clientOptions);
+
+    if (options?.infos) {
+        return res;
+    }
 
     return res.result;
 }
 
-export async function generateWithInfo(
-    task: string,
-    options: GenerationOptionsWithInfos = {},
-    clientOptions: InputClientOptions = {},
-): Promise<GenerationResult> {
-    options.infos = true;
-    const res = await generateWithTokenUsage(task, options, clientOptions);
-
-    return res;
-}
-
 function stream(
     task: string,
-    options: GenerationOptionsWithInfos = {},
+    options: GenerationGlobalOptions = {},
     clientOptions: InputClientOptions = {},
     onMessage: (data: any, resultStream: Readable) => void,
 ): Readable {
@@ -138,14 +152,13 @@ function stream(
     (async () => {
         const requestBody: {
             task: string;
-            // eslint-disable-next-line camelcase
             memory_id?: string;
-            // eslint-disable-next-line camelcase
             chat_id?: string;
             provider: GenerationOptions["provider"];
             model?: string;
             stop: GenerationOptions["stop"];
             infos?: boolean;
+            system_prompt_id?: string;
         } = {
             task,
             provider: options?.provider || "openai",
@@ -154,6 +167,7 @@ function stream(
             chat_id: options?.chatId || "",
             stop: options?.stop || [],
             infos: options?.infos || false,
+            system_prompt_id: options?.systemPromptId,
         };
 
         const { token, endpoint } = await defaultOptions(clientOptions);
@@ -165,37 +179,32 @@ function stream(
     return resultStream;
 }
 
-export function generateStreamWithInfos(
-    task: string,
-    options: GenerationOptions = {},
-    clientOptions: InputClientOptions = {},
-): Readable {
-    return stream(
-        task,
-        { ...options, infos: true },
-        clientOptions,
-        (data: any, resultStream: Readable) => {
-            if (data.data === "") {
-                resultStream.push(null);
-            } else if (data.data.startsWith("[INFOS]:")) {
-                try {
-                    const potentialRessources = JSON.parse(data.data.replace("[INFOS]:", ""));
-                    resultStream.emit("infos", potentialRessources);
-                } catch (e) {
-                    resultStream.push("");
-                }
-            } else {
-                resultStream.push(data.data);
-            }
-        },
-    );
-}
-
 export function generateStream(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationGlobalOptions = {},
     clientOptions: InputClientOptions = {},
 ): Readable {
+    if (options.infos) {
+        return stream(
+            task,
+            { ...options, infos: true },
+            clientOptions,
+            (data: any, resultStream: Readable) => {
+                if (data.data === "") {
+                    resultStream.push(null);
+                } else if (data.data.startsWith("[INFOS]:")) {
+                    try {
+                        const potentialRessources = JSON.parse(data.data.replace("[INFOS]:", ""));
+                        resultStream.emit("infos", potentialRessources);
+                    } catch (e) {
+                        resultStream.push("");
+                    }
+                } else {
+                    resultStream.push(data.data);
+                }
+            },
+        );
+    }
     return stream(task, options, clientOptions, (data: any, resultStream: Readable) => {
         if (data.data === "") {
             resultStream.push(null);
@@ -210,10 +219,8 @@ export type GenerationClient = {
         task: string,
         options?: GenerationOptions,
     ) => Promise<GenerationResult>;
-    generate: (task: string, options?: GenerationOptions) => Promise<string>;
-    generateWithInfo: (task: string, options?: GenerationOptions) => Promise<GenerationResult>;
+    generate: (task: string, options?: GenerationOptions) => Promise<string | GenerationResult>;
     generateStream: (task: string, options?: GenerationOptions) => Readable;
-    generateStreamWithInfos: (task: string, options?: GenerationOptions) => Readable;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): GenerationClient {
@@ -222,11 +229,7 @@ export default function client(clientOptions: InputClientOptions = {}): Generati
             generateWithTokenUsage(task, options, clientOptions),
         generate: (task: string, options: GenerationOptions = {}) =>
             generate(task, options, clientOptions),
-        generateWithInfo: (task: string, options: GenerationOptions = {}) =>
-            generateWithInfo(task, options, clientOptions),
-        generateStream: (task: string, options: GenerationOptions = {}) =>
+        generateStream: (task: string, options: GenerationGlobalOptions = {}) =>
             generateStream(task, options, clientOptions),
-        generateStreamWithInfos: (task: string, options: GenerationOptions = {}) =>
-            generateStreamWithInfos(task, options, clientOptions),
     };
 }

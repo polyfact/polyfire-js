@@ -1,9 +1,10 @@
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable, PassThrough } from "readable-stream";
+import { UUID } from "crypto";
 import {
+    Exclusive,
     generateStream,
-    generateStreamWithInfos,
     generateWithTokenUsage,
     GenerationOptions,
     GenerationResult,
@@ -21,20 +22,22 @@ const Message = t.type({
 });
 export async function createChat(
     systemPrompt?: string,
+    systemPromptId?: UUID,
     options: InputClientOptions = {},
 ): Promise<string> {
     try {
         const { token, endpoint } = await defaultOptions(options);
 
-        const response = await axios.post(
-            `${endpoint}/chats`,
-            { system_prompt: systemPrompt },
-            {
-                headers: {
-                    "X-Access-Token": token,
-                },
+        const body = {
+            ...(systemPromptId ? { system_prompt_id: systemPromptId } : {}),
+            ...(systemPrompt && !systemPromptId ? { system_prompt: systemPrompt } : {}),
+        };
+
+        const response = await axios.post(`${endpoint}/chats`, body, {
+            headers: {
+                "X-Access-Token": token,
             },
-        );
+        });
 
         return response?.data?.id;
     } catch (e: unknown) {
@@ -48,9 +51,8 @@ export async function createChat(
 type ChatOptions = {
     provider?: "openai" | "cohere" | "llama";
     model?: string;
-    systemPrompt?: string;
     autoMemory?: boolean;
-};
+} & Exclusive<{ systemPrompt?: string }, { systemPromptId?: UUID }>;
 
 export class Chat {
     chatId: Promise<string>;
@@ -63,9 +65,12 @@ export class Chat {
 
     autoMemory?: Promise<Memory>;
 
+    systemPromptId?: UUID;
+
     constructor(options: ChatOptions = {}, clientOptions: InputClientOptions = {}) {
+        this.systemPromptId = options.systemPromptId;
         this.clientOptions = defaultOptions(clientOptions);
-        this.chatId = createChat(options.systemPrompt, this.clientOptions);
+        this.chatId = createChat(options.systemPrompt, options.systemPromptId, this.clientOptions);
         this.provider = options.provider || "openai";
         this.model = options.model;
         if (options.autoMemory) {
@@ -85,7 +90,13 @@ export class Chat {
 
         const result = await generateWithTokenUsage(
             message,
-            { provider: this.provider, model: this.model, ...options, chatId },
+            {
+                provider: this.provider,
+                model: this.model,
+                ...options,
+                chatId,
+                systemPromptId: this.systemPromptId,
+            },
             this.clientOptions,
         );
 
@@ -117,9 +128,9 @@ export class Chat {
                 options.memory = await this.autoMemory;
             }
 
-            const result = generateStreamWithInfos(
+            const result = generateStream(
                 message,
-                { ...options, chatId },
+                { ...options, chatId, infos: true, systemPromptId: this.systemPromptId },
                 await this.clientOptions,
             );
 
@@ -158,7 +169,13 @@ export class Chat {
 
             const result = generateStream(
                 message,
-                { provider: this.provider, model: this.model, ...options, chatId },
+                {
+                    provider: this.provider,
+                    model: this.model,
+                    ...options,
+                    chatId,
+                    systemPromptId: this.systemPromptId,
+                },
                 await this.clientOptions,
             );
 
@@ -207,13 +224,14 @@ export class Chat {
 }
 
 export type ChatClient = {
-    createChat: (systemPrompt?: string) => Promise<string>;
+    createChat: (systemPrompt?: string, systemPromptId?: UUID) => Promise<string>;
     Chat: typeof Chat;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): ChatClient {
     return {
-        createChat: (systemPrompt?: string) => createChat(systemPrompt, clientOptions),
+        createChat: (systemPrompt?: string, systemPromptId?: UUID) =>
+            createChat(systemPrompt, systemPromptId, clientOptions),
         Chat: class C extends Chat {
             constructor(options: ChatOptions = {}) {
                 super(options, clientOptions);

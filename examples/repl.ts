@@ -1,10 +1,13 @@
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import Polyfact from "../lib/index";
-
+import { Chat } from "../lib/index";
 async function main() {
-    const { Chat } = Polyfact.exec();
-    const chat = new Chat({ autoMemory: true, provider: "openai", model: "gpt-3.5-turbo" });
+    const chat = new Chat({
+        autoMemory: true,
+        provider: "openai",
+        model: "gpt-3.5-turbo-16k",
+        systemPromptId: "8fc39ca4-3941-40d9-824a-5ed283102f6e", // Holy Bible Prompt
+    });
 
     const rl = readline.createInterface({ input, output });
 

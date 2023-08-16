@@ -4,8 +4,6 @@ import * as t from "polyfact-io-ts";
 import { Mutex } from "async-mutex";
 import { POLYFACT_TOKEN, POLYFACT_ENDPOINT } from "./utils";
 import generateClient, {
-    generateWithInfo,
-    generateStreamWithInfos,
     generate,
     generateWithTokenUsage,
     GenerationOptions,
@@ -45,8 +43,6 @@ export {
     generateWithTokenUsage,
     generateWithType,
     generateWithTypeWithTokenUsage,
-    generateWithInfo,
-    generateStreamWithInfos,
     splitString,
     tokenCount,
     t,
