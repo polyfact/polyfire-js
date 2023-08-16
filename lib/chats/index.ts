@@ -87,6 +87,9 @@ export class Chat {
         if (this.autoMemory && !options.memory && !options.memoryId) {
             options.memory = await this.autoMemory;
         }
+        if (this.systemPromptId) {
+            options.systemPromptId = this.systemPromptId;
+        }
 
         const result = await generateWithTokenUsage(
             message,
@@ -95,7 +98,6 @@ export class Chat {
                 model: this.model,
                 ...options,
                 chatId,
-                systemPromptId: this.systemPromptId,
             },
             this.clientOptions,
         );
@@ -127,10 +129,13 @@ export class Chat {
             if (this.autoMemory && !options.memory && !options.memoryId) {
                 options.memory = await this.autoMemory;
             }
+            if (this.systemPromptId) {
+                options.systemPromptId = this.systemPromptId;
+            }
 
             const result = generateStream(
                 message,
-                { ...options, chatId, infos: true, systemPromptId: this.systemPromptId },
+                { ...options, chatId, infos: true },
                 await this.clientOptions,
             );
 
@@ -166,6 +171,9 @@ export class Chat {
             if (this.autoMemory && !options.memory && !options.memoryId) {
                 options.memory = await this.autoMemory;
             }
+            if (this.systemPromptId) {
+                options.systemPromptId = this.systemPromptId;
+            }
 
             const result = generateStream(
                 message,
@@ -174,7 +182,6 @@ export class Chat {
                     model: this.model,
                     ...options,
                     chatId,
-                    systemPromptId: this.systemPromptId,
                 },
                 await this.clientOptions,
             );

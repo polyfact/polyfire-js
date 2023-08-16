@@ -23,6 +23,12 @@ const Required = t.type({
 
 const GenerationAPIResponse = t.intersection([Required, PartialResultType]);
 
+export type Exclusive<T, U = T> =
+    | (T & Partial<Record<Exclude<keyof U, keyof T>, never>>)
+    | (U & Partial<Record<Exclude<keyof T, keyof U>, never>>);
+
+type SystemPrompt = Exclusive<{ systemPromptId?: UUID }, { systemPrompt?: string }>;
+
 export type GenerationOptions = {
     provider?: "openai" | "cohere" | "llama";
     model?: string;
@@ -30,16 +36,8 @@ export type GenerationOptions = {
     memory?: Memory;
     memoryId?: string;
     stop?: string[];
-};
-
-export type Exclusive<T, U = T> =
-    | (T & Partial<Record<Exclude<keyof U, keyof T>, never>>)
-    | (U & Partial<Record<Exclude<keyof T, keyof U>, never>>);
-
-export type GenerationGlobalOptions = GenerationOptions &
-    Exclusive<{ systemPromptId?: UUID }, { systemPrompt?: string }> & {
-        infos?: boolean;
-    };
+    infos?: boolean;
+} & SystemPrompt;
 
 export type TokenUsage = {
     input: number;
@@ -63,7 +61,7 @@ export type GenerationResult = {
 
 export async function generateWithTokenUsage(
     task: string,
-    options: GenerationGlobalOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<GenerationResult> {
     const { token, endpoint } = await defaultOptions(clientOptions);
@@ -75,7 +73,7 @@ export async function generateWithTokenUsage(
         model?: string;
         stop: GenerationOptions["stop"];
         infos: boolean;
-        system_prompt_id?: string;
+        system_prompt_id?: UUID;
     } = {
         task,
         provider: options?.provider || "openai",
@@ -128,7 +126,7 @@ export async function generateWithTokenUsage(
  */
 export async function generate(
     task: string,
-    options: GenerationGlobalOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<string | GenerationResult> {
     const res = await generateWithTokenUsage(task, options, clientOptions);
@@ -142,7 +140,7 @@ export async function generate(
 
 function stream(
     task: string,
-    options: GenerationGlobalOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
     onMessage: (data: any, resultStream: Readable) => void,
 ): Readable {
@@ -158,7 +156,7 @@ function stream(
             model?: string;
             stop: GenerationOptions["stop"];
             infos?: boolean;
-            system_prompt_id?: string;
+            system_prompt_id?: UUID;
         } = {
             task,
             provider: options?.provider || "openai",
@@ -181,7 +179,7 @@ function stream(
 
 export function generateStream(
     task: string,
-    options: GenerationGlobalOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
 ): Readable {
     if (options.infos) {
@@ -229,7 +227,7 @@ export default function client(clientOptions: InputClientOptions = {}): Generati
             generateWithTokenUsage(task, options, clientOptions),
         generate: (task: string, options: GenerationOptions = {}) =>
             generate(task, options, clientOptions),
-        generateStream: (task: string, options: GenerationGlobalOptions = {}) =>
+        generateStream: (task: string, options: GenerationOptions = {}) =>
             generateStream(task, options, clientOptions),
     };
 }
