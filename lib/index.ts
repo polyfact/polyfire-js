@@ -24,6 +24,7 @@ import memoryClient, {
     MemoryClient,
 } from "./memory";
 import { splitString, tokenCount } from "./split";
+import userClient, { usage, UserClient } from "./user";
 import { InputClientOptions } from "./clientOpts";
 import kvClient, { get as KVGet, set as KVSet, KVClient } from "./kv";
 
@@ -54,13 +55,15 @@ export {
     Chat,
     Memory,
     kv,
+    usage,
 };
 
 type Client = GenerationClient &
     GenerationWithTypeClient &
     TranscribeClient &
     MemoryClient &
-    ChatClient & { kv: KVClient };
+    ChatClient &
+    UserClient & { kv: KVClient };
 
 function client(co: InputClientOptions): Client {
     return {
@@ -69,6 +72,7 @@ function client(co: InputClientOptions): Client {
         ...transcribeClient(co),
         ...memoryClient(co),
         ...chatClient(co),
+        ...userClient(co),
         kv: kvClient(co),
     };
 }
@@ -241,6 +245,7 @@ type Provider = "github" | "google";
 export function usePolyfact({ project, endpoint }: { project: string; endpoint?: string }): {
     polyfact: Client | undefined;
     login: ((input: { provider: Provider }) => Promise<void>) | undefined;
+    email?: string;
     loading: boolean;
 } {
     if (typeof window === "undefined") {
@@ -249,6 +254,7 @@ export function usePolyfact({ project, endpoint }: { project: string; endpoint?:
 
     const react = require("react"); // eslint-disable-line
     const [polyfact, setPolyfact] = react.useState();
+    const [email, setEmail] = react.useState();
     const [loading, setLoading] = react.useState(true);
     const [login, setLogin] = react.useState();
 
@@ -294,6 +300,10 @@ export function usePolyfact({ project, endpoint }: { project: string; endpoint?:
                         data.session?.refresh_token,
                     );
                 }
+
+                const { data } = await supabase.auth.getUser(token);
+
+                setEmail(data.user?.email);
                 const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
                     .project(project)
                     .signInWithToken(token);
@@ -312,5 +322,5 @@ export function usePolyfact({ project, endpoint }: { project: string; endpoint?:
         })();
     }, []);
 
-    return { polyfact, login, loading };
+    return { polyfact, login, loading, email };
 }
