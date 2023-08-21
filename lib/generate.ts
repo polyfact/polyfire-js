@@ -138,14 +138,46 @@ export async function generate(
     return res.result;
 }
 
+export class GenerationStream extends Readable {
+    stop: () => void;
+
+    constructor({ stop }: { stop?: () => void } = {}) {
+        super({ read() {}, objectMode: true });
+        this.stop = stop || (() => {});
+    }
+
+    pipeInto(stream: GenerationStream): GenerationStream {
+        this.on("infos", (data) => {
+            stream.emit("infos", data);
+        });
+        this.on("data", (d) => {
+            stream.push(d);
+        });
+        this.on("end", () => {
+            stream.push(null);
+        });
+        stream.stop = () => this.stopWrap();
+
+        return this;
+    }
+
+    stopWrap() {
+        this.stop();
+    }
+}
+
 function stream(
     task: string,
     options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
-    onMessage: (data: any, resultStream: Readable) => void,
-): Readable {
-    const resultStream = new Readable({
-        read() {},
+    onMessage: (data: any, resultStream: GenerationStream) => void,
+): GenerationStream {
+    let stopped = false;
+    const resultStream = new GenerationStream({
+        stop: () => {
+            stopped = true;
+            resultStream.push(null);
+        },
     });
     (async () => {
         const requestBody: {
@@ -169,10 +201,16 @@ function stream(
         };
 
         const { token, endpoint } = await defaultOptions(clientOptions);
+        if (stopped) {
+            return;
+        }
         const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream?token=${token}`);
 
         ws.onopen = () => ws.send(JSON.stringify(requestBody));
         ws.onmessage = (data: any) => onMessage(data, resultStream);
+        resultStream.stop = () => {
+            ws.send("STOP");
+        };
     })();
     return resultStream;
 }
@@ -181,13 +219,13 @@ export function generateStream(
     task: string,
     options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
-): Readable {
+): GenerationStream {
     if (options.infos) {
         return stream(
             task,
             { ...options, infos: true },
             clientOptions,
-            (data: any, resultStream: Readable) => {
+            (data: any, resultStream: GenerationStream) => {
                 if (data.data === "") {
                     resultStream.push(null);
                 } else if (data.data.startsWith("[INFOS]:")) {
@@ -203,7 +241,7 @@ export function generateStream(
             },
         );
     }
-    return stream(task, options, clientOptions, (data: any, resultStream: Readable) => {
+    return stream(task, options, clientOptions, (data: any, resultStream: GenerationStream) => {
         if (data.data === "") {
             resultStream.push(null);
         } else {
@@ -218,7 +256,7 @@ export type GenerationClient = {
         options?: GenerationOptions,
     ) => Promise<GenerationResult>;
     generate: (task: string, options?: GenerationOptions) => Promise<string | GenerationResult>;
-    generateStream: (task: string, options?: GenerationOptions) => Readable;
+    generateStream: (task: string, options?: GenerationOptions) => GenerationStream;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): GenerationClient {
