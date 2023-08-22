@@ -151,7 +151,7 @@ export class Chat {
                 resultStream.push(null);
                 (async () => {
                     if (this.autoMemory) {
-                        const totalResult = Buffer.concat(bufs).toString("utf8");
+                        const totalResult = new Blob(bufs).arrayBuffer().toString();
                         (await this.autoMemory).add(`Human: ${message}`);
                         (await this.autoMemory).add(`AI: ${totalResult}`);
                     }
@@ -194,7 +194,7 @@ export class Chat {
                     bufs.push(d);
                 });
                 result.on("end", () => {
-                    res(Buffer.concat(bufs).toString("utf8"));
+                    res(new Blob(bufs).arrayBuffer().toString());
                 });
             });
 
