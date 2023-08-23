@@ -3,7 +3,7 @@ import { generateStream, generateWithTokenUsage } from "../lib/generate";
 
 const config = {
     endpoint: "http://localhost:8080",
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOGJlOWQwZWYtZGMyZi00ODQzLWE0MjctYmYwNDRlZmJkNTVlIiwiaWF0IjoxNTE2MjM5MDIyfQ.1lULQuZIkRBL9eWPYjsU-x0Am4F0VauW82ZRTiRVyaE",
+    token: "<YOUR_TOKEN>",
 };
 
 function handleStreamData(stream: Readable): Promise<void> {
