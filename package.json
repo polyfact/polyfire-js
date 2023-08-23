@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.44",
+    "version": "0.1.45",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
