@@ -44,12 +44,13 @@ export type GenerationOptions = {
     memory?: Memory;
     memoryId?: string;
     stop?: string[];
+    temperature?: number;
     infos?: boolean;
 } & SystemPrompt;
 
 export type GenerationWithWebOptions = Omit<
     GenerationOptions,
-    "chatId" | "memory" | "memoryId" | "stop" | "systemPromptId" | "systemPrompt"
+    "chatId" | "memory" | "memoryId" | "stop" | "temperature" | "systemPromptId" | "systemPrompt"
 > & { web: true };
 
 export type TokenUsage = {
@@ -141,6 +142,7 @@ export async function generateWithTokenUsage(
             memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
             chat_id: genOptions.chatId,
             stop: genOptions.stop || [],
+            temperature: genOptions.temperature,
             infos: genOptions.infos || false,
             system_prompt_id: genOptions.systemPromptId,
         };
@@ -202,6 +204,7 @@ function stream(
                 memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
                 chat_id: options?.chatId || "",
                 stop: options?.stop || [],
+                temperature: options.temperature,
                 infos: options?.infos || false,
                 system_prompt_id: options?.systemPromptId,
             };
