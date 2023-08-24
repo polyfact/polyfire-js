@@ -25,6 +25,10 @@ PolyFact's goal is to make it possible to code every AI tool/Chatbot you could w
 
 You can consult PolyFact's documentation at https://github.com/polyfact/polyfact-node/wiki
 
+We also made a couple of tutorials you can use to get started with Polyfact:
+- **[Tutorial: A ChatGPT‐like using polyfact](https://github.com/polyfact/polyfact-node/wiki/Tutorial:-A-ChatGPT%E2%80%90like-using-polyfact)**
+- **[Tutorial: Add payment to your polyfact app with stripe subscriptions](https://github.com/polyfact/polyfact-node/wiki/Tutorial:-Add-stripe-subscriptions)**
+
 ## 🚀 Getting started
 
 To install polyfact into your repository:
