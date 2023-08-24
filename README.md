@@ -18,6 +18,8 @@ PolyFact's goal is to make it possible to code every AI tool/Chatbot you could w
 - **[Transcribe](https://github.com/polyfact/polyfact-node/wiki/Transcribe-audio-files)**: Transcribe audio files to text
 - **[Memory](https://github.com/polyfact/polyfact-node/wiki/Long-term-Memory-and-Embeddings)**: Easily create a long-term memory and simplify the use of large amounts of information
 - **[Type checked generation](https://github.com/polyfact/polyfact-node/wiki/Generate-objects-following-a-type)**: Answer simple requests with a type you defined *(🎲 probabilistic function)*
+- **[Image generation](https://github.com/polyfact/polyfact-node/wiki/Generate-images)**: Generate images with Dall-E and Midjourney
+- **[Usable without a backend from React](https://github.com/polyfact/polyfact-node/wiki/Using-Polyfact-in-React)**: The usePolyfact hooks lets you use Polyfact and handle authentification without having to deploy any backend
 
 ## 📚 Documentation
 
