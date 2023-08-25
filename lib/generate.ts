@@ -23,11 +23,19 @@ const Required = t.type({
 
 const GenerationAPIResponse = t.intersection([Required, PartialResultType]);
 
-export type Exclusive<T, U = T> =
+export type Exclusive<T, U> =
     | (T & Partial<Record<Exclude<keyof U, keyof T>, never>>)
     | (U & Partial<Record<Exclude<keyof T, keyof U>, never>>);
 
-type SystemPrompt = Exclusive<{ systemPromptId?: UUID }, { systemPrompt?: string }>;
+export type ExclusiveN<T extends Record<string, unknown>[]> = T extends [infer F, ...infer Rest]
+    ? F extends Record<string, unknown>
+        ? Exclusive<F, ExclusiveN<Extract<Rest, Record<string, unknown>[]>>>
+        : never
+    : unknown;
+
+type ExclusiveProps = [{ systemPromptId?: UUID }, { systemPrompt?: string }];
+
+export type SystemPrompt = ExclusiveN<ExclusiveProps>;
 
 export type GenerationOptions = {
     provider?: "openai" | "cohere" | "llama";
@@ -38,6 +46,11 @@ export type GenerationOptions = {
     stop?: string[];
     infos?: boolean;
 } & SystemPrompt;
+
+export type GenerationWithWebOptions = Omit<
+    GenerationOptions,
+    "chatId" | "memory" | "memoryId" | "stop" | "systemPromptId" | "systemPrompt"
+> & { web: true };
 
 export type TokenUsage = {
     input: number;
@@ -59,31 +72,11 @@ export type GenerationResult = {
     ressources?: Ressource[];
 };
 
-export async function generateWithTokenUsage(
-    task: string,
-    options: GenerationOptions = {},
-    clientOptions: InputClientOptions = {},
+async function generateRequest(
+    requestBody: Record<string, unknown>,
+    clientOptions: InputClientOptions,
 ): Promise<GenerationResult> {
     const { token, endpoint } = await defaultOptions(clientOptions);
-    const requestBody: {
-        task: string;
-        memory_id?: string;
-        chat_id?: string;
-        provider: GenerationOptions["provider"];
-        model?: string;
-        stop: GenerationOptions["stop"];
-        infos: boolean;
-        system_prompt_id?: UUID;
-    } = {
-        task,
-        provider: options?.provider || "openai",
-        model: options.model,
-        memory_id: (await options?.memory?.memoryId) || options?.memoryId,
-        chat_id: options?.chatId,
-        stop: options?.stop || [],
-        infos: options?.infos || false,
-        system_prompt_id: options?.systemPromptId,
-    };
 
     try {
         const res = await axios.post(`${endpoint}/generate`, requestBody, {
@@ -111,6 +104,49 @@ export async function generateWithTokenUsage(
         }
         throw e;
     }
+}
+
+export async function generateWithTokenUsage(
+    task: string,
+    options: GenerationOptions,
+    clientOptions?: InputClientOptions,
+): Promise<GenerationResult>;
+export async function generateWithTokenUsage(
+    task: string,
+    options: GenerationWithWebOptions,
+    clientOptions?: InputClientOptions,
+): Promise<GenerationResult>;
+
+export async function generateWithTokenUsage(
+    task: string,
+    options: GenerationOptions | GenerationWithWebOptions = {},
+    clientOptions: InputClientOptions = {},
+): Promise<GenerationResult> {
+    let requestBody = {};
+    if ("web" in options) {
+        requestBody = {
+            task,
+            provider: options.provider || "openai",
+            model: options.model || "gpt-3.5-turbo",
+            infos: options.infos || false,
+            web: options.web,
+        };
+    } else {
+        const genOptions = options as GenerationOptions;
+
+        requestBody = {
+            task,
+            provider: genOptions.provider || "openai",
+            model: genOptions.model || "gpt-3.5-turbo",
+            memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
+            chat_id: genOptions.chatId,
+            stop: genOptions.stop || [],
+            infos: genOptions.infos || false,
+            system_prompt_id: genOptions.systemPromptId,
+        };
+    }
+
+    return generateRequest(requestBody, clientOptions);
 }
 
 /**
@@ -168,9 +204,9 @@ export class GenerationStream extends Readable {
 
 function stream(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationOptions | GenerationWithWebOptions = {},
     clientOptions: InputClientOptions = {},
-    onMessage: (data: any, resultStream: GenerationStream) => void,
+    onMessage: (data: unknown, resultStream: GenerationStream) => void,
 ): GenerationStream {
     let stopped = false;
     const resultStream = new GenerationStream({
@@ -180,25 +216,27 @@ function stream(
         },
     });
     (async () => {
-        const requestBody: {
-            task: string;
-            memory_id?: string;
-            chat_id?: string;
-            provider: GenerationOptions["provider"];
-            model?: string;
-            stop: GenerationOptions["stop"];
-            infos?: boolean;
-            system_prompt_id?: UUID;
-        } = {
-            task,
-            provider: options?.provider || "openai",
-            model: options?.model,
-            memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
-            chat_id: options?.chatId || "",
-            stop: options?.stop || [],
-            infos: options?.infos || false,
-            system_prompt_id: options?.systemPromptId,
-        };
+        let requestBody = {};
+        if ("web" in options) {
+            requestBody = {
+                task,
+                provider: options.provider || "openai",
+                model: options.model || "gpt-3.5-turbo",
+                infos: options.infos || false,
+                web: options.web,
+            };
+        } else {
+            requestBody = {
+                task,
+                provider: options?.provider || "openai",
+                model: options?.model || "gpt-3.5-turbo",
+                memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
+                chat_id: options?.chatId || "",
+                stop: options?.stop || [],
+                infos: options?.infos || false,
+                system_prompt_id: options?.systemPromptId,
+            };
+        }
 
         const { token, endpoint } = await defaultOptions(clientOptions);
         if (stopped) {
@@ -207,7 +245,7 @@ function stream(
         const ws = new WebSocket(`${endpoint.replace("http", "ws")}/stream?token=${token}`);
 
         ws.onopen = () => ws.send(JSON.stringify(requestBody));
-        ws.onmessage = (data: any) => onMessage(data, resultStream);
+        ws.onmessage = (data: unknown) => onMessage(data, resultStream);
         resultStream.stop = () => {
             ws.send("STOP");
         };
@@ -217,7 +255,7 @@ function stream(
 
 export function generateStream(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationOptions | GenerationWithWebOptions = {},
     clientOptions: InputClientOptions = {},
 ): GenerationStream {
     if (options.infos) {

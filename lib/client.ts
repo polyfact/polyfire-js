@@ -11,13 +11,15 @@ import memoryClient, { MemoryClient } from "./memory";
 import userClient, { UserClient } from "./user";
 import { InputClientOptions } from "./clientOpts";
 import kvClient, { KVClient } from "./kv";
+import imageGenerationClient, { ImageGenerationClient } from "./image";
 
 export type Client = GenerationClient &
     GenerationWithTypeClient &
     TranscribeClient &
     MemoryClient &
     ChatClient &
-    UserClient & { kv: KVClient };
+    UserClient &
+    ImageGenerationClient & { kv: KVClient };
 
 function client(co: InputClientOptions): Client {
     return {
@@ -27,6 +29,7 @@ function client(co: InputClientOptions): Client {
         ...memoryClient(co),
         ...chatClient(co),
         ...userClient(co),
+        ...imageGenerationClient(co),
         kv: kvClient(co),
     };
 }

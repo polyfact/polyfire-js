@@ -1,6 +1,6 @@
 import usePolyfact from "./usePolyfact";
 
-type Message = {
+export type Message = {
     id: string | null;
     chat_id: string; // eslint-disable-line
     is_user_message: boolean; // eslint-disable-line

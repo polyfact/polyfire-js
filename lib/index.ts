@@ -13,6 +13,7 @@ import { get as KVGet, set as KVSet } from "./kv";
 import Polyfact, { PolyfactClientBuilder } from "./client";
 import usePolyfact from "./hooks/usePolyfact";
 import useChat from "./hooks/useChat";
+import { generateImage } from "./image";
 
 // Export types and models
 export type { TokenUsage, Ressource, GenerationResult } from "./generate";
@@ -45,6 +46,7 @@ export {
     usePolyfact,
     useChat,
     PolyfactClientBuilder,
+    generateImage,
 };
 
 export default Polyfact;

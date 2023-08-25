@@ -9,6 +9,7 @@ import {
     GenerationOptions,
     GenerationResult,
     GenerationStream,
+    SystemPrompt,
 } from "../generate";
 import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
@@ -53,7 +54,7 @@ type ChatOptions = {
     provider?: "openai" | "cohere" | "llama";
     model?: string;
     autoMemory?: boolean;
-} & Exclusive<{ systemPrompt?: string }, { systemPromptId?: UUID }>;
+} & SystemPrompt;
 
 export class Chat {
     chatId: Promise<string>;
