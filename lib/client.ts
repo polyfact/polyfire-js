@@ -135,10 +135,55 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
         return this;
     }
 
-    signInWithToken(token: string): PolyfactClientBuilder {
+    signInWithOAuthToken(token: string): PolyfactClientBuilder {
         this.isAuthTokenSetSync = true;
         this.authTokenResolve(token);
         return this;
+    }
+
+    async getSession(): Promise<{ token?: string; email?: string }> {
+        let token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
+            "access_token",
+        );
+        let refreshToken = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
+            "refresh_token",
+        );
+
+        const supabase = createClient(
+            supabaseDefaultClient.supabaseUrl,
+            supabaseDefaultClient.supabaseKey,
+            {
+                auth: { persistSession: false },
+            },
+        );
+        if (!refreshToken && window.localStorage.getItem("polyfact_refresh_token")) {
+            refreshToken = window.localStorage.getItem("polyfact_refresh_token");
+        } else if (refreshToken) {
+            window.localStorage.setItem("polyfact_refresh_token", refreshToken);
+        }
+
+        if (refreshToken) {
+            if (!token) {
+                const { data } = await supabase.auth.refreshSession({
+                    refresh_token: refreshToken,
+                });
+
+                token = data.session?.access_token || "";
+
+                if (!token) {
+                    window.localStorage.removeItem("polyfact_refresh_token");
+                    return {};
+                }
+
+                window.localStorage.setItem("polyfact_refresh_token", data.session?.refresh_token);
+            }
+
+            const { data } = await supabase.auth.getUser(token);
+
+            return { token, email: data.user?.email || "" };
+        }
+
+        return {};
     }
 
     signInWithPassword(credentials: { email: string; password: string }): PolyfactClientBuilder {
@@ -155,26 +200,38 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
         return this;
     }
 
-    signInWithOAuth(
+    async oAuthRedirect(
         credentials: Awaited<
             Parameters<ReturnType<typeof createClient>["auth"]["signInWithOAuth"]>[0]
         >,
-    ): PolyfactClientBuilder {
+        browserRedirect = true,
+    ): Promise<string> {
         if (typeof window === "undefined") {
             throw new Error("signInWithOAuth not usable outside of the browser environment");
         }
-        console.log({
-            options: { redirectTo: window?.location },
-        });
         this.isAuthTokenSetSync = true;
-        this.buildQueue.push(async () => {
-            await this.supabaseClient.auth.signInWithOAuth({
-                ...credentials,
-                options: { redirectTo: window?.location },
-            });
-        });
-        this.buildQueue.push(() => new Promise<void>(() => {})); // Since it should redirect to another page, the promise shouldn't resolve.
-        return this;
+        const url = new Promise<string>((res, rej) =>
+            this.buildQueue.push(async () => {
+                const { data } = await this.supabaseClient.auth.signInWithOAuth({
+                    ...credentials,
+                    options: {
+                        redirectTo: window?.location,
+                        skipBrowserRedirect: !browserRedirect,
+                    },
+                });
+
+                if (!data?.url) {
+                    rej(new Error("signInWithOAuth failed"));
+                    return;
+                }
+
+                res(data.url);
+            }),
+        );
+
+        await this;
+
+        return url;
     }
 
     project(projectId: string): PolyfactClientBuilder {
