@@ -16,6 +16,8 @@ async function main() {
 
         const stream = chat.sendMessageStream(userInput);
 
+        setTimeout(() => stream.stop(), 7000);
+
         stream.pipe(output);
         await new Promise((res) => stream.on("end", res));
         output.write("\n");

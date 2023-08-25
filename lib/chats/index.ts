@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
-import { Readable, PassThrough } from "readable-stream";
+import { PassThrough } from "readable-stream";
 import { UUID } from "crypto";
 import {
     Exclusive,
@@ -8,6 +8,7 @@ import {
     generateWithTokenUsage,
     GenerationOptions,
     GenerationResult,
+    GenerationStream,
     SystemPrompt,
 } from "../generate";
 import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
@@ -117,10 +118,13 @@ export class Chat {
         return result.result;
     }
 
-    sendMessageStreamWithInfos(message: string, options: GenerationOptions = {}): Readable {
-        const resultStream = new Readable({
-            read() {},
-            objectMode: true,
+    sendMessageStreamWithInfos(message: string, options: GenerationOptions = {}): GenerationStream {
+        let stopped = false;
+        const resultStream = new GenerationStream({
+            stop: () => {
+                stopped = true;
+                resultStream.push(null);
+            },
         });
         const bufs: Buffer[] = [];
 
@@ -134,22 +138,20 @@ export class Chat {
                 options.systemPromptId = this.systemPromptId;
             }
 
+            if (stopped) {
+                return;
+            }
+
             const result = generateStream(
                 message,
                 { ...options, chatId, infos: true },
                 await this.clientOptions,
-            );
-
-            result.on("infos", (data) => {
-                resultStream.emit("infos", data);
-            });
+            ).pipeInto(resultStream);
 
             result.on("data", (d) => {
                 bufs.push(d);
-                resultStream.push(d);
             });
             result.on("end", () => {
-                resultStream.push(null);
                 (async () => {
                     if (this.autoMemory) {
                         const totalResult = new Blob(bufs).arrayBuffer().toString();
@@ -163,8 +165,14 @@ export class Chat {
         return resultStream;
     }
 
-    sendMessageStream(message: string, options: GenerationOptions = {}): Readable {
-        const resultStream = new PassThrough();
+    sendMessageStream(message: string, options: GenerationOptions = {}): GenerationStream {
+        let stopped = false;
+        const resultStream = new GenerationStream({
+            stop: () => {
+                stopped = true;
+                resultStream.push(null);
+            },
+        });
 
         (async () => {
             const chatId = await this.chatId;
@@ -174,6 +182,10 @@ export class Chat {
             }
             if (this.systemPromptId) {
                 options.systemPromptId = this.systemPromptId;
+            }
+
+            if (stopped) {
+                return;
             }
 
             const result = generateStream(
@@ -187,13 +199,10 @@ export class Chat {
                 await this.clientOptions,
             );
 
-            result.pipe(resultStream);
+            result.pipeInto(resultStream);
 
             const bufs: Buffer[] = [];
             const totalResult = await new Promise((res, _rej) => {
-                result.on("data", (d) => {
-                    bufs.push(d);
-                });
                 result.on("end", () => {
                     res(new Blob(bufs).arrayBuffer().toString());
                 });
@@ -205,7 +214,7 @@ export class Chat {
             }
         })();
 
-        return resultStream as unknown as Readable;
+        return resultStream as unknown as GenerationStream;
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {
