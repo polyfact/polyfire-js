@@ -142,12 +142,12 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
     }
 
     async getSession(): Promise<{ token?: string; email?: string }> {
-        let token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
-            "access_token",
-        );
-        let refreshToken = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
-            "refresh_token",
-        );
+        let token = new URLSearchParams(
+            window.location.hash.replace(/^#+/, "#").replace(/^#/, "?"),
+        ).get("access_token");
+        let refreshToken = new URLSearchParams(
+            window.location.hash.replace(/^#+/, "#").replace(/^#/, "?"),
+        ).get("refresh_token");
 
         const supabase = createClient(
             supabaseDefaultClient.supabaseUrl,
@@ -160,6 +160,7 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
             refreshToken = window.localStorage.getItem("polyfact_refresh_token");
         } else if (refreshToken) {
             window.localStorage.setItem("polyfact_refresh_token", refreshToken);
+            window.history.replaceState({}, window.document.title, ".");
         }
 
         if (refreshToken) {
