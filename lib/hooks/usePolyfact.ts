@@ -41,63 +41,22 @@ export default function usePolyfact(
                     reactMutex.release();
                     return;
                 }
-                let token = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
-                    "access_token",
-                );
-                let refreshToken = new URLSearchParams(window.location.hash.replace(/^#/, "?")).get(
-                    "refresh_token",
-                );
 
-                const supabase = createClient(
-                    supabaseDefaultClient.supabaseUrl,
-                    supabaseDefaultClient.supabaseKey,
-                    {
-                        auth: { persistSession: false },
-                    },
-                );
-                if (!refreshToken && window.localStorage.getItem("polyfact_refresh_token")) {
-                    refreshToken = window.localStorage.getItem("polyfact_refresh_token");
-                } else if (refreshToken) {
-                    window.localStorage.setItem("polyfact_refresh_token", refreshToken);
-                }
-
-                if (refreshToken) {
-                    if (!token) {
-                        const { data } = await supabase.auth.refreshSession({
-                            refresh_token: refreshToken,
-                        });
-
-                        token = data.session?.access_token || "";
-
-                        if (!token) {
-                            window.localStorage.removeItem("polyfact_refresh_token");
-                            window.location.reload();
-
-                            reactMutex.release();
-                            return;
-                        }
-
-                        window.localStorage.setItem(
-                            "polyfact_refresh_token",
-                            data.session?.refresh_token,
-                        );
-                    }
-
-                    const { data } = await supabase.auth.getUser(token);
-
-                    setEmail(data.user?.email);
+                const { token, email } = (await Polyfact.getSession()) || {};
+                if (token) {
                     const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
                         .project(project)
-                        .signInWithToken(token);
+                        .signInWithOAuthToken(token);
                     setLoading(false);
                     setPolyfact(p);
+                    setEmail(email);
                     window.Polyfact = p;
-                    window.PolyfactEmail = data.user?.email;
+                    window.PolyfactEmail = email;
                 } else {
                     setLogin(() => async ({ provider }: { provider: Provider }) => {
                         await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
                             .project(project)
-                            .signInWithOAuth({ provider });
+                            .oAuthRedirect({ provider });
                     });
                     setLoading(false);
                 }
