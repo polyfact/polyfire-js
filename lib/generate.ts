@@ -38,7 +38,7 @@ type ExclusiveProps = [{ systemPromptId?: UUID }, { systemPrompt?: string }];
 export type SystemPrompt = ExclusiveN<ExclusiveProps>;
 
 export type GenerationOptions = {
-    provider?: "openai" | "cohere" | "llama";
+    provider?: "openai" | "cohere" | "llama" | "";
     model?: string;
     chatId?: string;
     memory?: Memory;
@@ -126,7 +126,7 @@ export async function generateWithTokenUsage(
     if ("web" in options) {
         requestBody = {
             task,
-            provider: options.provider || "openai",
+            provider: options.provider || "",
             model: options.model || "gpt-3.5-turbo",
             infos: options.infos || false,
             web: options.web,
@@ -136,7 +136,7 @@ export async function generateWithTokenUsage(
 
         requestBody = {
             task,
-            provider: genOptions.provider || "openai",
+            provider: genOptions.provider || "",
             model: genOptions.model || "gpt-3.5-turbo",
             memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
             chat_id: genOptions.chatId,
@@ -220,7 +220,7 @@ function stream(
         if ("web" in options) {
             requestBody = {
                 task,
-                provider: options.provider || "openai",
+                provider: options.provider || "",
                 model: options.model || "gpt-3.5-turbo",
                 infos: options.infos || false,
                 web: options.web,
@@ -228,7 +228,7 @@ function stream(
         } else {
             requestBody = {
                 task,
-                provider: options?.provider || "openai",
+                provider: options?.provider || "",
                 model: options?.model || "gpt-3.5-turbo",
                 memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
                 chat_id: options?.chatId || "",

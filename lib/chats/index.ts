@@ -51,7 +51,7 @@ export async function createChat(
 }
 
 type ChatOptions = {
-    provider?: "openai" | "cohere" | "llama";
+    provider?: "openai" | "cohere" | "llama" | "";
     model?: string;
     autoMemory?: boolean;
 } & SystemPrompt;
@@ -59,7 +59,7 @@ type ChatOptions = {
 export class Chat {
     chatId: Promise<string>;
 
-    provider: "openai" | "cohere" | "llama";
+    provider: "openai" | "cohere" | "llama" | "";
 
     model?: string;
 
@@ -73,7 +73,7 @@ export class Chat {
         this.systemPromptId = options.systemPromptId;
         this.clientOptions = defaultOptions(clientOptions);
         this.chatId = createChat(options.systemPrompt, options.systemPromptId, this.clientOptions);
-        this.provider = options.provider || "openai";
+        this.provider = options.provider || "";
         this.model = options.model;
         if (options.autoMemory) {
             this.autoMemory = this.clientOptions.then((co) => new Memory(co));
