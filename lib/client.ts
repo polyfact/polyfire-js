@@ -9,7 +9,7 @@ import transcribeClient, { TranscribeClient } from "./transcribe";
 import chatClient, { ChatClient } from "./chats";
 import memoryClient, { MemoryClient } from "./memory";
 import userClient, { UserClient } from "./user";
-import { InputClientOptions } from "./clientOpts";
+import { InputClientOptions, supabaseDefaultClient } from "./clientOpts";
 import kvClient, { KVClient } from "./kv";
 import imageGenerationClient, { ImageGenerationClient } from "./image";
 
@@ -35,12 +35,6 @@ function client(co: InputClientOptions): Client {
 }
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
-
-export const supabaseDefaultClient = {
-    supabaseUrl: "https://hqyxaayiizqwlknddokk.supabase.co",
-    supabaseKey:
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxeXhhYXlpaXpxd2xrbmRkb2trIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODk4NjIyODksImV4cCI6MjAwNTQzODI4OX0.Ae1eJU6C3e1FO5X7ES1eStnbTM87IljnuuujZ83wwzM",
-};
 
 declare const window: any;
 
