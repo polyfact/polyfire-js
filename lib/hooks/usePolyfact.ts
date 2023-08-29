@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Mutex } from "async-mutex";
-import Polyfact, { Client, supabaseDefaultClient } from "../client";
+import { supabaseDefaultClient } from "../clientOpts";
+import Polyfact, { Client } from "../client";
 
 declare const window: any;
 
