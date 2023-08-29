@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable } from "readable-stream";
@@ -33,25 +32,39 @@ export type ExclusiveN<T extends Record<string, unknown>[]> = T extends [infer F
         : never
     : unknown;
 
-type ExclusiveProps = [{ systemPromptId?: UUID }, { systemPrompt?: string }];
+export type AndN<T extends Record<string, unknown>[]> = T extends [infer F, ...infer Rest]
+    ? F extends Record<string, unknown>
+        ? Partial<F> & AndN<Extract<Rest, Record<string, unknown>[]>>
+        : never
+    : unknown;
 
-export type SystemPrompt = ExclusiveN<ExclusiveProps>;
-
-export type GenerationOptions = {
+export type GenerationSimpleOptions = {
     provider?: "openai" | "cohere" | "llama" | "";
     model?: string;
-    chatId?: string;
-    memory?: Memory;
-    memoryId?: string;
     stop?: string[];
     temperature?: number;
     infos?: boolean;
-} & SystemPrompt;
+};
 
-export type GenerationWithWebOptions = Omit<
-    GenerationOptions,
-    "chatId" | "memory" | "memoryId" | "stop" | "temperature" | "systemPromptId" | "systemPrompt"
-> & { web: true };
+export type ChatOptions = [{ chatId: string }, {}];
+
+export type MemoryOptions = [{ memoryId: string }, { memory: Memory }, {}];
+
+export type SystemPromptOptions = [{ systemPromptId: UUID }, { systemPrompt: string }, {}];
+
+export type GenerationWithWebOptions = GenerationSimpleOptions & { web: true };
+
+export type GenerationWithoutWebOptions = GenerationSimpleOptions &
+    ExclusiveN<ChatOptions> &
+    ExclusiveN<MemoryOptions> &
+    ExclusiveN<SystemPromptOptions>;
+
+export type GenerationOptions = GenerationWithWebOptions | GenerationWithoutWebOptions;
+
+export type GenerationCompleteOptions = GenerationSimpleOptions &
+    AndN<ChatOptions> &
+    AndN<MemoryOptions> &
+    AndN<SystemPromptOptions> & { web?: true };
 
 export type TokenUsage = {
     input: number;
@@ -109,44 +122,23 @@ async function generateRequest(
 
 export async function generateWithTokenUsage(
     task: string,
-    options: GenerationOptions,
-    clientOptions?: InputClientOptions,
-): Promise<GenerationResult>;
-export async function generateWithTokenUsage(
-    task: string,
-    options: GenerationWithWebOptions,
-    clientOptions?: InputClientOptions,
-): Promise<GenerationResult>;
-
-export async function generateWithTokenUsage(
-    task: string,
     options: GenerationOptions | GenerationWithWebOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<GenerationResult> {
-    let requestBody = {};
-    if ("web" in options) {
-        requestBody = {
-            task,
-            provider: options.provider || "",
-            model: options.model || "gpt-3.5-turbo",
-            infos: options.infos || false,
-            web: options.web,
-        };
-    } else {
-        const genOptions = options as GenerationOptions;
+    const genOptions = options as GenerationCompleteOptions;
 
-        requestBody = {
-            task,
-            provider: genOptions.provider || "",
-            model: genOptions.model || "gpt-3.5-turbo",
-            memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
-            chat_id: genOptions.chatId,
-            stop: genOptions.stop || [],
-            temperature: genOptions.temperature,
-            infos: genOptions.infos || false,
-            system_prompt_id: genOptions.systemPromptId,
-        };
-    }
+    const requestBody = {
+        task,
+        provider: genOptions.provider || "",
+        model: genOptions.model,
+        memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
+        stop: genOptions.stop || [],
+        infos: genOptions.infos || false,
+        system_prompt_id: genOptions.systemPromptId,
+        temperature: genOptions.temperature,
+        chat_id: genOptions.chatId,
+        web: genOptions.web,
+    };
 
     return generateRequest(requestBody, clientOptions);
 }
@@ -206,7 +198,7 @@ export class GenerationStream extends Readable {
 
 function stream(
     task: string,
-    options: GenerationOptions | GenerationWithWebOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
     onMessage: (data: unknown, resultStream: GenerationStream) => void,
 ): GenerationStream {
@@ -218,28 +210,20 @@ function stream(
         },
     });
     (async () => {
-        let requestBody = {};
-        if ("web" in options) {
-            requestBody = {
-                task,
-                provider: options.provider || "",
-                model: options.model || "gpt-3.5-turbo",
-                infos: options.infos || false,
-                web: options.web,
-            };
-        } else {
-            requestBody = {
-                task,
-                provider: options?.provider || "",
-                model: options?.model || "gpt-3.5-turbo",
-                memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
-                chat_id: options?.chatId || "",
-                stop: options?.stop || [],
-                temperature: options.temperature,
-                infos: options?.infos || false,
-                system_prompt_id: options?.systemPromptId,
-            };
-        }
+        const genOptions = options as GenerationCompleteOptions;
+
+        const requestBody = {
+            task,
+            provider: genOptions.provider || "",
+            model: genOptions.model,
+            memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
+            stop: genOptions.stop || [],
+            infos: genOptions.infos || false,
+            system_prompt_id: genOptions.systemPromptId,
+            temperature: genOptions.temperature,
+            chat_id: genOptions.chatId,
+            web: genOptions.web,
+        };
 
         const { token, endpoint } = await defaultOptions(clientOptions);
         if (stopped) {
