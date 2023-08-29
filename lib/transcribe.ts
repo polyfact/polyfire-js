@@ -1,32 +1,66 @@
 import axios, { AxiosError } from "axios";
-import FormData from "form-data";
+import { createClient } from "@supabase/supabase-js";
 import { Readable } from "readable-stream";
 import * as t from "polyfact-io-ts";
-import { InputClientOptions, defaultOptions } from "./clientOpts";
+import { InputClientOptions, defaultOptions, supabaseDefaultClient } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
 const ResultType = t.type({
     text: t.string,
 });
 
+interface MinimalStream {
+    on(event: string | symbol, listener: (...args: any[]) => void): this;
+}
+
+function stream2buffer(stream: MinimalStream): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        const buf: any[] = [];
+
+        stream.on("data", (chunk) => buf.push(chunk));
+        stream.on("end", () => resolve(Buffer.concat(buf)));
+        stream.on("error", (err) => reject(err));
+    });
+}
+
+function randomString() {
+    const a = () => Math.floor(Math.random() * 1e16).toString(36);
+    return a() + a() + a();
+}
+
 export async function transcribe(
-    file: Buffer | Readable,
+    file: Buffer | MinimalStream,
     clientOptions: InputClientOptions = {},
+    supabaseClient: { supabaseUrl: string; supabaseKey: string } = supabaseDefaultClient,
 ): Promise<string> {
     try {
         const { token, endpoint } = await defaultOptions(clientOptions);
 
-        const formData = new FormData();
-        formData.append("file", file, {
-            contentType: "audio/mp3",
-            filename: "file.mp3",
+        let buf: Buffer;
+        if (file instanceof Buffer) {
+            buf = file;
+        } else {
+            buf = await stream2buffer(file);
+        }
+
+        const supa = createClient(supabaseClient.supabaseUrl, supabaseClient.supabaseKey, {
+            auth: { persistSession: false },
         });
 
-        const res = await axios.post(`${endpoint}/transcribe`, formData, {
-            headers: {
-                "X-Access-Token": token,
+        const fileName = randomString();
+
+        await supa.storage.from("audio_transcribes").upload(fileName, buf);
+
+        const res = await axios.post(
+            `${endpoint}/transcribe`,
+            { file_path: fileName },
+            {
+                headers: {
+                    "X-Access-Token": token,
+                    "Content-Type": "application/json",
+                },
             },
-        });
+        );
 
         if (!ResultType.is(res.data)) {
             throw new ApiError({

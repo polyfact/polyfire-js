@@ -130,10 +130,9 @@ export async function generateWithTokenUsage(
     options: GenerationOptions | GenerationWithWebOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<GenerationResult> {
-    let requestBody = {};
     const genOptions = options as GenerationCompleteOptions;
 
-    requestBody = {
+    const requestBody = {
         task,
         provider: genOptions.provider || "",
         model: genOptions.model,
@@ -217,28 +216,21 @@ function stream(
         },
     });
     (async () => {
-        let requestBody = {};
-        if ("web" in options) {
-            requestBody = {
-                task,
-                provider: options.provider || "openai",
-                model: options.model || "gpt-3.5-turbo",
-                infos: options.infos || false,
-                web: options.web,
-            };
-        } else {
-            requestBody = {
-                task,
-                provider: options?.provider || "openai",
-                model: options?.model || "gpt-3.5-turbo",
-                memory_id: (await options?.memory?.memoryId) || options?.memoryId || "",
-                chat_id: options?.chatId || "",
-                stop: options?.stop || [],
-                temperature: options.temperature,
-                infos: options?.infos || false,
-                system_prompt_id: options?.systemPromptId,
-            };
-        }
+        const genOptions = options as GenerationCompleteOptions;
+
+        const requestBody = {
+            task,
+            provider: genOptions.provider || "",
+            model: genOptions.model,
+            memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
+            stop: genOptions.stop || [],
+            infos: genOptions.infos || false,
+            system_prompt_id: genOptions.systemPromptId,
+            temperature: genOptions.temperature,
+            chat_id: genOptions.chatId,
+            prompt_id: genOptions?.promptId,
+            web: genOptions.web,
+        };
 
         const { token, endpoint } = await defaultOptions(clientOptions);
         if (stopped) {
