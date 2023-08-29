@@ -32,30 +32,44 @@ export type ExclusiveN<T extends Record<string, unknown>[]> = T extends [infer F
         : never
     : unknown;
 
-type ExclusiveProps = [{ systemPromptId?: UUID }, { systemPrompt?: string }];
+export type AndN<T extends Record<string, unknown>[]> = T extends [infer F, ...infer Rest]
+    ? F extends Record<string, unknown>
+        ? Partial<F> & AndN<Extract<Rest, Record<string, unknown>[]>>
+        : never
+    : unknown;
 
-export type SystemPrompt = ExclusiveN<ExclusiveProps>;
-
-export type GenerationOptions = {
-    provider?: "openai" | "cohere" | "llama";
+export type GenerationSimpleOptions = {
+    provider?: "openai" | "cohere" | "llama" | "";
     model?: string;
-    chatId?: string;
-    memory?: Memory;
-    memoryId?: string;
     stop?: string[];
     temperature?: number;
     infos?: boolean;
-} & SystemPrompt;
+};
 
-export type GenerationWithWebOptions = Omit<
-    GenerationOptions,
-    "chatId" | "memory" | "memoryId" | "stop" | "temperature" | "systemPromptId" | "systemPrompt"
-> & { web: true };
+export type ChatOptions = [{ chatId: string }, {}];
 
-export type GenerationGlobalOptions = GenerationOptions &
-    Exclusive<{ promptId?: string }, { systemPrompt?: string }> & {
-        infos?: boolean;
-    };
+export type MemoryOptions = [{ memoryId: string }, { memory: Memory }, {}];
+
+export type SystemPromptOptions = [
+    { systemPromptId: UUID },
+    { systemPrompt: string },
+    { promptId: string },
+    {},
+];
+
+export type GenerationWithWebOptions = GenerationSimpleOptions & { web: true };
+
+export type GenerationWithoutWebOptions = GenerationSimpleOptions &
+    ExclusiveN<ChatOptions> &
+    ExclusiveN<MemoryOptions> &
+    ExclusiveN<SystemPromptOptions>;
+
+export type GenerationOptions = GenerationWithWebOptions | GenerationWithoutWebOptions;
+
+export type GenerationCompleteOptions = GenerationSimpleOptions &
+    AndN<ChatOptions> &
+    AndN<MemoryOptions> &
+    AndN<SystemPromptOptions> & { web?: true };
 
 export type TokenUsage = {
     input: number;
@@ -113,22 +127,11 @@ async function generateRequest(
 
 export async function generateWithTokenUsage(
     task: string,
-    options: GenerationOptions,
-    clientOptions?: InputClientOptions,
-): Promise<GenerationResult>;
-export async function generateWithTokenUsage(
-    task: string,
-    options: GenerationWithWebOptions,
-    clientOptions?: InputClientOptions,
-): Promise<GenerationResult>;
-
-export async function generateWithTokenUsage(
-    task: string,
-    options: GenerationGlobalOptions | GenerationWithWebOptions = {},
+    options: GenerationOptions | GenerationWithWebOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<GenerationResult> {
     let requestBody = {};
-    const genOptions = options as GenerationGlobalOptions;
+    const genOptions = options as GenerationCompleteOptions;
 
     requestBody = {
         task,
@@ -141,7 +144,7 @@ export async function generateWithTokenUsage(
         temperature: genOptions.temperature,
         chat_id: genOptions.chatId,
         prompt_id: genOptions?.promptId,
-        web: "web" in options,
+        web: genOptions.web,
     };
 
     return generateRequest(requestBody, clientOptions);
@@ -160,7 +163,7 @@ export async function generateWithTokenUsage(
  */
 export async function generate(
     task: string,
-    options: GenerationGlobalOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<string | GenerationResult> {
     const res = await generateWithTokenUsage(task, options, clientOptions);
@@ -202,7 +205,7 @@ export class GenerationStream extends Readable {
 
 function stream(
     task: string,
-    options: GenerationGlobalOptions | GenerationWithWebOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
     onMessage: (data: unknown, resultStream: GenerationStream) => void,
 ): GenerationStream {

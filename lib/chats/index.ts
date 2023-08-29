@@ -9,7 +9,8 @@ import {
     GenerationOptions,
     GenerationResult,
     GenerationStream,
-    SystemPrompt,
+    GenerationWithoutWebOptions,
+    GenerationCompleteOptions,
 } from "../generate";
 import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
@@ -51,10 +52,8 @@ export async function createChat(
 }
 
 type ChatOptions = {
-    provider?: "openai" | "cohere" | "llama";
-    model?: string;
     autoMemory?: boolean;
-} & SystemPrompt;
+} & GenerationWithoutWebOptions;
 
 export class Chat {
     chatId: Promise<string>;
@@ -85,12 +84,13 @@ export class Chat {
         options: GenerationOptions = {},
     ): Promise<GenerationResult> {
         const chatId = await this.chatId;
+        const genOptions = options as GenerationCompleteOptions;
 
-        if (this.autoMemory && !options.memory && !options.memoryId) {
-            options.memory = await this.autoMemory;
+        if (this.autoMemory && !genOptions.memory && !genOptions.memoryId) {
+            genOptions.memory = await this.autoMemory;
         }
         if (this.systemPromptId) {
-            options.systemPromptId = this.systemPromptId;
+            genOptions.systemPromptId = this.systemPromptId;
         }
 
         const result = await generateWithTokenUsage(
@@ -130,12 +130,13 @@ export class Chat {
 
         (async () => {
             const chatId = await this.chatId;
+            const genOptions = options as GenerationCompleteOptions;
 
-            if (this.autoMemory && !options.memory && !options.memoryId) {
-                options.memory = await this.autoMemory;
+            if (this.autoMemory && !genOptions.memory && !genOptions.memoryId) {
+                genOptions.memory = await this.autoMemory;
             }
             if (this.systemPromptId) {
-                options.systemPromptId = this.systemPromptId;
+                genOptions.systemPromptId = this.systemPromptId;
             }
 
             if (stopped) {
@@ -176,12 +177,13 @@ export class Chat {
 
         (async () => {
             const chatId = await this.chatId;
+            const genOptions = options as GenerationCompleteOptions;
 
-            if (this.autoMemory && !options.memory && !options.memoryId) {
-                options.memory = await this.autoMemory;
+            if (this.autoMemory && !genOptions.memory && !genOptions.memoryId) {
+                genOptions.memory = await this.autoMemory;
             }
             if (this.systemPromptId) {
-                options.systemPromptId = this.systemPromptId;
+                genOptions.systemPromptId = this.systemPromptId;
             }
 
             if (stopped) {
