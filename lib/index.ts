@@ -1,5 +1,6 @@
 import * as t from "polyfact-io-ts";
 import { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
+
 import {
     generateWithType,
     generateWithTypeWithTokenUsage,
@@ -14,6 +15,17 @@ import Polyfact, { PolyfactClientBuilder } from "./client";
 import usePolyfact from "./hooks/usePolyfact";
 import useChat from "./hooks/useChat";
 import { generateImage } from "./image";
+
+import {
+    getAllPrompts,
+    getPromptById,
+    getPromptByName,
+    createPrompt,
+    updatePrompt,
+    deletePrompt,
+} from "./prompt";
+
+export type { PromptInsert, PromptUpdate, Prompt, FilterOperation, Filter } from "./prompt";
 
 // Export types and models
 export type { TokenUsage, Ressource, GenerationResult } from "./generate";
@@ -47,6 +59,12 @@ export {
     useChat,
     PolyfactClientBuilder,
     generateImage,
+    getAllPrompts,
+    getPromptById,
+    getPromptByName,
+    createPrompt,
+    updatePrompt,
+    deletePrompt,
 };
 
 export default Polyfact;

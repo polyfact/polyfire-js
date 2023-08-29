@@ -9,6 +9,7 @@ import transcribeClient, { TranscribeClient } from "./transcribe";
 import chatClient, { ChatClient } from "./chats";
 import memoryClient, { MemoryClient } from "./memory";
 import userClient, { UserClient } from "./user";
+import promptClient, { PromptClient } from "./prompt";
 import { InputClientOptions } from "./clientOpts";
 import kvClient, { KVClient } from "./kv";
 import imageGenerationClient, { ImageGenerationClient } from "./image";
@@ -19,9 +20,10 @@ export type Client = GenerationClient &
     MemoryClient &
     ChatClient &
     UserClient &
+    PromptClient &
     ImageGenerationClient & { kv: KVClient };
 
-function client(co: InputClientOptions): Client {
+export function client(co: InputClientOptions): Client {
     return {
         ...generateClient(co),
         ...generateWithTypeClient(co),
@@ -30,6 +32,7 @@ function client(co: InputClientOptions): Client {
         ...chatClient(co),
         ...userClient(co),
         ...imageGenerationClient(co),
+        ...promptClient(co),
         kv: kvClient(co),
     };
 }

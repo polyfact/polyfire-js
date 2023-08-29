@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { Readable } from "readable-stream";
@@ -52,6 +51,11 @@ export type GenerationWithWebOptions = Omit<
     GenerationOptions,
     "chatId" | "memory" | "memoryId" | "stop" | "temperature" | "systemPromptId" | "systemPrompt"
 > & { web: true };
+
+export type GenerationGlobalOptions = GenerationOptions &
+    Exclusive<{ promptId?: string }, { systemPrompt?: string }> & {
+        infos?: boolean;
+    };
 
 export type TokenUsage = {
     input: number;
@@ -120,33 +124,25 @@ export async function generateWithTokenUsage(
 
 export async function generateWithTokenUsage(
     task: string,
-    options: GenerationOptions | GenerationWithWebOptions = {},
+    options: GenerationGlobalOptions | GenerationWithWebOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<GenerationResult> {
     let requestBody = {};
-    if ("web" in options) {
-        requestBody = {
-            task,
-            provider: options.provider || "openai",
-            model: options.model || "gpt-3.5-turbo",
-            infos: options.infos || false,
-            web: options.web,
-        };
-    } else {
-        const genOptions = options as GenerationOptions;
+    const genOptions = options as GenerationGlobalOptions;
 
-        requestBody = {
-            task,
-            provider: genOptions.provider || "openai",
-            model: genOptions.model || "gpt-3.5-turbo",
-            memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
-            chat_id: genOptions.chatId,
-            stop: genOptions.stop || [],
-            temperature: genOptions.temperature,
-            infos: genOptions.infos || false,
-            system_prompt_id: genOptions.systemPromptId,
-        };
-    }
+    requestBody = {
+        task,
+        provider: genOptions.provider || "",
+        model: genOptions.model,
+        memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
+        stop: genOptions.stop || [],
+        infos: genOptions.infos || false,
+        system_prompt_id: genOptions.systemPromptId,
+        temperature: genOptions.temperature,
+        chat_id: genOptions.chatId,
+        prompt_id: genOptions?.promptId,
+        web: "web" in options,
+    };
 
     return generateRequest(requestBody, clientOptions);
 }
@@ -164,7 +160,7 @@ export async function generateWithTokenUsage(
  */
 export async function generate(
     task: string,
-    options: GenerationOptions = {},
+    options: GenerationGlobalOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<string | GenerationResult> {
     const res = await generateWithTokenUsage(task, options, clientOptions);
@@ -206,7 +202,7 @@ export class GenerationStream extends Readable {
 
 function stream(
     task: string,
-    options: GenerationOptions | GenerationWithWebOptions = {},
+    options: GenerationGlobalOptions | GenerationWithWebOptions = {},
     clientOptions: InputClientOptions = {},
     onMessage: (data: unknown, resultStream: GenerationStream) => void,
 ): GenerationStream {
