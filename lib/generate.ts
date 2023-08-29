@@ -50,12 +50,7 @@ export type ChatOptions = [{ chatId: string }, {}];
 
 export type MemoryOptions = [{ memoryId: string }, { memory: Memory }, {}];
 
-export type SystemPromptOptions = [
-    { systemPromptId: UUID },
-    { systemPrompt: string },
-    { promptId: string },
-    {},
-];
+export type SystemPromptOptions = [{ systemPromptId: UUID }, { systemPrompt: string }, {}];
 
 export type GenerationWithWebOptions = GenerationSimpleOptions & { web: true };
 
@@ -142,7 +137,6 @@ export async function generateWithTokenUsage(
         system_prompt_id: genOptions.systemPromptId,
         temperature: genOptions.temperature,
         chat_id: genOptions.chatId,
-        prompt_id: genOptions?.promptId,
         web: genOptions.web,
     };
 
@@ -228,7 +222,6 @@ function stream(
             system_prompt_id: genOptions.systemPromptId,
             temperature: genOptions.temperature,
             chat_id: genOptions.chatId,
-            prompt_id: genOptions?.promptId,
             web: genOptions.web,
         };
 
