@@ -10,7 +10,7 @@ interface MinimalStream {
     on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
 
-type LoaderInput = string | MinimalStream | Buffer;
+type LoaderFileInput = string | MinimalStream | Buffer;
 
 function stream2buffer(stream: MinimalStream): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -22,7 +22,7 @@ function stream2buffer(stream: MinimalStream): Promise<Buffer> {
     });
 }
 
-async function loaderInputToBuffer(input: LoaderInput): Promise<Buffer> {
+async function loaderInputToBuffer(input: LoaderFileInput): Promise<Buffer> {
     if (input instanceof Buffer) {
         return input;
     }
@@ -64,7 +64,7 @@ async function batchify<T extends Array<unknown>>(
 
 export type LoaderFunction = (memory: Memory, clientOptions: InputClientOptions) => Promise<void>;
 
-export function PDFLoader(file: LoaderInput): LoaderFunction {
+export function PDFLoader(file: LoaderFileInput): LoaderFunction {
     return async function loadPdfIntoMemory(
         memory: Memory,
         _clientOptions: InputClientOptions = {},
@@ -80,7 +80,38 @@ export function PDFLoader(file: LoaderInput): LoaderFunction {
     };
 }
 
-export function AudioLoader(file: LoaderInput, maxTokenPerChunk = 100): LoaderFunction {
+export function TextFileLoader(file: LoaderFileInput, maxTokenPerChunk = 100): LoaderFunction {
+    return async function loadPdfIntoMemory(
+        memory: Memory,
+        _clientOptions: InputClientOptions = {},
+    ) {
+        const fileBuffer = await loaderInputToBuffer(file);
+        const splittedFile = splitString(fileBuffer.toString("utf8"), maxTokenPerChunk);
+
+        async function addBatchIntoMemory(batches: string[]) {
+            await Promise.all(batches.map(async (batch) => memory.add(batch)));
+        }
+
+        await batchify(splittedFile, 10, addBatchIntoMemory);
+    };
+}
+
+export function StringLoader(str: string, maxTokenPerChunk = 100): LoaderFunction {
+    return async function loadPdfIntoMemory(
+        memory: Memory,
+        _clientOptions: InputClientOptions = {},
+    ) {
+        const splittedStr = splitString(str, maxTokenPerChunk);
+
+        async function addBatchIntoMemory(batches: string[]) {
+            await Promise.all(batches.map(async (batch) => memory.add(batch)));
+        }
+
+        await batchify(splittedStr, 10, addBatchIntoMemory);
+    };
+}
+
+export function AudioLoader(file: LoaderFileInput, maxTokenPerChunk = 100): LoaderFunction {
     return async function loadAudioIntoMemory(
         memory: Memory,
         clientOptions: InputClientOptions = {},
@@ -90,11 +121,7 @@ export function AudioLoader(file: LoaderInput, maxTokenPerChunk = 100): LoaderFu
         const transcriptions = splitString(transcription, maxTokenPerChunk);
 
         async function addBatchIntoMemory(batches: string[]) {
-            await Promise.all(
-                batches.map(async (batch) => {
-                    await memory.add(batch).then(() => console.log(batch));
-                }),
-            );
+            await Promise.all(batches.map(async (batch) => memory.add(batch)));
         }
 
         await batchify(transcriptions, 10, addBatchIntoMemory);
