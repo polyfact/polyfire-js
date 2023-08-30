@@ -4,6 +4,8 @@ import { Memory } from "../memory";
 import { transcribe } from "../transcribe";
 import { splitString } from "../split";
 
+import { InputClientOptions } from "../clientOpts";
+
 interface MinimalStream {
     on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
@@ -60,10 +62,13 @@ async function batchify<T extends Array<unknown>>(
     await batchify(array.slice(size) as T, size, callback);
 }
 
-export type LoaderFunction = (memory: Memory) => Promise<void>;
+export type LoaderFunction = (memory: Memory, clientOptions: InputClientOptions) => Promise<void>;
 
 export function PDFLoader(file: LoaderInput): LoaderFunction {
-    return async function loadPdfIntoMemory(memory: Memory) {
+    return async function loadPdfIntoMemory(
+        memory: Memory,
+        _clientOptions: InputClientOptions = {},
+    ) {
         const fileBuffer = await loaderInputToBuffer(file);
         const allPages = await pdfParsePages(fileBuffer);
 
@@ -76,9 +81,12 @@ export function PDFLoader(file: LoaderInput): LoaderFunction {
 }
 
 export function AudioLoader(file: LoaderInput, maxTokenPerChunk = 100): LoaderFunction {
-    return async function loadAudioIntoMemory(memory: Memory) {
+    return async function loadAudioIntoMemory(
+        memory: Memory,
+        clientOptions: InputClientOptions = {},
+    ) {
         const fileBuffer = await loaderInputToBuffer(file);
-        const transcription = await transcribe(fileBuffer);
+        const transcription = await transcribe(fileBuffer, clientOptions);
         const transcriptions = splitString(transcription, maxTokenPerChunk);
 
         async function addBatchIntoMemory(batches: string[]) {
@@ -93,13 +101,16 @@ export function AudioLoader(file: LoaderInput, maxTokenPerChunk = 100): LoaderFu
     };
 }
 
-export async function loaderToMemory(loaders: LoaderFunction | LoaderFunction[]): Promise<Memory> {
-    const memory = new Memory();
+export async function loaderToMemory(
+    loaders: LoaderFunction | LoaderFunction[],
+    clientOptions: InputClientOptions = {},
+): Promise<Memory> {
+    const memory = new Memory(clientOptions);
 
     if (typeof loaders === "function") {
-        await loaders(memory);
+        await loaders(memory, clientOptions);
     } else {
-        await Promise.all(loaders.map((loader) => loader(memory)));
+        await Promise.all(loaders.map((loader) => loader(memory, clientOptions)));
     }
 
     return memory;

@@ -135,7 +135,9 @@ export async function generateWithTokenUsage(
 
     let dataMemory;
     if (genOptions.data) {
-        dataMemory = await loaderToMemory(genOptions.data).then((memory) => memory.memoryId);
+        dataMemory = await loaderToMemory(genOptions.data, clientOptions).then(
+            (memory) => memory.memoryId,
+        );
     }
 
     const requestBody = {
@@ -227,7 +229,9 @@ function stream(
 
         let dataMemory;
         if (genOptions.data) {
-            dataMemory = await loaderToMemory(genOptions.data).then((memory) => memory.memoryId);
+            dataMemory = await loaderToMemory(genOptions.data, clientOptions).then(
+                (memory) => memory.memoryId,
+            );
         }
 
         const requestBody = {
