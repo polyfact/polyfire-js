@@ -2,13 +2,18 @@ import axios, { AxiosError } from "axios";
 import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
-async function createMemory(clientOptions: InputClientOptions = {}): Promise<{ id: string }> {
+async function createMemory(
+    clientOptions: InputClientOptions = {},
+    isPublic = true,
+): Promise<{ id: string }> {
     const { token, endpoint } = await defaultOptions(clientOptions);
 
     try {
         const res = await axios.post(
             `${endpoint}/memory`,
-            {},
+            {
+                public: isPublic,
+            },
             {
                 headers: {
                     "Content-Type": "application/json",
@@ -88,9 +93,11 @@ class Memory {
 
     clientOptions: InputClientOptions;
 
-    constructor(clientOptions: InputClientOptions = {}) {
+    constructor(clientOptions: InputClientOptions = {}, isPublic = true) {
         this.clientOptions = defaultOptions(clientOptions);
-        this.memoryId = this.clientOptions.then((co) => createMemory(co)).then((res) => res.id);
+        this.memoryId = this.clientOptions
+            .then((co) => createMemory(co, isPublic))
+            .then((res) => res.id);
     }
 
     async add(input: string, { maxToken = 0 }: MemoryAddOptions = {}): Promise<void> {
@@ -102,7 +109,7 @@ class Memory {
 export { createMemory, updateMemory, getAllMemories, Memory };
 
 export type MemoryClient = {
-    createMemory: () => Promise<{ id: string }>;
+    createMemory: (isPublic: true) => Promise<{ id: string }>;
     updateMemory: (id: string, input: string, maxToken?: number) => Promise<{ success: boolean }>;
     getAllMemories: () => Promise<{ ids: string[] }>;
     Memory: () => Memory;

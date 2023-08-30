@@ -1,7 +1,7 @@
 import { Memory, generate } from "../lib/index";
 
 (async () => {
-    // const memory = new Memory();
+    const memory = new Memory({}, true);
 
     // memory.add("The secret word is: banana42");
 
