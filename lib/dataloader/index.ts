@@ -1,5 +1,3 @@
-import * as path from "path";
-import fs from "fs";
 import pdf from "pdf-parse";
 
 import { Memory } from "../memory";
@@ -27,6 +25,7 @@ async function loaderInputToBuffer(input: LoaderInput): Promise<Buffer> {
         return input;
     }
     if (typeof input === "string") {
+        const fs = await import("fs");
         return new Promise<Buffer>((res, rej) =>
             fs.readFile(input, (err, data) => (err !== null ? rej(err) : res(data))),
         );
