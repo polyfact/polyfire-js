@@ -8,7 +8,7 @@ interface MinimalStream {
     on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
 
-type LoaderFileInput = string | MinimalStream | Buffer;
+type LoaderFileInput = MinimalStream | Buffer;
 
 function stream2buffer(stream: MinimalStream): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -23,12 +23,6 @@ function stream2buffer(stream: MinimalStream): Promise<Buffer> {
 async function loaderInputToBuffer(input: LoaderFileInput): Promise<Buffer> {
     if (input instanceof Buffer) {
         return input;
-    }
-    if (typeof input === "string") {
-        const fs = require("fs"); // eslint-disable-line
-        return new Promise<Buffer>((res, rej) =>
-            fs.readFile(input, (err: any, data: any) => (err !== null ? rej(err) : res(data))),
-        );
     }
 
     return stream2buffer(input);
