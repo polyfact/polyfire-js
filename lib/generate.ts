@@ -39,12 +39,36 @@ export type AndN<T extends Record<string, unknown>[]> = T extends [infer F, ...i
         : never
     : unknown;
 
+export type Language =
+    | "english"
+    | "french"
+    | "spanish"
+    | "german"
+    | "italian"
+    | "portuguese"
+    | "russian"
+    | "mandarin"
+    | "japanese"
+    | "arabic"
+    | "hindi"
+    | "bengali"
+    | "punjabi"
+    | "javanese"
+    | "swahili"
+    | "korean"
+    | "turkish"
+    | "vietnamese"
+    | "telugu"
+    | "marathi"
+    | "";
+
 export type GenerationSimpleOptions = {
     provider?: "openai" | "cohere" | "llama" | "";
     model?: string;
     stop?: string[];
     temperature?: number;
     infos?: boolean;
+    language?: Language;
 };
 
 export type ChatOptions = [{ chatId: string }, {}];
@@ -151,6 +175,7 @@ export async function generateWithTokenUsage(
         temperature: genOptions.temperature,
         chat_id: genOptions.chatId,
         web: genOptions.web,
+        language: genOptions.language,
     };
 
     console.log(requestBody);
@@ -245,6 +270,7 @@ function stream(
             temperature: genOptions.temperature,
             chat_id: genOptions.chatId,
             web: genOptions.web,
+            language: genOptions.language,
         };
 
         const { token, endpoint } = await defaultOptions(clientOptions);
