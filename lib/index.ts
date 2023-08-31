@@ -15,6 +15,7 @@ import Polyfact, { PolyfactClientBuilder } from "./client";
 import usePolyfact from "./hooks/usePolyfact";
 import useChat from "./hooks/useChat";
 import { generateImage } from "./image";
+import { PDFLoader, TextFileLoader, StringLoader, AudioLoader } from "./dataloader";
 
 import {
     getAllPrompts,
@@ -26,6 +27,7 @@ import {
 } from "./prompt";
 
 export type { PromptInsert, PromptUpdate, Prompt, FilterOperation, Filter } from "./prompt";
+export type { LoaderFunction } from "./dataloader";
 
 // Export types and models
 export type { TokenUsage, Ressource, GenerationResult } from "./generate";
@@ -39,32 +41,51 @@ const kv = {
 
 // Export methods
 export {
+    // text generation
     generate,
     generateWithTokenUsage,
     generateWithType,
     generateWithTypeWithTokenUsage,
-    splitString,
-    tokenCount,
-    t,
     GenerationOptions,
+    Chat,
+
+    // transcription
     transcribe,
+
+    // memory
     createMemory,
     updateMemory,
     getAllMemories,
-    Chat,
     Memory,
-    kv,
+
+    // utils
+    PolyfactClientBuilder,
     usage,
+    splitString,
+    tokenCount,
+    t,
+    kv,
+
+    // hooks
     usePolyfact,
     useChat,
-    PolyfactClientBuilder,
+
+    // Image generation
     generateImage,
+
+    // Prompts
     getAllPrompts,
     getPromptById,
     getPromptByName,
     createPrompt,
     updatePrompt,
     deletePrompt,
+
+    // Loader
+    PDFLoader,
+    TextFileLoader,
+    StringLoader,
+    AudioLoader,
 };
 
 export default Polyfact;

@@ -7,6 +7,7 @@ import { UUID } from "crypto";
 import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
 import { ApiError, ErrorData } from "./helpers/error";
+import { loaderToMemory, LoaderFunction } from "./dataloader";
 
 const PartialResultType = t.partial({
     ressources: t.array(t.type({ id: t.string, content: t.string, similarity: t.number })),
@@ -72,7 +73,12 @@ export type GenerationSimpleOptions = {
 
 export type ChatOptions = [{ chatId: string }, {}];
 
-export type MemoryOptions = [{ memoryId: string }, { memory: Memory }, {}];
+export type MemoryOptions = [
+    { memoryId: string },
+    { memory: Memory },
+    { data: [LoaderFunction] | LoaderFunction },
+    {},
+];
 
 export type SystemPromptOptions = [{ systemPromptId: UUID }, { systemPrompt: string }, {}];
 
@@ -151,11 +157,18 @@ export async function generateWithTokenUsage(
 ): Promise<GenerationResult> {
     const genOptions = options as GenerationCompleteOptions;
 
+    let dataMemory;
+    if (genOptions.data) {
+        dataMemory = await loaderToMemory(genOptions.data, clientOptions).then(
+            (memory) => memory.memoryId,
+        );
+    }
+
     const requestBody = {
         task,
         provider: genOptions.provider || "",
         model: genOptions.model,
-        memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
+        memory_id: dataMemory || (await genOptions.memory?.memoryId) || genOptions.memoryId,
         stop: genOptions.stop || [],
         infos: genOptions.infos || false,
         system_prompt_id: genOptions.systemPromptId,
@@ -164,6 +177,8 @@ export async function generateWithTokenUsage(
         web: genOptions.web,
         language: genOptions.language,
     };
+
+    console.log(requestBody);
 
     return generateRequest(requestBody, clientOptions);
 }
@@ -237,11 +252,18 @@ function stream(
     (async () => {
         const genOptions = options as GenerationCompleteOptions;
 
+        let dataMemory;
+        if (genOptions.data) {
+            dataMemory = await loaderToMemory(genOptions.data, clientOptions).then(
+                (memory) => memory.memoryId,
+            );
+        }
+
         const requestBody = {
             task,
             provider: genOptions.provider || "",
             model: genOptions.model,
-            memory_id: (await genOptions.memory?.memoryId) || genOptions.memoryId,
+            memory_id: dataMemory || (await genOptions.memory?.memoryId) || genOptions.memoryId,
             stop: genOptions.stop || [],
             infos: genOptions.infos || false,
             system_prompt_id: genOptions.systemPromptId,

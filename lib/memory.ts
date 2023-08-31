@@ -57,6 +57,7 @@ async function updateMemory(
 
         return res.data;
     } catch (e: unknown) {
+        console.log(e);
         if (e instanceof AxiosError) {
             throw new ApiError(e?.response?.data as ErrorData);
         }
