@@ -42,8 +42,8 @@ async function pdfParsePages(fileBuffer: Buffer): Promise<string[]> {
         pdf(fileBuffer, {
             pagerender: (e) => {
                 return e
-                    .getTextContent()
-                    .then((e: { items: { str: string }[] }) => e.items.map((s) => s.str).join("\n"))
+                    .getTextContent({ normalizeWhitespace: true })
+                    .then((e: { items: { str: string }[] }) => e.items.map((s) => s.str).join(""))
                     .then((r: string) => result.push(r));
             },
         }).then(() => res(result));
