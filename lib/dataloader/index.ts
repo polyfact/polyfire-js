@@ -43,7 +43,13 @@ async function pdfParsePages(fileBuffer: Buffer): Promise<string[]> {
             pagerender: (e) => {
                 return e
                     .getTextContent({ normalizeWhitespace: true })
-                    .then((e: { items: { str: string }[] }) => e.items.map((s) => s.str).join(""))
+                    .then(
+                        (e: { items: { str: string }[] }) =>
+                            e.items
+                                .map((s) => s.str)
+                                .join("")
+                                .replace(/\x00/g, ""), // eslint-disable-line
+                    )
                     .then((r: string) => result.push(r));
             },
         }).then(() => res(result));
