@@ -22,7 +22,8 @@ export default function usePolyfact(
 } {
     const { project, endpoint } = args || {};
     if (typeof window === "undefined") {
-        throw new Error("usePolyfact not usable outside of the browser environment");
+        console.error("usePolyfact not usable outside of the browser environment");
+        return { loading: true, polyfact: undefined, login: undefined };
     }
 
     const react = require("react"); // eslint-disable-line

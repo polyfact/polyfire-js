@@ -1,7 +1,7 @@
 import { Chat } from "../lib/index";
 
 async function main() {
-    const chat = new Chat({ model: "best" });
+    const chat = new Chat({});
 
     console.log(await chat.chatId);
 

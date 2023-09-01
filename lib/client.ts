@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { createClient } from "@supabase/supabase-js";
 import { POLYFACT_TOKEN, POLYFACT_ENDPOINT } from "./utils";
 import generateClient, { GenerationClient } from "./generate";
@@ -13,6 +13,7 @@ import promptClient, { PromptClient } from "./prompt";
 import { InputClientOptions, supabaseDefaultClient } from "./clientOpts";
 import kvClient, { KVClient } from "./kv";
 import imageGenerationClient, { ImageGenerationClient } from "./image";
+import { ApiError, ErrorData } from "./helpers/error";
 
 export type Client = GenerationClient &
     GenerationWithTypeClient &
@@ -235,11 +236,18 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
     project(projectId: string): PolyfactClientBuilder {
         this.buildQueue.push(async () => {
             if (projectId) {
-                const { data } = await axios.get(
-                    `${(await this.clientOptions).endpoint}/project/${projectId}/auth/token`,
-                    { headers: { Authorization: `Bearer ${await this.authToken}` } },
-                );
-                (await this.clientOptions).token = data;
+                try {
+                    const { data } = await axios.get(
+                        `${(await this.clientOptions).endpoint}/project/${projectId}/auth/token`,
+                        { headers: { Authorization: `Bearer ${await this.authToken}` } },
+                    );
+                    (await this.clientOptions).token = data;
+                } catch (e: unknown) {
+                    if (e instanceof AxiosError) {
+                        throw new ApiError(e?.response?.data as ErrorData);
+                    }
+                    throw e;
+                }
             }
         });
         return this;
