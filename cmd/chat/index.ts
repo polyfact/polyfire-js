@@ -169,7 +169,7 @@ const questions = [
         type: "list",
         name: "style",
         message:
-            "Would you like to use a preset style or generate with LLM a custom style based on a specific topic?",
+            "Would you like to use a preset style or generate custom style based on a specific topic using LLMs ?",
         choices: ["Preset", "Custom"],
         default: "Custom",
         when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
