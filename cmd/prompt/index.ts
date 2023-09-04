@@ -95,7 +95,7 @@ async function managePrompts(token: string): Promise<boolean> {
                 {
                     type: "input",
                     name: "name",
-                    message: "Update prompt name (leave blank to skip):",
+                    message: "Update the prompt's name (leave it blank to skip):",
                 },
                 {
                     type: "input",
