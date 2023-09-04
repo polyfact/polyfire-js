@@ -90,7 +90,7 @@ async function managePrompts(token: string): Promise<boolean> {
                 {
                     type: "input",
                     name: "id",
-                    message: "Enter the prompt ID to update:",
+                    message: "Input the ID of the prompt you would like to update:",
                 },
                 {
                     type: "input",
