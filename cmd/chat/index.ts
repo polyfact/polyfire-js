@@ -191,7 +191,7 @@ const questions = [
     {
         type: "input",
         name: "bot",
-        message: "What name would you like to give your bot?",
+        message: "What name would you like to give to your bot?",
         default: "ChatBot",
         when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
     },
