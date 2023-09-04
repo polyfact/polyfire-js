@@ -178,8 +178,6 @@ export async function generateWithTokenUsage(
         language: genOptions.language,
     };
 
-    console.log(requestBody);
-
     return generateRequest(requestBody, clientOptions);
 }
 
