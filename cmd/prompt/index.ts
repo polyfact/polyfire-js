@@ -63,7 +63,7 @@ async function managePrompts(token: string): Promise<boolean> {
                 {
                     type: "input",
                     name: "name",
-                    message: "Enter prompt name:",
+                    message: "Input the prompt's name:",
                 },
                 {
                     type: "input",
