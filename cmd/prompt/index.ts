@@ -126,7 +126,7 @@ async function managePrompts(token: string): Promise<boolean> {
             const { deleteId } = await inquirer.prompt({
                 type: "input",
                 name: "deleteId",
-                message: "Enter the prompt ID to delete:",
+                message: "Input the ID of the prompt you would like to delete:",
             });
             await promptClient.deletePrompt(deleteId);
             console.log("Prompt deleted successfully.");
