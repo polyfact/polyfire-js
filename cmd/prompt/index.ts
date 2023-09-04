@@ -31,7 +31,7 @@ async function managePrompts(token: string): Promise<boolean> {
         },
     ]);
 
-    const promptClient = client({ token, endpoint: "http://localhost:8080" });
+    const promptClient = client({ token });
 
     switch (answers.action) {
         case "Back":
