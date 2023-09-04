@@ -4,7 +4,7 @@ import { generate } from "../lib/index";
     const res = await generate(
         "i want a Swiss white beger dog",
         {
-            promptId: "f4a1f732-9c38-4bdb-b9e4-3baa7971286a",
+            systemPromptId: "f4a1f732-9c38-4bdb-b9e4-3baa7971286a",
             infos: true,
         },
         {
