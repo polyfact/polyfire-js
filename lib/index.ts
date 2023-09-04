@@ -15,7 +15,7 @@ import Polyfact, { PolyfactClientBuilder } from "./client";
 import usePolyfact from "./hooks/usePolyfact";
 import useChat from "./hooks/useChat";
 import { generateImage } from "./image";
-import { PDFLoader, TextFileLoader, StringLoader, AudioLoader } from "./dataloader";
+import { TextFileLoader, StringLoader, AudioLoader } from "./dataloader";
 
 import {
     getAllPrompts,
@@ -82,7 +82,6 @@ export {
     deletePrompt,
 
     // Loader
-    PDFLoader,
     TextFileLoader,
     StringLoader,
     AudioLoader,
