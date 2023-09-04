@@ -44,7 +44,7 @@ async function managePrompts(token: string): Promise<boolean> {
             const { name } = await inquirer.prompt({
                 type: "input",
                 name: "name",
-                message: "Enter the prompt name:",
+                message: "Input the prompt's name:",
             });
             const promptByName = await promptClient.getPromptByName(name);
             console.info(promptByName);
