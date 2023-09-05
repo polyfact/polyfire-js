@@ -1,5 +1,5 @@
 import * as t from "polyfact-io-ts";
-import { generate, generateWithTokenUsage, GenerationOptions } from "./generate";
+import { generate, generateWithTokenUsage, GenerationOptions, generateStream } from "./generate";
 
 import {
     generateWithType,
@@ -46,6 +46,7 @@ export {
     generateWithTokenUsage,
     generateWithType,
     generateWithTypeWithTokenUsage,
+    generateStream,
     GenerationOptions,
     Chat,
 
