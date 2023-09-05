@@ -221,6 +221,9 @@ export class GenerationStream extends Readable {
         this.on("data", (d) => {
             stream.push(d);
         });
+        this.on("error", (data) => {
+            stream.emit("error", data);
+        });
         this.on("end", () => {
             stream.push(null);
         });
@@ -306,6 +309,13 @@ export function generateStream(
                     } catch (e) {
                         resultStream.push("");
                     }
+                } else if (data.data.startsWith("[ERROR]:")) {
+                    try {
+                        const potentialRessources = JSON.parse(data.data.replace("[ERROR]:", ""));
+                        resultStream.emit("error", potentialRessources);
+                    } catch (e) {
+                        resultStream.push("");
+                    }
                 } else {
                     resultStream.push(data.data);
                 }
@@ -315,6 +325,13 @@ export function generateStream(
     return stream(task, options, clientOptions, (data: any, resultStream: GenerationStream) => {
         if (data.data === "") {
             resultStream.push(null);
+        } else if (data.data.startsWith("[ERROR]:")) {
+            try {
+                const potentialRessources = JSON.parse(data.data.replace("[ERROR]:", ""));
+                resultStream.emit("error", potentialRessources);
+            } catch (e) {
+                resultStream.push("");
+            }
         } else {
             resultStream.push(data.data);
         }
