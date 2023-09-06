@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { ClientOptions, defaultOptions, InputClientOptions } from "./clientOpts";
+import { defaultOptions, InputClientOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
 export type FilterOperation = "eq" | "neq" | "gt" | "lt" | "gte" | "lte" | "like" | "ilike" | "cs";
@@ -28,7 +28,7 @@ export type PromptUpdate = Partial<PromptInsert>;
 async function axiosWrapper<T>(
     method: "get" | "post" | "put" | "delete",
     url: string,
-    data?: Record<string, string | string[]>,
+    data?: Record<string, string | string[]> | undefined,
     clientOptions: InputClientOptions = {},
 ): Promise<T> {
     const { token, endpoint } = await defaultOptions(clientOptions);
@@ -53,14 +53,14 @@ export async function getPromptByName(
     name: string,
     clientOptions: InputClientOptions = {},
 ): Promise<Prompt> {
-    return axiosWrapper("get", `/prompt/name/${name}`, {}, clientOptions);
+    return axiosWrapper("get", `/prompt/name/${name}`, undefined, clientOptions);
 }
 
 export async function getPromptById(
     id: string,
     clientOptions: InputClientOptions = {},
 ): Promise<Prompt> {
-    return axiosWrapper("get", `/prompt/id/${id}`, {}, clientOptions);
+    return axiosWrapper("get", `/prompt/id/${id}`, undefined, clientOptions);
 }
 
 export async function getAllPrompts(
@@ -78,7 +78,7 @@ export async function getAllPrompts(
     return axiosWrapper(
         "get",
         `/prompts${queryString ? `?${queryString}` : ""}`,
-        {},
+        undefined,
         clientOptions,
     );
 }
@@ -102,7 +102,7 @@ export async function deletePrompt(
     id: string,
     clientOptions: InputClientOptions = {},
 ): Promise<void> {
-    return axiosWrapper("delete", `/prompt/${id}`, {}, clientOptions);
+    return axiosWrapper("delete", `/prompt/${id}`, undefined, clientOptions);
 }
 
 export type PromptClient = {
