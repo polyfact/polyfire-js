@@ -5,7 +5,7 @@ import fs from "fs";
 
 const clientOptions = {
     endpoint: "http://localhost:8080",
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoX2lkIjoiOGJlOWQwZWYtZGMyZi00ODQzLWE0MjctYmYwNDRlZmJkNTVlIiwidXNlcl9pZCI6IjhiZTlkMGVmLWRjMmYtNDg0My1hNDI3LWJmMDQ0ZWZiZDU1ZSJ9.3XiX_5hNmLCRgh90EYMUudIdPXo1Nm6qbYs_8IMz8Bk",
+    token: "<YOUR_POLYFACT_TOKEN>",
 };
 async function main() {
     fs.readFile(`${__dirname}/dataloader/AudioLoader.mp3`, async function (err, data) {
