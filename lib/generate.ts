@@ -150,6 +150,28 @@ async function generateRequest(
     }
 }
 
+async function getMemoryIds(
+    dataMemory: string | undefined,
+    genOptionsMemoryId: string | undefined,
+    genOptionsMemory: Memory | undefined,
+): Promise<string[] | string | undefined> {
+    const memoryIds: (string | undefined)[] = [
+        dataMemory,
+        genOptionsMemoryId,
+        await genOptionsMemory?.memoryId,
+    ];
+
+    const validMemoryIds: string[] = memoryIds.filter((id): id is string => id !== undefined);
+
+    if (validMemoryIds.length === 0) {
+        return undefined;
+    } else if (validMemoryIds.length >= 2) {
+        return validMemoryIds;
+    } else {
+        return validMemoryIds[0];
+    }
+}
+
 export async function generateWithTokenUsage(
     task: string,
     options: GenerationOptions | GenerationWithWebOptions = {},
@@ -164,11 +186,17 @@ export async function generateWithTokenUsage(
         );
     }
 
+    const memoryIdAssignment = await getMemoryIds(
+        dataMemory,
+        genOptions.memoryId,
+        genOptions.memory,
+    );
+
     const requestBody = {
         task,
         provider: genOptions.provider || "",
         model: genOptions.model,
-        memory_id: dataMemory || (await genOptions.memory?.memoryId) || genOptions.memoryId,
+        memory_id: memoryIdAssignment,
         stop: genOptions.stop || [],
         infos: genOptions.infos || false,
         system_prompt_id: genOptions.systemPromptId,
@@ -249,7 +277,6 @@ function stream(
     });
     (async () => {
         const genOptions = options as GenerationCompleteOptions;
-
         let dataMemory;
         if (genOptions.data) {
             dataMemory = await loaderToMemory(genOptions.data, clientOptions).then(
@@ -257,11 +284,17 @@ function stream(
             );
         }
 
+        const memoryIdAssignment = await getMemoryIds(
+            dataMemory,
+            genOptions.memoryId,
+            genOptions.memory,
+        );
+
         const requestBody = {
             task,
             provider: genOptions.provider || "",
             model: genOptions.model,
-            memory_id: dataMemory || (await genOptions.memory?.memoryId) || genOptions.memoryId,
+            memory_id: memoryIdAssignment,
             stop: genOptions.stop || [],
             infos: genOptions.infos || false,
             system_prompt_id: genOptions.systemPromptId,

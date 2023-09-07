@@ -1,9 +1,9 @@
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
-import { PassThrough } from "readable-stream";
 import { UUID } from "crypto";
+
+import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray";
 import {
-    Exclusive,
     generateStream,
     generateWithTokenUsage,
     GenerationOptions,
@@ -15,6 +15,7 @@ import {
 import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
 import { Memory } from "../memory";
 import { ApiError, ErrorData } from "../helpers/error";
+import { LoaderFunction, loaderToMemory } from "../dataloader";
 
 const Message = t.type({
     id: t.string,
@@ -55,27 +56,45 @@ type ChatOptions = {
     autoMemory?: boolean;
 } & GenerationWithoutWebOptions;
 
+type ProgressCallback = (step: string) => void;
+
 export class Chat {
     chatId: Promise<string>;
-
-    provider: "openai" | "cohere" | "llama" | "";
-
-    model?: string;
 
     clientOptions: Promise<ClientOptions>;
 
     autoMemory?: Promise<Memory>;
 
-    systemPromptId?: UUID;
+    memoryId?: string;
+
+    options: ChatOptions;
 
     constructor(options: ChatOptions = {}, clientOptions: InputClientOptions = {}) {
-        this.systemPromptId = options.systemPromptId;
+        this.options = options;
         this.clientOptions = defaultOptions(clientOptions);
         this.chatId = createChat(options.systemPrompt, options.systemPromptId, this.clientOptions);
-        this.provider = options.provider || "";
-        this.model = options.model;
+        this.options.provider = options.provider || "";
+
         if (options.autoMemory) {
             this.autoMemory = this.clientOptions.then((co) => new Memory(co));
+        }
+    }
+
+    async dataLoader(
+        data: LoaderFunction | LoaderFunction[],
+        onProgress: ProgressCallback,
+    ): Promise<void> {
+        try {
+            onProgress("START_LOADING");
+            const memory = await loaderToMemory(data, this.clientOptions);
+
+            onProgress("GET_MEMORY_ID");
+            this.memoryId = await memory.memoryId;
+
+            onProgress("FULLY_LOADED");
+        } catch (error) {
+            onProgress("LOAD_ERROR");
+            console.error("Error loading data into memory:", error);
         }
     }
 
@@ -89,15 +108,18 @@ export class Chat {
         if (this.autoMemory && !genOptions.memory && !genOptions.memoryId) {
             genOptions.memory = await this.autoMemory;
         }
-        if (this.systemPromptId) {
-            genOptions.systemPromptId = this.systemPromptId;
+
+        if (this.options.systemPromptId) {
+            genOptions.systemPromptId = this.options.systemPromptId;
+        }
+
+        if (this.memoryId) {
+            genOptions.memoryId = this.memoryId;
         }
 
         const result = await generateWithTokenUsage(
             message,
             {
-                provider: this.provider,
-                model: this.model,
                 ...options,
                 chatId,
             },
@@ -126,7 +148,7 @@ export class Chat {
                 resultStream.push(null);
             },
         });
-        const bufs: Buffer[] = [];
+        let aiMessage = "";
 
         (async () => {
             const chatId = await this.chatId;
@@ -135,8 +157,12 @@ export class Chat {
             if (this.autoMemory && !genOptions.memory && !genOptions.memoryId) {
                 genOptions.memory = await this.autoMemory;
             }
-            if (this.systemPromptId) {
-                genOptions.systemPromptId = this.systemPromptId;
+            if (this.options.systemPromptId) {
+                genOptions.systemPromptId = this.options.systemPromptId;
+            }
+
+            if (this.memoryId) {
+                genOptions.memoryId = this.memoryId;
             }
 
             if (stopped) {
@@ -150,14 +176,14 @@ export class Chat {
             ).pipeInto(resultStream);
 
             result.on("data", (d) => {
-                bufs.push(d);
+                aiMessage = aiMessage.concat(d);
             });
+
             result.on("end", () => {
                 (async () => {
                     if (this.autoMemory) {
-                        const totalResult = new Blob(bufs).arrayBuffer().toString();
                         (await this.autoMemory).add(`Human: ${message}`);
-                        (await this.autoMemory).add(`AI: ${totalResult}`);
+                        (await this.autoMemory).add(`AI: ${aiMessage}`);
                     }
                 })();
             });
@@ -182,8 +208,11 @@ export class Chat {
             if (this.autoMemory && !genOptions.memory && !genOptions.memoryId) {
                 genOptions.memory = await this.autoMemory;
             }
-            if (this.systemPromptId) {
-                genOptions.systemPromptId = this.systemPromptId;
+            if (this.options.systemPromptId) {
+                genOptions.systemPromptId = this.options.systemPromptId;
+            }
+            if (this.memoryId) {
+                genOptions.memoryId = this.memoryId;
             }
 
             if (stopped) {
@@ -193,8 +222,6 @@ export class Chat {
             const result = generateStream(
                 message,
                 {
-                    provider: this.provider,
-                    model: this.model,
                     ...options,
                     chatId,
                 },
