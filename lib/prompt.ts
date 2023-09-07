@@ -41,7 +41,7 @@ async function axiosWrapper<T>(
         const response = await axios({ method, url: `${endpoint}${url}`, headers, data });
         return response.data;
     } catch (e: unknown) {
-        console.log(e);
+        console.error(e);
         if (e instanceof AxiosError) {
             throw new ApiError(e?.response?.data as ErrorData);
         }

@@ -28,6 +28,7 @@ async function loaderInputToBuffer(input: LoaderFileInput): Promise<Buffer> {
     return stream2buffer(input);
 }
 
+// eslint-disable-next-line consistent-return
 async function batchify<T extends Array<unknown>>(
     array: T,
     size: number,
