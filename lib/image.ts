@@ -4,7 +4,7 @@ import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
 export type ImageGenerationOptions = {
-    provider?: "openai" | "midjourney";
+    provider?: "openai";
 };
 
 const ImageGenerationResponseType = t.type({
