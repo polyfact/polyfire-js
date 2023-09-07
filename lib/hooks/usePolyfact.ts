@@ -17,13 +17,19 @@ export default function usePolyfact(
 ): {
     polyfact: Client | undefined;
     login: ((input: { provider: Provider }) => Promise<void>) | undefined;
+    loginWithFirebase: ((token: string) => Promise<void>) | undefined;
     email?: string;
     loading: boolean;
 } {
     const { project, endpoint } = args || {};
     if (typeof window === "undefined") {
         console.error("usePolyfact not usable outside of the browser environment");
-        return { loading: true, polyfact: undefined, login: undefined };
+        return {
+            loading: true,
+            polyfact: undefined,
+            login: undefined,
+            loginWithFirebase: undefined,
+        };
     }
 
     const react = require("react"); // eslint-disable-line
@@ -31,6 +37,7 @@ export default function usePolyfact(
     const [email, setEmail] = react.useState();
     const [loading, setLoading] = react.useState(true);
     const [login, setLogin] = react.useState();
+    const [loginWithFirebase, setLoginWithFirebase] = react.useState();
 
     react.useEffect(() => {
         if (project) {
@@ -60,6 +67,15 @@ export default function usePolyfact(
                             .project(project)
                             .oAuthRedirect({ provider });
                     });
+                    setLoginWithFirebase(() => async (token: string) => {
+                        const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
+                            .project(project)
+                            .signInWithFirebaseToken(token);
+                        setLogin();
+                        setLoginWithFirebase();
+                        setPolyfact(p);
+                        window.Polyfact = p;
+                    });
                     setLoading(false);
                 }
 
@@ -84,5 +100,5 @@ export default function usePolyfact(
         }
     }, []);
 
-    return { polyfact, login, loading, email };
+    return { polyfact, login, loading, email, loginWithFirebase };
 }

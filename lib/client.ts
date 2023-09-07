@@ -57,6 +57,8 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
 
     private supabaseClient: ReturnType<typeof createClient>;
 
+    private authType: "token" | "firebase" = "token";
+
     constructor(
         supabaseClient: { supabaseUrl: string; supabaseKey: string } = supabaseDefaultClient,
     ) {
@@ -135,6 +137,14 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
 
     signInWithOAuthToken(token: string): PolyfactClientBuilder {
         this.isAuthTokenSetSync = true;
+        this.authType = "token";
+        this.authTokenResolve(token);
+        return this;
+    }
+
+    signInWithFirebaseToken(token: string): PolyfactClientBuilder {
+        this.isAuthTokenSetSync = true;
+        this.authType = "firebase";
         this.authTokenResolve(token);
         return this;
     }
@@ -187,6 +197,7 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
 
     signInWithPassword(credentials: { email: string; password: string }): PolyfactClientBuilder {
         this.isAuthTokenSetSync = true;
+        this.authType = "token";
         this.buildQueue.push(async () => {
             const data = await this.supabaseClient.auth.signInWithPassword(credentials);
 
@@ -238,7 +249,9 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
             if (projectId) {
                 try {
                     const { data } = await axios.get(
-                        `${(await this.clientOptions).endpoint}/project/${projectId}/auth/token`,
+                        `${(await this.clientOptions).endpoint}/project/${projectId}/auth/${
+                            this.authType
+                        }`,
                         { headers: { Authorization: `Bearer ${await this.authToken}` } },
                     );
                     (await this.clientOptions).token = data;
