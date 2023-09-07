@@ -32,7 +32,6 @@ export async function generateImage(
         );
 
         if (!ImageGenerationResponseType.is(image.data)) {
-            console.log(image);
             throw new ApiError({
                 code: "mismatched_response",
                 message: "The response from the API does not match the expected format",
@@ -41,7 +40,7 @@ export async function generateImage(
 
         return image.data;
     } catch (e: unknown) {
-        console.log(e);
+        console.error(e);
         if (e instanceof AxiosError) {
             throw new ApiError(e?.response?.data as ErrorData);
         }
