@@ -54,6 +54,11 @@ export default function useChat(): {
             setMessages([aiMessage, userMessage, ...history]);
         });
 
+        stream.on("error", (d: string) => {
+            console.error(d);
+            throw new Error(d);
+        });
+
         stream.on("end", async () => {
             const history = await chat.getMessages();
 
