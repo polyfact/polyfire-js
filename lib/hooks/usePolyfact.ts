@@ -32,7 +32,12 @@ export default function usePolyfact(
         };
     }
 
-    const react = require("react"); // eslint-disable-line
+    let react;
+    try {
+        react = require("react"); // eslint-disable-line
+    } catch (_) {
+        throw new Error("usePolyfact not usable outside of a react environment");
+    }
     const [polyfact, setPolyfact] = react.useState();
     const [email, setEmail] = react.useState();
     const [loading, setLoading] = react.useState(true);
