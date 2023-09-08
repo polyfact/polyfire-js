@@ -3,7 +3,7 @@ import { generateStream, generateWithTokenUsage } from "../lib/generate";
 
 // Client-side configuration for interfacing with the Polyfact API.
 const config = {
-    endpoint: "https://api2.polyfact.com",
+    endpoint: "https://api.polyfact.com",
     token: "<YOUR_POLYFACT_TOKEN>", // API authentication token. Obtain yours from https://app.polyfact.com.
 };
 

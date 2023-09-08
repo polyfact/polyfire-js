@@ -1,7 +1,7 @@
 import { createMemory, updateMemory, getAllMemories, generate } from "../lib/index";
 
 const clientOptions = {
-    endpoint: "https://api2.polyfact.com",
+    endpoint: "https://api.polyfact.com",
     token: "<YOUR_POLYFACT_TOKEN>",
 };
 

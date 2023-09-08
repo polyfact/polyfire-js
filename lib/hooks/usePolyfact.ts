@@ -53,7 +53,7 @@ export default function usePolyfact(
 
                 const { token, email } = (await Polyfact.getSession()) || {};
                 if (token) {
-                    const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
+                    const p = await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
                         .project(project)
                         .signInWithOAuthToken(token);
                     setLoading(false);
@@ -63,12 +63,12 @@ export default function usePolyfact(
                     window.PolyfactEmail = email;
                 } else {
                     setLogin(() => async ({ provider }: { provider: Provider }) => {
-                        await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
+                        await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
                             .project(project)
                             .oAuthRedirect({ provider });
                     });
                     setLoginWithFirebase(() => async (token: string) => {
-                        const p = await Polyfact.endpoint(endpoint || "https://api2.polyfact.com")
+                        const p = await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
                             .project(project)
                             .signInWithFirebaseToken(token);
                         setLogin();
