@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.58",
+    "version": "0.1.59",
     "main": "dist/lib/index.js",
     "types": "dist/lib/index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
@@ -66,6 +66,7 @@
         "lint": "prettier --check lib/ cmd/ ; eslint lib/ cmd/",
         "lint:fix": "prettier --write lib/ cmd/ ; eslint --fix lib/ cmd/",
         "cmd:build": "esbuild cmd/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp",
+        "cmd:vanilla-js": "esbuild target/vanilla-js.ts --bundle --minify --target=chrome67,firefox68,edge79,safari15 --outfile=build/vanilla-js.js",
         "build": "tsc -p tsconfig.json --declaration --outDir dist"
     }
 }
