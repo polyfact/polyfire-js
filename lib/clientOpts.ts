@@ -16,7 +16,7 @@ export async function defaultOptions(popts: InputClientOptions): Promise<ClientO
     }
 
     return {
-        endpoint: POLYFACT_ENDPOINT || "https://api2.polyfact.com",
+        endpoint: POLYFACT_ENDPOINT || "https://api.polyfact.com",
         token: POLYFACT_TOKEN || "",
 
         ...opts,

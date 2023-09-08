@@ -46,7 +46,7 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
     private buildQueue: (() => Promise<void>)[] = [];
 
     private clientOptions: InputClientOptions = {
-        endpoint: POLYFACT_ENDPOINT || "https://api2.polyfact.com",
+        endpoint: POLYFACT_ENDPOINT || "https://api.polyfact.com",
     };
 
     private authToken: Promise<string>;

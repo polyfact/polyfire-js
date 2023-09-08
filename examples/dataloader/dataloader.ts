@@ -5,7 +5,7 @@ import weirdStory from "./StringLoader";
 import fs from "fs";
 
 const clientOptions = {
-    endpoint: "https://api2.polyfact.com",
+    endpoint: "https://api.polyfact.com",
     token: "<YOUR_POLYFACT_TOKEN>", // You can get one at https://app.polyfact.com/
 };
 (async () => {
