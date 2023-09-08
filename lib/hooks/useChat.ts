@@ -15,7 +15,13 @@ export default function useChat(): {
 } {
     const { polyfact } = usePolyfact(null);
 
-    const react = require("react"); // eslint-disable-line
+    let react;
+    try {
+        react = require("react"); // eslint-disable-line
+    } catch (_) {
+        throw new Error("usePolyfact not usable outside of a react environment");
+    }
+
     const [chat, setChat] = react.useState();
     const [history, setHistory] = react.useState([]);
     const [messages, setMessages] = react.useState([]);

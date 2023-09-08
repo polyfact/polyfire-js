@@ -32,3 +32,34 @@ jobs:
               run: npm publish
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Build Vanilla JS
+              run: npm run cmd:vanilla-js
+
+            - name: Parse the package.json for the version
+              run: |
+                echo 'PACKAGE_JSON<<EOF' >> $GITHUB_ENV
+                cat ./package.json >> $GITHUB_ENV
+                echo 'EOF' >> $GITHUB_ENV
+
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                tag_name: ${{ fromJson(env.PACKAGE_JSON).version }}
+                release_name: Release ${{ fromJson(env.PACKAGE_JSON).version }}
+                draft: false
+                prerelease: false
+
+            - name: Upload Release Asset
+              id: upload-release-asset
+              uses: actions/upload-release-asset@v1
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                upload_url: ${{ steps.create_release.outputs.upload_url }}
+                asset_path: ./build/vanilla-js.js
+                asset_name: 'polyfact-min-${{ fromJson(env.PACKAGE_JSON).version }}.js'
+                asset_content_type: application/javascript
