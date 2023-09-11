@@ -65,10 +65,6 @@ export {
     t,
     kv,
 
-    // hooks
-    usePolyfact,
-    useChat,
-
     // Image generation
     generateImage,
 

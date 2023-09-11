@@ -1,6 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { Mutex } from "async-mutex";
-import { supabaseDefaultClient } from "../clientOpts";
+import { useState, useEffect } from "react";
 import Polyfact, { Client } from "../client";
 
 declare const window: any;
@@ -22,29 +21,17 @@ export default function usePolyfact(
     loading: boolean;
 } {
     const { project, endpoint } = args || {};
-    if (typeof window === "undefined") {
-        console.error("usePolyfact not usable outside of the browser environment");
-        return {
-            loading: true,
-            polyfact: undefined,
-            login: undefined,
-            loginWithFirebase: undefined,
-        };
-    }
+    const [polyfact, setPolyfact] = useState<Client>();
+    const [email, setEmail] = useState<string>();
+    const [loading, setLoading] = useState(true);
+    const [login, setLogin] = useState<
+        ((input: { provider: Provider }) => Promise<void>) | undefined
+    >();
+    const [loginWithFirebase, setLoginWithFirebase] = useState<
+        ((token: string) => Promise<void>) | undefined
+    >();
 
-    let react;
-    try {
-        react = require("react"); // eslint-disable-line
-    } catch (_) {
-        throw new Error("usePolyfact not usable outside of a react environment");
-    }
-    const [polyfact, setPolyfact] = react.useState();
-    const [email, setEmail] = react.useState();
-    const [loading, setLoading] = react.useState(true);
-    const [login, setLogin] = react.useState();
-    const [loginWithFirebase, setLoginWithFirebase] = react.useState();
-
-    react.useEffect(() => {
+    useEffect(() => {
         if (project) {
             (async () => {
                 await reactMutex.acquire();
@@ -76,8 +63,8 @@ export default function usePolyfact(
                         const p = await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
                             .project(project)
                             .signInWithFirebaseToken(token);
-                        setLogin();
-                        setLoginWithFirebase();
+                        setLogin(undefined);
+                        setLoginWithFirebase(undefined);
                         setPolyfact(p);
                         window.Polyfact = p;
                     });
