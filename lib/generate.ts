@@ -39,6 +39,12 @@ export type AndN<T extends Record<string, unknown>[]> = T extends [infer F, ...i
         : never
     : unknown;
 
+export type NeverN<T extends Record<string, unknown>[]> = T extends [infer F, ...infer Rest]
+    ? F extends Record<string, unknown>
+        ? Partial<{ [x in keyof F]: never }> & NeverN<Extract<Rest, Record<string, unknown>[]>>
+        : never
+    : unknown;
+
 export type Language =
     | "english"
     | "french"
@@ -82,19 +88,22 @@ export type MemoryOptions = [
 
 export type SystemPromptOptions = [{ systemPromptId: UUID }, { systemPrompt: string }, {}];
 
-export type GenerationWithWebOptions = GenerationSimpleOptions & { web: true };
+export type GenerationWithWebOptions = GenerationSimpleOptions &
+    NeverN<ChatOptions> &
+    NeverN<MemoryOptions> &
+    NeverN<SystemPromptOptions> & { web: true };
 
 export type GenerationWithoutWebOptions = GenerationSimpleOptions &
     ExclusiveN<ChatOptions> &
     ExclusiveN<MemoryOptions> &
-    ExclusiveN<SystemPromptOptions>;
+    ExclusiveN<SystemPromptOptions> & { web?: false };
 
 export type GenerationOptions = GenerationWithWebOptions | GenerationWithoutWebOptions;
 
 export type GenerationCompleteOptions = GenerationSimpleOptions &
     AndN<ChatOptions> &
     AndN<MemoryOptions> &
-    AndN<SystemPromptOptions> & { web?: true };
+    AndN<SystemPromptOptions> & { web?: boolean };
 
 export type TokenUsage = {
     input: number;
@@ -220,6 +229,16 @@ export async function generateWithTokenUsage(
  * @param clientOptions - The client options.
  * @returns Either a `string` or a `GenerationResult` based on `options.infos`.
  */
+export async function generate(
+    task: string,
+    options?: (GenerationOptions & { infos?: false | undefined }) | undefined,
+    clientOptions?: InputClientOptions,
+): Promise<string>;
+export async function generate(
+    task: string,
+    options: GenerationOptions & { infos: true },
+    clientOptions?: InputClientOptions,
+): Promise<GenerationResult>;
 export async function generate(
     task: string,
     options: GenerationOptions = {},
@@ -376,7 +395,10 @@ export type GenerationClient = {
         task: string,
         options?: GenerationOptions,
     ) => Promise<GenerationResult>;
-    generate: (task: string, options?: GenerationOptions) => Promise<string | GenerationResult>;
+    generate: <T extends GenerationOptions>(
+        task: string,
+        options?: T,
+    ) => Promise<T extends { infos: true } ? GenerationResult : string>;
     generateStream: (task: string, options?: GenerationOptions) => GenerationStream;
 };
 
@@ -384,8 +406,9 @@ export default function client(clientOptions: InputClientOptions = {}): Generati
     return {
         generateWithTokenUsage: (task: string, options: GenerationOptions = {}) =>
             generateWithTokenUsage(task, options, clientOptions),
-        generate: (task: string, options: GenerationOptions = {}) =>
-            generate(task, options, clientOptions),
+        generate: (task: string, options: GenerationOptions = {}) => {
+            return generate(task, options as any, clientOptions) as any;
+        },
         generateStream: (task: string, options: GenerationOptions = {}) =>
             generateStream(task, options, clientOptions),
     };
