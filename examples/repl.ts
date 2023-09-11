@@ -3,22 +3,15 @@ import { stdin as input, stdout as output } from "node:process";
 import { AudioLoader, Chat } from "../lib/index";
 import fs from "fs";
 
-const clientOptions = {
-    endpoint: "http://localhost:8080",
-    token: "<YOUR_POLYFACT_TOKEN>",
-};
 async function main() {
     fs.readFile(`${__dirname}/dataloader/AudioLoader.mp3`, async function (err, data) {
         if (err) throw err;
-        const chat = new Chat(
-            {
-                autoMemory: true,
-                provider: "openai",
-                model: "gpt-3.5-turbo-16k",
-                // systemPromptId: "8fc39ca4-3941-40d9-824a-5ed283102f6e", // Holy Bible Prompt
-            },
-            clientOptions,
-        );
+        const chat = new Chat({
+            autoMemory: true,
+            provider: "openai",
+            model: "gpt-3.5-turbo-16k",
+            // systemPromptId: "8fc39ca4-3941-40d9-824a-5ed283102f6e", // Holy Bible Prompt
+        });
 
         await chat.dataLoader(AudioLoader(data), (step) => console.log(step));
 
