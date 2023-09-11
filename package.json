@@ -1,16 +1,13 @@
 {
     "name": "polyfact",
     "version": "0.1.59",
-    "main": "dist/lib/index.js",
-    "types": "dist/lib/index.d.ts",
+    "main": "index.js",
+    "types": "index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
     "license": "MIT",
-    "bin": "build/polyfact",
+    "bin": "polyfact",
     "dependencies": {
         "@supabase/supabase-js": "^2.31.0",
-        "@types/inquirer": "^9.0.3",
-        "@types/pdf-parse": "^1.1.1",
-        "@types/readable-stream": "^4.0.0",
         "async-mutex": "^0.4.0",
         "axios": "^0.27.2",
         "buffer": "^6.0.3",
@@ -22,6 +19,7 @@
         "js-tiktoken": "^1.0.7",
         "pdf-parse": "^1.1.1",
         "polyfact-io-ts": "^2.2.20",
+        "react": "^18.2.0",
         "readable-stream": "^4.4.2",
         "ts-node": "^10.9.1",
         "uuid": "^9.0.0",
@@ -32,6 +30,10 @@
         "@types/isomorphic-fetch": "^0.0.36",
         "@types/node": "^20.4.5",
         "@types/uuid": "^9.0.2",
+        "@types/inquirer": "^9.0.3",
+        "@types/pdf-parse": "^1.1.1",
+        "@types/react": "^18.2.21",
+        "@types/readable-stream": "^4.0.0",
         "@typescript-eslint/eslint-plugin": "^4.14.1",
         "@typescript-eslint/parser": "^4.14.1",
         "cli-progress": "^3.12.0",
@@ -67,6 +69,7 @@
         "lint:fix": "prettier --write lib/ cmd/ ; eslint --fix lib/ cmd/",
         "cmd:build": "esbuild cmd/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp",
         "cmd:vanilla-js": "esbuild target/vanilla-js.ts --bundle --minify --target=chrome67,firefox68,edge79,safari15 --outfile=build/vanilla-js.js",
-        "build": "tsc -p tsconfig.json --declaration --outDir dist"
+        "build": "tsc --target es2021 --lib es2021,DOM --module commonjs --strict --esModuleInterop --declaration --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts && npm run cmd:build && cp build/polyfact package.json README.md dist/",
+        "publish": "npm run build && cd dist && npm publish && cd .."
     }
 }

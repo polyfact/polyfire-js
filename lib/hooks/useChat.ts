@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import usePolyfact from "./usePolyfact";
+import type { Chat } from "../chats";
 
 export type Message = {
     id: string | null;
@@ -15,19 +17,12 @@ export default function useChat(): {
 } {
     const { polyfact } = usePolyfact(null);
 
-    let react;
-    try {
-        react = require("react"); // eslint-disable-line
-    } catch (_) {
-        throw new Error("usePolyfact not usable outside of a react environment");
-    }
+    const [chat, setChat] = useState<Chat>();
+    const [history, setHistory] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const [chat, setChat] = react.useState();
-    const [history, setHistory] = react.useState([]);
-    const [messages, setMessages] = react.useState([]);
-    const [loading, setLoading] = react.useState(true);
-
-    react.useEffect(() => {
+    useEffect(() => {
         if (polyfact) {
             setChat(new polyfact.Chat());
             setHistory([]);
@@ -36,6 +31,9 @@ export default function useChat(): {
     }, [polyfact]);
 
     async function sendMessage(message: string) {
+        if (chat === undefined) {
+            throw new Error("Chat not initialized");
+        }
         const userMessage = {
             id: null,
             chat_id: await chat.chatId,

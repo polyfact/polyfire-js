@@ -22,14 +22,8 @@ jobs:
             - name: Install dependencies using Yarn
               run: yarn install
 
-            - name: Build lib
-              run: npm run build
-
-            - name: Build bin
-              run: npm run cmd:build
-
             - name: Publish to npm
-              run: npm publish
+              run: npm run publish
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
