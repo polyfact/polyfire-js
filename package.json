@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.60",
+    "version": "0.1.61",
     "main": "index.js",
     "types": "index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
@@ -70,6 +70,6 @@
         "cmd:build": "esbuild cmd/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp",
         "cmd:vanilla-js": "esbuild target/vanilla-js.ts --bundle --minify --target=chrome67,firefox68,edge79,safari15 --outfile=build/vanilla-js.js",
         "build": "tsc --target es2021 --lib es2021,DOM --module commonjs --strict --esModuleInterop --declaration --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts && npm run cmd:build && cp build/polyfact package.json README.md dist/",
-        "publish": "npm run build && cd dist && npm publish && cd .."
+        "npm-publish": "npm run build && cd dist && npm publish && cd .."
     }
 }
