@@ -121,6 +121,7 @@ export class Chat {
             message,
             {
                 ...options,
+                web: false,
                 chatId,
             },
             this.clientOptions,
@@ -171,7 +172,7 @@ export class Chat {
 
             const result = generateStream(
                 message,
-                { ...options, chatId, infos: true },
+                { ...options, web: false, chatId, infos: true },
                 await this.clientOptions,
             ).pipeInto(resultStream);
 
@@ -223,6 +224,7 @@ export class Chat {
                 message,
                 {
                     ...options,
+                    web: false,
                     chatId,
                 },
                 await this.clientOptions,
