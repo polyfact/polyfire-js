@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { usePolyfact } from "../hooks";
 
 export const examples: string[] = [
@@ -29,26 +29,19 @@ export type Options = {
 };
 
 type Agent = {
-    start?: (
+    start: (
         question: string,
         progress?: (step: string, result: string) => void,
     ) => Promise<string | null>;
-    stop?: () => void;
+    stop: () => void;
     error?: string;
     loading?: boolean;
 };
 
 const useAgent = (options: Options = { provider: "openai", model: "gpt-3.5-turbo" }): Agent => {
-    const { polyfact } = usePolyfact(null);
+    const { polyfact, polyfactPromise } = usePolyfact(null);
 
     const [isRunning, setIsRunning] = useState(true);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (polyfact) {
-            setLoading(false);
-        }
-    }, [polyfact]);
 
     const parseLine = (line: string): Line => {
         const [type, arg] = line.split(/ {0,}--> {0,}/g);
@@ -69,6 +62,8 @@ const useAgent = (options: Options = { provider: "openai", model: "gpt-3.5-turbo
     };
 
     const search = async (query: string) => {
+        await polyfactPromise;
+
         const page = (await polyfact?.generate(query, {
             ...options,
             web: true,
@@ -108,6 +103,7 @@ const useAgent = (options: Options = { provider: "openai", model: "gpt-3.5-turbo
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         progress: (step: string, result: string) => void = () => {},
     ): Promise<string | null> => {
+        await polyfactPromise;
         console.info("Starting...");
         let history = `Examples : ${examples.join("\n\n")}
     
@@ -154,10 +150,7 @@ const useAgent = (options: Options = { provider: "openai", model: "gpt-3.5-turbo
             loop++;
         }
     };
-    if (polyfact) {
-        return { start, stop };
-    }
-    return { loading };
+    return { start, stop };
 };
 
 export default useAgent;
