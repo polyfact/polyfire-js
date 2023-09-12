@@ -105,12 +105,13 @@ const useAgent = (options: Options = { provider: "openai", model: "gpt-3.5-turbo
     ): Promise<string | null> => {
         await polyfactPromise;
         console.info("Starting...");
-        let history = `Examples : ${examples.join("\n\n")}
-    
-    Follow exactly the structure of the examples.
-    It's important to use the same patterns like --> or ==>.
-    Give alway a lot of details.
-    Question --> ${question}`;
+        let history = `
+        Examples : ${examples.join("\n\n")}\n
+        Follow exactly the structure of the examples.
+        It's important to use the same patterns like --> or ==>.
+        Give alway a lot of details.
+        Question --> ${question}
+        `;
 
         let loop = 0;
 

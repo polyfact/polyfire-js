@@ -15,7 +15,7 @@ export default function useChat(): {
     sendMessage?: (message: string) => void;
     loading: boolean;
 } {
-    const { polyfact } = usePolyfact(null);
+    const { polyfactPromise } = usePolyfact(null);
 
     const [chat, setChat] = useState<Chat>();
     const [history, setHistory] = useState<Message[]>([]);
@@ -23,12 +23,12 @@ export default function useChat(): {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (polyfact) {
+        polyfactPromise.then((polyfact) => {
             setChat(new polyfact.Chat());
             setHistory([]);
             setLoading(false);
-        }
-    }, [polyfact]);
+        });
+    }, []);
 
     async function sendMessage(message: string) {
         if (chat === undefined) {
@@ -72,8 +72,5 @@ export default function useChat(): {
         });
     }
 
-    if (polyfact) {
-        return { messages, sendMessage, loading };
-    }
-    return { loading };
+    return { messages, sendMessage, loading };
 }
