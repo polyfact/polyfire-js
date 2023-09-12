@@ -19,6 +19,7 @@ export default function usePolyfact(
     loginWithFirebase: ((token: string) => Promise<void>) | undefined;
     email?: string;
     loading: boolean;
+    polyfactPromise: Promise<Client>;
 } {
     const { project, endpoint } = args || {};
     const [polyfact, setPolyfact] = useState<Client>();
@@ -31,12 +32,24 @@ export default function usePolyfact(
         ((token: string) => Promise<void>) | undefined
     >();
 
+    const [polyfactPromise] = useState<{
+        promise: Promise<Client>;
+        resolveFunction: (client: Client) => void;
+    }>(() => {
+        let resolveFunction: (client: Client) => void;
+        const promise = new Promise<Client>((resolve) => {
+            resolveFunction = resolve;
+        });
+        return { promise, resolveFunction: resolveFunction! };
+    });
+
     useEffect(() => {
         if (project) {
             (async () => {
                 await reactMutex.acquire();
                 if (window.Polyfact) {
                     setPolyfact(window.Polyfact);
+                    polyfactPromise.resolveFunction(window.Polyfact);
                     setEmail(window.PolyfactEmail);
                     setLoading(false);
                     reactMutex.release();
@@ -50,6 +63,7 @@ export default function usePolyfact(
                         .signInWithOAuthToken(token);
                     setLoading(false);
                     setPolyfact(p);
+                    polyfactPromise.resolveFunction(p);
                     setEmail(email);
                     window.Polyfact = p;
                     window.PolyfactEmail = email;
@@ -66,6 +80,7 @@ export default function usePolyfact(
                         setLogin(undefined);
                         setLoginWithFirebase(undefined);
                         setPolyfact(p);
+                        polyfactPromise.resolveFunction(p);
                         window.Polyfact = p;
                     });
                     setLoading(false);
@@ -78,6 +93,7 @@ export default function usePolyfact(
                 await reactMutex.acquire();
                 if (window.Polyfact) {
                     setPolyfact(window.Polyfact);
+                    polyfactPromise.resolveFunction(window.Polyfact);
                     setEmail(window.PolyfactEmail);
                     setLoading(false);
                     reactMutex.release();
@@ -92,5 +108,12 @@ export default function usePolyfact(
         }
     }, []);
 
-    return { polyfact, login, loading, email, loginWithFirebase };
+    return {
+        polyfact,
+        login,
+        loading,
+        email,
+        loginWithFirebase,
+        polyfactPromise: polyfactPromise.promise,
+    };
 }
