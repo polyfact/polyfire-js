@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { Memory } from "../memory";
 import { transcribe } from "../transcribe";
 import { splitString } from "../split";
@@ -8,7 +9,13 @@ interface MinimalStream {
     on(event: string | symbol, listener: (...args: any[]) => void): this;
 }
 
-type LoaderFileInput = MinimalStream | Buffer;
+interface FetchReadableStream {
+    getReader(): {
+        read(): Promise<{ done: boolean; value?: Uint8Array | undefined }>;
+    };
+}
+
+type LoaderFileInput = MinimalStream | Buffer | FetchReadableStream;
 
 function stream2buffer(stream: MinimalStream): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -20,12 +27,37 @@ function stream2buffer(stream: MinimalStream): Promise<Buffer> {
     });
 }
 
+async function fetchStream2buffer(stream: FetchReadableStream): Promise<Buffer> {
+    const reader = stream.getReader();
+    const chunks: Uint8Array[] = [];
+
+    let done = false;
+    let value: Uint8Array | undefined;
+    while (!done) {
+        // eslint-disable-next-line no-await-in-loop
+        ({ done, value } = await reader.read());
+        if (value) {
+            chunks.push(value);
+        }
+    }
+
+    return Buffer.concat(chunks);
+}
+
 async function loaderInputToBuffer(input: LoaderFileInput): Promise<Buffer> {
     if (input instanceof Buffer) {
         return input;
     }
 
-    return stream2buffer(input);
+    if ("on" in input) {
+        return stream2buffer(input);
+    }
+
+    if ("getReader" in input) {
+        return fetchStream2buffer(input);
+    }
+
+    return null as never;
 }
 
 // eslint-disable-next-line consistent-return
