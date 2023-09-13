@@ -2,11 +2,10 @@ import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import { UUID } from "crypto";
 
-import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray";
 import {
-    generateStream,
-    generateWithTokenUsage,
+    generate,
     GenerationOptions,
+    GenerationOptionsWithoutResponseTypeChange,
     GenerationResult,
     GenerationStream,
     GenerationWithoutWebOptions,
@@ -24,6 +23,7 @@ const Message = t.type({
     content: t.string,
     created_at: t.string,
 });
+
 export async function createChat(
     systemPrompt?: string,
     systemPromptId?: UUID,
@@ -98,9 +98,9 @@ export class Chat {
         }
     }
 
-    async sendMessageWithTokenUsage(
+    private async sendMessageWithTokenUsage(
         message: string,
-        options: GenerationOptions = {},
+        options: GenerationOptionsWithoutResponseTypeChange = {},
     ): Promise<GenerationResult> {
         const chatId = await this.chatId;
         const genOptions = options as GenerationCompleteOptions;
@@ -117,11 +117,13 @@ export class Chat {
             genOptions.memoryId = this.memoryId;
         }
 
-        const result = await generateWithTokenUsage(
+        const result = await generate(
             message,
             {
                 ...options,
+                stream: false,
                 web: false,
+                infos: true,
                 chatId,
             },
             this.clientOptions,
@@ -135,13 +137,10 @@ export class Chat {
         return result;
     }
 
-    async sendMessage(message: string, options: GenerationOptions = {}): Promise<string> {
-        const result = await this.sendMessageWithTokenUsage(message, options);
-
-        return result.result;
-    }
-
-    sendMessageStreamWithInfos(message: string, options: GenerationOptions = {}): GenerationStream {
+    private sendMessageStream(
+        message: string,
+        options: GenerationOptionsWithoutResponseTypeChange = {},
+    ): GenerationStream {
         let stopped = false;
         const resultStream = new GenerationStream({
             stop: () => {
@@ -170,13 +169,13 @@ export class Chat {
                 return;
             }
 
-            const result = generateStream(
+            const result = generate(
                 message,
-                { ...options, web: false, chatId, infos: true },
+                { ...options, web: false, chatId, infos: true, stream: true },
                 await this.clientOptions,
             ).pipeInto(resultStream);
 
-            result.on("data", (d) => {
+            result.on("data", (d: any) => {
                 aiMessage = aiMessage.concat(d);
             });
 
@@ -193,59 +192,23 @@ export class Chat {
         return resultStream;
     }
 
-    sendMessageStream(message: string, options: GenerationOptions = {}): GenerationStream {
-        let stopped = false;
-        const resultStream = new GenerationStream({
-            stop: () => {
-                stopped = true;
-                resultStream.push(null);
-            },
-        });
+    sendMessage<T extends GenerationOptions>(
+        message: string,
+        options?: T,
+    ): T extends { stream: true }
+        ? GenerationStream
+        : T extends { infos: true }
+        ? Promise<GenerationResult>
+        : Promise<string> {
+        if (options?.stream) {
+            return this.sendMessageStream(message, options) as any;
+        }
 
-        (async () => {
-            const chatId = await this.chatId;
-            const genOptions = options as GenerationCompleteOptions;
+        if (options?.infos) {
+            return this.sendMessageWithTokenUsage(message, options) as any;
+        }
 
-            if (this.autoMemory && !genOptions.memory && !genOptions.memoryId) {
-                genOptions.memory = await this.autoMemory;
-            }
-            if (this.options.systemPromptId) {
-                genOptions.systemPromptId = this.options.systemPromptId;
-            }
-            if (this.memoryId) {
-                genOptions.memoryId = this.memoryId;
-            }
-
-            if (stopped) {
-                return;
-            }
-
-            const result = generateStream(
-                message,
-                {
-                    ...options,
-                    web: false,
-                    chatId,
-                },
-                await this.clientOptions,
-            );
-
-            result.pipeInto(resultStream);
-
-            const bufs: Buffer[] = [];
-            const totalResult = await new Promise((res, _rej) => {
-                result.on("end", () => {
-                    res(new Blob(bufs).arrayBuffer().toString());
-                });
-            });
-
-            if (this.autoMemory) {
-                (await this.autoMemory).add(`Human: ${message}`);
-                (await this.autoMemory).add(`AI: ${totalResult}`);
-            }
-        })();
-
-        return resultStream as unknown as GenerationStream;
+        return this.sendMessageWithTokenUsage(message, options).then((r) => r.result) as any;
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {

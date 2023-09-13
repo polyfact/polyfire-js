@@ -1,6 +1,6 @@
 import { generate } from "../../lib/index";
 import { AudioLoader, StringLoader, TextFileLoader } from "../../lib/dataloader";
-import { generateStream, generateWithTokenUsage } from "../../lib/generate";
+import { generate } from "../../lib/generate";
 import weirdStory from "./StringLoader";
 import fs from "fs";
 
@@ -25,11 +25,12 @@ const clientOptions = {
     // Generate and ask question from a text file with token usage
 
     fs.readFile(`${__dirname}/TextFileLoader.csv`, async (_err, data) => {
-        const res2 = await generateWithTokenUsage(
+        const res2 = await generate(
             "Give me back the only rows for people who bought a Smartphone (Product column)\n",
             {
                 data: TextFileLoader(data),
                 model: "gpt-4",
+                infos: true,
             },
             clientOptions,
         );
@@ -38,11 +39,12 @@ const clientOptions = {
     });
 
     // Generate and ask question from a big string with token usage
-    const res3 = await generateWithTokenUsage(
+    const res3 = await generate(
         "What are strange or unreal in this story ?",
         {
             data: StringLoader(weirdStory),
             model: "gpt-4",
+            infos: true,
         },
         clientOptions,
     );
@@ -51,11 +53,12 @@ const clientOptions = {
 
     // Generate a stream and ask question from an audio file
     fs.readFile(`${__dirname}/AudioLoader.mp3`, async (_err, data) => {
-        const stream = generateStream(
+        const stream = generate(
             "What does this audio talk about? ",
             {
                 data: AudioLoader(data),
                 model: "gpt-3.5-turbo-16k",
+                stream: true,
             },
             clientOptions,
         );
