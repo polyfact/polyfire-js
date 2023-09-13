@@ -1,4 +1,4 @@
-<h1 align="center">🏭 PolyFact</h1>
+<h1 align="center">PolyFact</h1>
 
 <h4 align="center">
     <a href="https://polyfact.readme.io/reference/polyfact">Documentation</a> |
