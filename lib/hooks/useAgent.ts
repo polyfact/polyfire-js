@@ -22,18 +22,13 @@ const ActionAgent = t.type({
 export type ActionAgent = t.TypeOf<typeof ActionAgent>;
 
 export type Agent = {
-    start: (
-        question: string,
-        progress?: (step: string, result: string) => void,
-    ) => Promise<string | null>;
+    start: (question: string, progress?: (step: string, result: string) => void) => Promise<string>;
     stop: () => void;
-    error?: string;
-    loading?: boolean;
 };
 
 export type DefinitionAction = {
     name: string;
-    callback: (arg: string) => Promise<string | undefined>;
+    callback: (arg: string) => Promise<string>;
     description: string;
     example: {
         question: string;
@@ -74,7 +69,7 @@ const useAgent = (
     actions: DefinitionAction[],
     options: GenerationSimpleOptions = { provider: "openai", model: "gpt-3.5-turbo" },
 ): Agent => {
-    const { polyfact, polyfactPromise } = usePolyfact(null);
+    const { polyfactPromise } = usePolyfact(null);
 
     const [isRunning, setIsRunning] = useState(true);
 
@@ -104,8 +99,8 @@ const useAgent = (
         question: string,
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         progress: (step: string, result: string) => void = () => {},
-    ): Promise<string | null> => {
-        await polyfactPromise;
+    ): Promise<string> => {
+        const polyfact = await polyfactPromise;
         console.info("Starting...");
         let history = `
         ====
@@ -123,7 +118,7 @@ const useAgent = (
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            const result = await polyfact?.generateWithType(history, ActionAgent, options);
+            const result = await polyfact.generateWithType(history, ActionAgent, options);
 
             if (!ActionAgent.is(result)) {
                 throw new Error("Expected ActionAgent");
