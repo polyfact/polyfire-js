@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 import { createClient } from "@supabase/supabase-js";
 import { Readable } from "readable-stream";
 import * as t from "polyfact-io-ts";
+import { Buffer } from "buffer";
 import { InputClientOptions, defaultOptions, supabaseDefaultClient } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 

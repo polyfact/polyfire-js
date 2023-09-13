@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 import * as t from "polyfact-io-ts";
-import { generateWithTokenUsage, GenerationOptions } from "../generate";
-import { ClientOptions, InputClientOptions } from "../clientOpts";
+import { generate, GenerationOptions } from "../generate";
+import { InputClientOptions } from "../clientOpts";
 
 function typePartial2String(entries: [string, any][], indent: number, partial: boolean): string {
     const leftpad = Array(2 * (indent + 1))
@@ -82,18 +82,22 @@ function generateTypedPrompt(typeFormat: string, task: string) {
     return `Your goal is to write a JSON object that will accomplish a specific task.\nThe string inside the JSON must be plain text, and not contain any markdown or HTML unless explicitely mentionned in the task.\nThe JSON object should follow this type:\n\`\`\`\n${typeFormat}\n\`\`\` The task you must accomplish:\n${task}\n\nPlease only provide the JSON in a single json markdown code block with the keys described above. Do not include any other text.\nPlease make sure the JSON is a single line and does not contain any newlines outside of the strings.`;
 }
 
-export async function generateWithTypeWithTokenUsage<T extends t.Props>(
+export async function generateWithType<T extends t.Props, O extends GenerationOptions>(
     task: string,
     type: t.TypeC<T>,
-    options: GenerationOptions = {},
+    options?: O,
     clientOptions: InputClientOptions = {},
-): Promise<{ result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }> {
+): Promise<
+    O extends { infos: true }
+        ? { result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }
+        : t.TypeOf<t.TypeC<T>>
+> {
     const typeFormat = tsio2String(type);
     const tokenUsage = { input: 0, output: 0 };
     for (let tryCount = 0; tryCount < 5; tryCount++) {
-        const { result: resultJson, tokenUsage: tu } = await generateWithTokenUsage(
+        const { result: resultJson, tokenUsage: tu } = await generate(
             generateTypedPrompt(typeFormat, task),
-            options,
+            { ...(options || {}), infos: true, stream: false },
             clientOptions,
         );
 
@@ -116,47 +120,33 @@ export async function generateWithTypeWithTokenUsage<T extends t.Props>(
             continue;
         }
 
-        return { result, tokenUsage };
+        if (!options?.infos) {
+            return result as any;
+        }
+        return { result, tokenUsage } as any;
     }
 
     throw new Error("Generation failed to match the given type after 5 retry");
 }
 
-export async function generateWithType<T extends t.Props>(
-    task: string,
-    type: t.TypeC<T>,
-    options: GenerationOptions = {},
-    clientOptions: InputClientOptions = {},
-): Promise<t.TypeOf<t.TypeC<T>>> {
-    const res = await generateWithTypeWithTokenUsage(task, type, options, clientOptions);
-
-    return res.result;
-}
-
 export type GenerationWithTypeClient = {
-    generateWithTypeWithTokenUsage: <T extends t.Props>(
+    generateWithType: <T extends t.Props, O extends GenerationOptions>(
         task: string,
         type: t.TypeC<T>,
-        options?: GenerationOptions,
-    ) => Promise<{ result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }>;
-    generateWithType: <T extends t.Props>(
-        task: string,
-        type: t.TypeC<T>,
-        options?: GenerationOptions,
-    ) => Promise<t.TypeOf<t.TypeC<T>>>;
+        options?: O,
+    ) => Promise<
+        O extends { infos: true }
+            ? { result: t.TypeOf<t.TypeC<T>>; tokenUsage: { input: number; output: number } }
+            : t.TypeOf<t.TypeC<T>>
+    >;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): GenerationWithTypeClient {
     return {
-        generateWithTypeWithTokenUsage: <T extends t.Props>(
+        generateWithType: <T extends t.Props, O extends GenerationOptions>(
             task: string,
             type: t.TypeC<T>,
-            options: GenerationOptions = {},
-        ) => generateWithTypeWithTokenUsage(task, type, options, clientOptions),
-        generateWithType: <T extends t.Props>(
-            task: string,
-            type: t.TypeC<T>,
-            options: GenerationOptions = {},
-        ) => generateWithType(task, type, options, clientOptions),
+            options?: O,
+        ) => generateWithType(task, type, options, clientOptions) as any,
     };
 }
