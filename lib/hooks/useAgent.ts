@@ -45,8 +45,8 @@ export type DefinitionAction = {
     };
 };
 
-function formatAllExamples(actions: TDefinitionAction[]): string {
-    const formatExample = (examples: TDefinitionAction["example"]): string => {
+function formatAllExamples(actions: DefinitionAction[]): string {
+    const formatExample = (examples: DefinitionAction["example"]): string => {
         const formattedExamples = examples.process
             .map(
                 (p) => `
@@ -66,12 +66,12 @@ function formatAllExamples(actions: TDefinitionAction[]): string {
     return actions.map((action) => formatExample(action.example)).join("\n");
 }
 
-function formatActionList(actions: TDefinitionAction[]): string {
+function formatActionList(actions: DefinitionAction[]): string {
     return actions.map((action) => `${action.name} // ${action.description}`).join("\n");
 }
 
 const useAgent = (
-    actions: TDefinitionAction[],
+    actions: DefinitionAction[],
     options: GenerationSimpleOptions = { provider: "openai", model: "gpt-3.5-turbo" },
 ): Agent => {
     const { polyfact, polyfactPromise } = usePolyfact(null);
@@ -83,7 +83,7 @@ const useAgent = (
         setIsRunning(false);
     };
 
-    const executeAction = async (res: TActionAgent): Promise<string> => {
+    const executeAction = async (res: ActionAgent): Promise<string> => {
         console.info("Executing action...");
 
         let observation = "No Action found";
