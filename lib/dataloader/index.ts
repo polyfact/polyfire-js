@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { Memory } from "../memory";
 import { transcribe } from "../transcribe";
 import { splitString } from "../split";
@@ -10,7 +11,7 @@ interface MinimalStream {
 
 interface FetchReadableStream {
     getReader(): {
-        read(): Promise<{ done: boolean; value: Uint8Array | null }>;
+        read(): Promise<{ done: boolean; value?: Uint8Array | undefined }>;
     };
 }
 
@@ -31,7 +32,7 @@ async function fetchStream2buffer(stream: FetchReadableStream): Promise<Buffer> 
     const chunks: Uint8Array[] = [];
 
     let done = false;
-    let value: Uint8Array | null = null;
+    let value: Uint8Array | undefined;
     while (!done) {
         // eslint-disable-next-line no-await-in-loop
         ({ done, value } = await reader.read());
