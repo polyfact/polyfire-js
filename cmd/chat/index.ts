@@ -126,7 +126,7 @@ async function generateTheme(options: Record<string, string>, token: string): Pr
     const prompt = formatPrompt(options);
     const { result } = await generateWithTokenUsage(
         prompt,
-        { model: "gpt-4" },
+        { model: "gpt-4", provider: "openai" },
         { token, endpoint: "https://api2.polyfact.com" },
     ).catch((e) => {
         throw new Error(`Error during OpenAI request: ${e.message}`);
@@ -147,69 +147,76 @@ async function updateConfig(repo: string, res: string): Promise<void> {
     console.log("Config file updated successfully with the new theme!");
 }
 
-const questions = [
-    {
-        type: "list",
-        name: "testBoilerplate",
-        message: "Would you like to test the boilerplate with predefined settings?",
-        choices: ["Yes", "No"],
-        default: "No",
-    },
-
-    {
-        type: "list",
-        name: "stack",
-        message:
-            "What stack would you like to use? (If you are not sure, please select the default option)",
-        choices: Object.keys(BOILERPLATES).map((key) => key),
-        default: BOILERPLATES[REACT_BOILERPLATE],
-        when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
-    },
-    {
-        type: "list",
-        name: "style",
-        message:
-            "Would you like to use a preset style or generate custom style based on a specific topic using LLMs ?",
-        choices: ["Preset", "Custom"],
-        default: "Custom",
-        when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
-    },
-    {
-        type: "input",
-        name: "topic",
-        message: "Provide your custom topic to create a unique theme:",
-        when: (answers: { [key: string]: string }) =>
-            answers.testBoilerplate === "No" && answers.style === "Custom",
-    },
-    {
-        type: "input",
-        name: "name",
-        message: "What is the name of the repository you wish to clone?",
-        default: "polyfact-chat-template",
-        when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
-    },
-    {
-        type: "input",
-        name: "bot",
-        message: "What name would you like to give to your bot?",
-        default: "ChatBot",
-        when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
-    },
-    {
-        type: "input",
-        name: "memory",
-        message: "If applicable, provide the ID of the memory:",
-        when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
-    },
-    {
-        type: "input",
-        name: "prompt",
-        message: "If you wish to load a shared prompt, please provide the System Prompt ID:",
-        when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
-    },
-];
-
 export default async function chat(token: string): Promise<boolean> {
+    const questions = [
+        {
+            type: "list",
+            name: "testBoilerplate",
+            message: "Would you like to test the boilerplate with predefined settings?",
+            choices: ["Yes", "No"],
+            default: "No",
+        },
+
+        {
+            type: "list",
+            name: "stack",
+            message:
+                "What stack would you like to use? (If you are not sure, please select the default option)",
+            choices: Object.keys(BOILERPLATES).map((key) => key),
+            default: BOILERPLATES[REACT_BOILERPLATE],
+            when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
+        },
+        {
+            type: "list",
+            name: "style",
+            message:
+                "Would you like to use a preset style or generate custom style based on a specific topic using LLMs ?",
+            choices: ["Preset", "Custom"],
+            default: "Custom",
+            when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
+        },
+        {
+            type: "input",
+            name: "topic",
+            message: "Provide your custom topic to create a unique theme:",
+            when: (answers: { [key: string]: string }) =>
+                answers.testBoilerplate === "No" && answers.style === "Custom",
+        },
+        {
+            type: "input",
+            name: "token",
+            message: "Please provide your POLYFACT_TOKEN:",
+            default: process.env.POLYFACT_TOKEN,
+            when: (answers: { [key: string]: string }) =>
+                answers.testBoilerplate === "No" && answers.style === "Custom" && !token,
+        },
+        {
+            type: "input",
+            name: "name",
+            message: "What is the name of the repository you wish to clone?",
+            default: "polyfact-chat-template",
+            when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
+        },
+        {
+            type: "input",
+            name: "bot",
+            message: "What name would you like to give to your bot?",
+            default: "ChatBot",
+            when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
+        },
+        {
+            type: "input",
+            name: "memory",
+            message: "If applicable, provide the ID of the memory:",
+            when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
+        },
+        {
+            type: "input",
+            name: "prompt",
+            message: "If you wish to load a shared prompt, please provide the System Prompt ID:",
+            when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
+        },
+    ];
     try {
         const answers = await inquirer.prompt(questions);
         const options = sanitizeOptions(answers);
