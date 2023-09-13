@@ -47,7 +47,6 @@
         "eslint-plugin-import": "^2.22.1",
         "eslint-plugin-tsdoc": "^0.2.14",
         "husky": "8.0.1",
-        "koumu": "0.3.3",
         "prettier": "^2.2.1",
         "typescript": "^4.6.2"
     },
