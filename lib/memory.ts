@@ -25,6 +25,7 @@ async function createMemory(
         return res.data;
     } catch (e: unknown) {
         if (e instanceof AxiosError) {
+            console.error(e);
             throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
