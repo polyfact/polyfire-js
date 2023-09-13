@@ -1,10 +1,7 @@
 import * as t from "polyfact-io-ts";
-import { generate, generateWithTokenUsage, GenerationOptions, generateStream } from "./generate";
+import { generate, GenerationOptions } from "./generate";
 
-import {
-    generateWithType,
-    generateWithTypeWithTokenUsage,
-} from "./probabilistic_helpers/generateWithType";
+import { generateWithType } from "./probabilistic_helpers/generateWithType";
 import { transcribe } from "./transcribe";
 import { Chat } from "./chats";
 import { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
@@ -41,10 +38,7 @@ const kv = {
 export {
     // text generation
     generate,
-    generateWithTokenUsage,
     generateWithType,
-    generateWithTypeWithTokenUsage,
-    generateStream,
     GenerationOptions,
     Chat,
 

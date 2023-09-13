@@ -73,7 +73,6 @@ export type GenerationSimpleOptions = {
     model?: string;
     stop?: string[];
     temperature?: number;
-    infos?: boolean;
     language?: Language;
 };
 
@@ -98,12 +97,21 @@ export type GenerationWithoutWebOptions = GenerationSimpleOptions &
     ExclusiveN<MemoryOptions> &
     ExclusiveN<SystemPromptOptions> & { web?: false };
 
-export type GenerationOptions = GenerationWithWebOptions | GenerationWithoutWebOptions;
+export type GenerationResponseTypes = { stream?: boolean };
+
+export type GenerationOptionsWithoutResponseTypeChange =
+    | GenerationWithWebOptions
+    | GenerationWithoutWebOptions;
+
+export type GenerationOptions = GenerationOptionsWithoutResponseTypeChange & {
+    stream?: boolean;
+    infos?: boolean;
+};
 
 export type GenerationCompleteOptions = GenerationSimpleOptions &
     AndN<ChatOptions> &
     AndN<MemoryOptions> &
-    AndN<SystemPromptOptions> & { web?: boolean };
+    AndN<SystemPromptOptions> & { web?: boolean; stream?: boolean; infos?: boolean };
 
 export type TokenUsage = {
     input: number;
@@ -179,78 +187,6 @@ async function getMemoryIds(
     } else {
         return validMemoryIds[0];
     }
-}
-
-export async function generateWithTokenUsage(
-    task: string,
-    options: GenerationOptions | GenerationWithWebOptions = {},
-    clientOptions: InputClientOptions = {},
-): Promise<GenerationResult> {
-    const genOptions = options as GenerationCompleteOptions;
-
-    let dataMemory;
-    if (genOptions.data) {
-        dataMemory = await loaderToMemory(genOptions.data, clientOptions).then(
-            (memory) => memory.memoryId,
-        );
-    }
-
-    const memoryIdAssignment = await getMemoryIds(
-        dataMemory,
-        genOptions.memoryId,
-        genOptions.memory,
-    );
-
-    const requestBody = {
-        task,
-        provider: genOptions.provider || "",
-        model: genOptions.model,
-        memory_id: memoryIdAssignment,
-        stop: genOptions.stop || [],
-        infos: genOptions.infos || false,
-        system_prompt_id: genOptions.systemPromptId,
-        temperature: genOptions.temperature,
-        chat_id: genOptions.chatId,
-        web: genOptions.web,
-        language: genOptions.language,
-    };
-
-    return generateRequest(requestBody, clientOptions);
-}
-
-/**
- * Generates a result based on provided options.
- *
- * If `options.infos` is set to `true`, this function will return a `GenerationResult`.
- * If `options.infos` is set to `false` or left `undefined`, this function will return a `string`.
- *
- * @param task - The task string.
- * @param options - The generation options.
- * @param clientOptions - The client options.
- * @returns Either a `string` or a `GenerationResult` based on `options.infos`.
- */
-export async function generate(
-    task: string,
-    options?: (GenerationOptions & { infos?: false | undefined }) | undefined,
-    clientOptions?: InputClientOptions,
-): Promise<string>;
-export async function generate(
-    task: string,
-    options: GenerationOptions & { infos: true },
-    clientOptions?: InputClientOptions,
-): Promise<GenerationResult>;
-export async function generate(
-    task: string,
-    options: GenerationOptions = {},
-    clientOptions: InputClientOptions = {},
-): Promise<string | GenerationResult> {
-    const res = await generateWithTokenUsage(task, options, clientOptions);
-
-    if (options?.infos) {
-        return res;
-    }
-
-    return res.result;
 }
 
 export class GenerationStream extends Readable {
@@ -341,9 +277,9 @@ function stream(
     return resultStream;
 }
 
-export function generateStream(
+function generateStream(
     task: string,
-    options: GenerationOptions | GenerationWithWebOptions = {},
+    options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
 ): GenerationStream {
     if (options.infos) {
@@ -390,26 +326,101 @@ export function generateStream(
     });
 }
 
+/**
+ * Generates a result based on provided options.
+ *
+ * If `options.stream` is set to `true`, this function will return a `GenerationStream`.
+ * Otherwise, if `options.infos` is set to `true`, this function will return a `GenerationResult`.
+ * And if `options.infos` as well as `options.stream` are set to `false` or left `undefined`, this
+ * function will return a `string`.
+ *
+ * @param task - The task string.
+ * @param options - The generation options.
+ * @param clientOptions - The client options.
+ * @returns Either a `string` or a `GenerationResult` based on `options.infos`.
+ */
+
+export function generate(
+    task: string,
+    options: GenerationOptions & { stream: true },
+    clientOptions?: InputClientOptions,
+): GenerationStream;
+export function generate(
+    task: string,
+    options?:
+        | (GenerationOptions & { infos?: false | undefined; stream?: false | undefined })
+        | undefined,
+    clientOptions?: InputClientOptions,
+): Promise<string>;
+export function generate(
+    task: string,
+    options: GenerationOptions & { infos: true; stream?: false | undefined },
+    clientOptions?: InputClientOptions,
+): Promise<GenerationResult>;
+export function generate(
+    task: string,
+    options: GenerationOptions = {},
+    clientOptions: InputClientOptions = {},
+): Promise<string | GenerationResult> | GenerationStream {
+    if (options.stream) {
+        return generateStream(task, options, clientOptions);
+    }
+
+    return (async () => {
+        const genOptions = options as GenerationCompleteOptions;
+
+        let dataMemory;
+        if (genOptions.data) {
+            dataMemory = await loaderToMemory(genOptions.data, clientOptions).then(
+                (memory) => memory.memoryId,
+            );
+        }
+
+        const memoryIdAssignment = await getMemoryIds(
+            dataMemory,
+            genOptions.memoryId,
+            genOptions.memory,
+        );
+
+        const requestBody = {
+            task,
+            provider: genOptions.provider || "",
+            model: genOptions.model,
+            memory_id: memoryIdAssignment,
+            stop: genOptions.stop || [],
+            infos: genOptions.infos || false,
+            system_prompt_id: genOptions.systemPromptId,
+            temperature: genOptions.temperature,
+            chat_id: genOptions.chatId,
+            web: genOptions.web,
+            language: genOptions.language,
+        };
+
+        const res = await generateRequest(requestBody, clientOptions);
+
+        if (options?.infos) {
+            return res;
+        }
+
+        return res.result;
+    })();
+}
+
 export type GenerationClient = {
-    generateWithTokenUsage: (
-        task: string,
-        options?: GenerationOptions,
-    ) => Promise<GenerationResult>;
     generate: <T extends GenerationOptions>(
         task: string,
         options?: T,
-    ) => Promise<T extends { infos: true } ? GenerationResult : string>;
-    generateStream: (task: string, options?: GenerationOptions) => GenerationStream;
+    ) => T extends { stream: true }
+        ? GenerationStream
+        : T extends { infos: true }
+        ? Promise<GenerationResult>
+        : Promise<string>;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): GenerationClient {
     return {
-        generateWithTokenUsage: (task: string, options: GenerationOptions = {}) =>
-            generateWithTokenUsage(task, options, clientOptions),
         generate: (task: string, options: GenerationOptions = {}) => {
             return generate(task, options as any, clientOptions) as any;
         },
-        generateStream: (task: string, options: GenerationOptions = {}) =>
-            generateStream(task, options, clientOptions),
     };
 }
