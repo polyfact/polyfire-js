@@ -29,6 +29,13 @@ async function managePrompts(token: string): Promise<boolean> {
                 "Back",
             ],
         },
+        {
+            type: "input",
+            name: "token",
+            message: "Please provide your POLYFACT_TOKEN:",
+            default: process.env.POLYFACT_TOKEN,
+            when: () => token === undefined,
+        },
     ]);
 
     const promptClient = client({ token });

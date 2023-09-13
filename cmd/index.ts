@@ -3,19 +3,12 @@ import inquirer from "inquirer";
 import docs from "./docs";
 import chat from "./chat";
 import prompt from "./prompt";
+import agent from "./agent";
 
 let token: string;
 
 async function promptUser(initial = true) {
     const answer = await inquirer.prompt([
-        {
-            type: "input",
-            name: "token",
-            message: "Please provide your POLYFACT_TOKEN:",
-            validate: (value: string) => (value ? true : "POLYFACT_TOKEN is a mandatory field."),
-            default: process.env.POLYFACT_TOKEN,
-            when: initial,
-        },
         {
             type: "list",
             name: "appType",
@@ -24,24 +17,23 @@ async function promptUser(initial = true) {
         },
     ]);
 
-    if (initial) token = answer.token;
+    if (initial) token = process.env.POLYFACT_TOKEN as string;
 
     switch (answer.appType) {
         case "Create chatbot":
-            while (await chat(token));
+            await chat(token);
             promptUser(false);
             break;
-
         case "Manage prompt":
             while (await prompt(token));
             promptUser(false);
             break;
-
+        case "Create agent":
+            await agent(token);
+            promptUser(false);
+            break;
         case "Create docs":
             docs();
-            break;
-        case "Create agent":
-            console.info("Not implemented yet");
             break;
         case "Quit":
             console.info("Bye!");
