@@ -19,7 +19,7 @@ const ActionAgent = t.type({
     }),
 });
 
-export type TActionAgent = t.TypeOf<typeof ActionAgent>;
+export type ActionAgent = t.TypeOf<typeof ActionAgent>;
 
 export type Agent = {
     start: (
@@ -31,7 +31,7 @@ export type Agent = {
     loading?: boolean;
 };
 
-export type TDefinitionAction = {
+export type DefinitionAction = {
     name: string;
     callback: (arg: string) => Promise<string | undefined>;
     description: string;
