@@ -33,10 +33,13 @@ function loginFunctionBuilder({ project, endpoint }: { project: string; endpoint
 }
 
 export default function usePolyfact(
-    args: {
-        project: string;
-        endpoint?: string;
-    } | null,
+    args:
+        | {
+              project: string;
+              endpoint?: string;
+          }
+        | string
+        | null,
 ): {
     polyfact: Client | undefined;
     login: ((input: LoginFunctionInput) => Promise<void>) | undefined;
@@ -45,7 +48,14 @@ export default function usePolyfact(
     loading: boolean;
     polyfactPromise: Promise<Client>;
 } {
-    const { project, endpoint } = args || {};
+    let project: string | undefined;
+    let endpoint: string | undefined;
+    if (typeof args === "string") {
+        project = args;
+    } else if (typeof args === "object") {
+        ({ project, endpoint } = args || {});
+    }
+
     const [polyfact, setPolyfact] = useState<Client>();
     const [email, setEmail] = useState<string>();
     const [loading, setLoading] = useState(true);
