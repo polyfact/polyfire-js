@@ -180,7 +180,7 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
                 token = data.session?.access_token || "";
 
                 if (!token) {
-                    window.localStorage.removeItem("polyfact_refresh_token");
+                    this.clearSessionStorage();
                     return {};
                 }
 
@@ -193,6 +193,10 @@ export class PolyfactClientBuilder implements PromiseLike<ReturnType<typeof clie
         }
 
         return {};
+    }
+
+    clearSessionStorage(): void {
+        window.localStorage.removeItem("polyfact_refresh_token");
     }
 
     signInWithPassword(credentials: { email: string; password: string }): PolyfactClientBuilder {
