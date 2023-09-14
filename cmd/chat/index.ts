@@ -3,7 +3,7 @@ import { exec } from "child_process";
 import path from "path";
 import fs from "fs/promises";
 import inquirer from "inquirer";
-import { generateWithTokenUsage } from "../../lib/generate";
+import { generate } from "../../lib/generate";
 
 const REACT_BOILERPLATE = "Vite     | React       | TypeScript | Styled Components";
 const NEXT_BOILERPLATE = "Next.js  | React       | TypeScript | Styled Components";
@@ -124,9 +124,9 @@ async function generateTheme(options: Record<string, string>, token: string): Pr
     console.log("Generating a theme for the chatbot...");
 
     const prompt = formatPrompt(options);
-    const { result } = await generateWithTokenUsage(
+    const { result } = await generate(
         prompt,
-        { model: "gpt-4" },
+        { model: "gpt-4", infos: true },
         { token, endpoint: "https://api2.polyfact.com" },
     ).catch((e) => {
         throw new Error(`Error during OpenAI request: ${e.message}`);
