@@ -6,7 +6,31 @@ declare const window: any;
 
 const reactMutex = new Mutex();
 
-type Provider = "github" | "google";
+type SimpleProvider = "github" | "google";
+type LoginWithFirebaseInput = { token: string; provider: "firebase" };
+type LoginFunctionInput = SimpleProvider | { provider: SimpleProvider } | LoginWithFirebaseInput;
+
+function loginFunctionBuilder({ project, endpoint }: { project: string; endpoint?: string }) {
+    return async function loginFunction(input: LoginFunctionInput): Promise<Client> {
+        if (typeof input === "object" && input.provider === "firebase") {
+            return await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
+                .project(project)
+                .signInWithFirebaseToken(input.token);
+        }
+
+        let provider: SimpleProvider;
+        if (typeof input === "string") {
+            provider = input;
+        } else {
+            provider = input.provider;
+        }
+
+        await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
+            .project(project)
+            .oAuthRedirect({ provider });
+        return new Promise<Client>(() => {});
+    };
+}
 
 export default function usePolyfact(
     args: {
@@ -15,8 +39,8 @@ export default function usePolyfact(
     } | null,
 ): {
     polyfact: Client | undefined;
-    login: ((input: { provider: Provider }) => Promise<void>) | undefined;
-    loginWithFirebase: ((token: string) => Promise<void>) | undefined;
+    login: ((input: LoginFunctionInput) => Promise<void>) | undefined;
+    logout: () => Promise<void>;
     email?: string;
     loading: boolean;
     polyfactPromise: Promise<Client>;
@@ -25,23 +49,44 @@ export default function usePolyfact(
     const [polyfact, setPolyfact] = useState<Client>();
     const [email, setEmail] = useState<string>();
     const [loading, setLoading] = useState(true);
-    const [login, setLogin] = useState<
-        ((input: { provider: Provider }) => Promise<void>) | undefined
-    >();
-    const [loginWithFirebase, setLoginWithFirebase] = useState<
-        ((token: string) => Promise<void>) | undefined
-    >();
+    const [allowLogin, setAllowLogin] = useState<boolean>(false);
 
-    const [polyfactPromise] = useState<{
+    function initPolyfactPromise(): {
         promise: Promise<Client>;
         resolveFunction: (client: Client) => void;
-    }>(() => {
+    } {
         let resolveFunction: (client: Client) => void;
         const promise = new Promise<Client>((resolve) => {
             resolveFunction = resolve;
         });
         return { promise, resolveFunction: resolveFunction! };
-    });
+    }
+
+    const [polyfactPromise, setPolyfactPromise] = useState<ReturnType<typeof initPolyfactPromise>>(
+        () => initPolyfactPromise(),
+    );
+
+    async function loginFunction(input: LoginFunctionInput) {
+        if (project) {
+            const p = await loginFunctionBuilder({ project, endpoint })(input);
+            setAllowLogin(false);
+            setPolyfact(p);
+            polyfactPromise.resolveFunction(p);
+            window.Polyfact = p;
+        }
+    }
+
+    async function logout() {
+        if (!loading && polyfact) {
+            setPolyfact(undefined);
+            setAllowLogin(true);
+            setEmail(undefined);
+            setPolyfactPromise(() => initPolyfactPromise());
+            setLoading(false);
+        } else {
+            throw new Error("Polyfact is not initialized");
+        }
+    }
 
     useEffect(() => {
         if (project) {
@@ -68,21 +113,7 @@ export default function usePolyfact(
                     window.Polyfact = p;
                     window.PolyfactEmail = email;
                 } else {
-                    setLogin(() => async ({ provider }: { provider: Provider }) => {
-                        await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
-                            .project(project)
-                            .oAuthRedirect({ provider });
-                    });
-                    setLoginWithFirebase(() => async (token: string) => {
-                        const p = await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
-                            .project(project)
-                            .signInWithFirebaseToken(token);
-                        setLogin(undefined);
-                        setLoginWithFirebase(undefined);
-                        setPolyfact(p);
-                        polyfactPromise.resolveFunction(p);
-                        window.Polyfact = p;
-                    });
+                    setAllowLogin(true);
                     setLoading(false);
                 }
 
@@ -110,10 +141,10 @@ export default function usePolyfact(
 
     return {
         polyfact,
-        login,
+        login: allowLogin ? loginFunction : undefined,
+        logout,
         loading,
         email,
-        loginWithFirebase,
         polyfactPromise: polyfactPromise.promise,
     };
 }
