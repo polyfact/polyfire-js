@@ -1,160 +1,60 @@
-import { Mutex } from "async-mutex";
-import { useState, useEffect } from "react";
-import Polyfact, { Client } from "../client";
+import { useState } from "react";
+import PolyfactClientBuilder, { Client } from "../client";
 
-declare const window: any;
-
-const reactMutex = new Mutex();
-
-type SimpleProvider = "github" | "google";
-type LoginWithFirebaseInput = { token: string; provider: "firebase" };
-type LoginFunctionInput = SimpleProvider | { provider: SimpleProvider } | LoginWithFirebaseInput;
-
-function loginFunctionBuilder({ project, endpoint }: { project: string; endpoint?: string }) {
-    return async function loginFunction(input: LoginFunctionInput): Promise<Client> {
-        if (typeof input === "object" && input.provider === "firebase") {
-            return await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
-                .project(project)
-                .signInWithFirebaseToken(input.token);
-        }
-
-        let provider: SimpleProvider;
-        if (typeof input === "string") {
-            provider = input;
-        } else {
-            provider = input.provider;
-        }
-
-        await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
-            .project(project)
-            .oAuthRedirect({ provider });
-        return new Promise<Client>(() => {});
-    };
-}
+type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
 export default function usePolyfact(
     args:
         | {
-              project: string;
+              projectId: string;
               endpoint?: string;
           }
         | string
         | null,
-): {
-    polyfact: Client | undefined;
-    login: ((input: LoginFunctionInput) => Promise<void>) | undefined;
-    logout: () => Promise<void>;
-    email?: string;
-    loading: boolean;
-    polyfactPromise: Promise<Client>;
+): Omit<Client, "auth"> & {
+    auth: Omit<Client["auth"], "init"> & { status: AuthStatus };
 } {
-    let project: string | undefined;
-    let endpoint: string | undefined;
+    let projectId: string | undefined;
+    let endpoint = "https://api.polyfact.com";
     if (typeof args === "string") {
-        project = args;
+        projectId = args;
     } else if (typeof args === "object") {
-        ({ project, endpoint } = args || {});
+        ({ projectId, endpoint = "https://api.polyfact.com" } = args || {});
     }
 
-    const [polyfact, setPolyfact] = useState<Client>();
-    const [email, setEmail] = useState<string>();
-    const [loading, setLoading] = useState(true);
-    const [allowLogin, setAllowLogin] = useState<boolean>(false);
+    if (!projectId) {
+        throw new Error("No project specified");
+    }
 
-    function initPolyfactPromise(): {
-        promise: Promise<Client>;
-        resolveFunction: (client: Client) => void;
-    } {
-        let resolveFunction: (client: Client) => void;
-        const promise = new Promise<Client>((resolve) => {
-            resolveFunction = resolve;
+    const project = projectId;
+
+    const [status, setStatus] = useState<AuthStatus>("loading");
+    const [polyfact] = useState<Client>(() => {
+        const client = PolyfactClientBuilder({ projectId: project, endpoint });
+
+        client.auth.init().then((isAuthenticated) => {
+            setStatus(isAuthenticated ? "authenticated" : "unauthenticated");
         });
-        return { promise, resolveFunction: resolveFunction! };
-    }
 
-    const [polyfactPromise, setPolyfactPromise] = useState<ReturnType<typeof initPolyfactPromise>>(
-        () => initPolyfactPromise(),
-    );
-
-    async function loginFunction(input: LoginFunctionInput) {
-        if (project) {
-            const p = await loginFunctionBuilder({ project, endpoint })(input);
-            setAllowLogin(false);
-            setPolyfact(p);
-            polyfactPromise.resolveFunction(p);
-            window.Polyfact = p;
-        }
-    }
-
-    async function logout() {
-        if (!loading && polyfact) {
-            setPolyfact(undefined);
-            setAllowLogin(true);
-            setEmail(undefined);
-            setPolyfactPromise(() => initPolyfactPromise());
-            setLoading(false);
-        } else {
-            throw new Error("Polyfact is not initialized");
-        }
-    }
-
-    useEffect(() => {
-        if (project) {
-            (async () => {
-                await reactMutex.acquire();
-                if (window.Polyfact) {
-                    setPolyfact(window.Polyfact);
-                    polyfactPromise.resolveFunction(window.Polyfact);
-                    setEmail(window.PolyfactEmail);
-                    setLoading(false);
-                    reactMutex.release();
-                    return;
-                }
-
-                const { token, email } = (await Polyfact.getSession()) || {};
-                if (token) {
-                    const p = await Polyfact.endpoint(endpoint || "https://api.polyfact.com")
-                        .project(project)
-                        .signInWithOAuthToken(token);
-                    setLoading(false);
-                    setPolyfact(p);
-                    polyfactPromise.resolveFunction(p);
-                    setEmail(email);
-                    window.Polyfact = p;
-                    window.PolyfactEmail = email;
-                } else {
-                    setAllowLogin(true);
-                    setLoading(false);
-                }
-
-                reactMutex.release();
-            })();
-        } else {
-            const getPolyfact = async () => {
-                await reactMutex.acquire();
-                if (window.Polyfact) {
-                    setPolyfact(window.Polyfact);
-                    polyfactPromise.resolveFunction(window.Polyfact);
-                    setEmail(window.PolyfactEmail);
-                    setLoading(false);
-                    reactMutex.release();
-                    return;
-                }
-                setLoading(true);
-                setTimeout(getPolyfact, 50);
-                reactMutex.release();
-            };
-
-            getPolyfact();
-        }
-    }, []);
+        return client;
+    });
 
     return {
-        polyfact,
-        login: allowLogin ? loginFunction : undefined,
-        logout,
-        loading,
-        email,
-        polyfactPromise: polyfactPromise.promise,
+        ...polyfact,
+        auth: {
+            ...polyfact.auth,
+            status,
+            login: async (input) => {
+                setStatus("loading");
+                const res = await polyfact.auth.login(input);
+                setStatus("authenticated");
+                return res;
+            },
+            logout: async () => {
+                setStatus("loading");
+                await polyfact.auth.logout();
+                setStatus("unauthenticated");
+            },
+        },
     };
 }

@@ -8,7 +8,7 @@ import { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
 import { splitString, tokenCount } from "./split";
 import { usage } from "./user";
 import { get as KVGet, set as KVSet } from "./kv";
-import Polyfact, { PolyfactClientBuilder } from "./client";
+import PolyfactClientBuilder from "./client";
 import { generateImage } from "./image";
 import { TextFileLoader, StringLoader, AudioLoader } from "./dataloader";
 
@@ -52,7 +52,6 @@ export {
     Memory,
 
     // utils
-    PolyfactClientBuilder,
     usage,
     splitString,
     tokenCount,
@@ -76,4 +75,4 @@ export {
     AudioLoader,
 };
 
-export default Polyfact;
+export default PolyfactClientBuilder;
