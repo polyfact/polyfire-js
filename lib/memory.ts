@@ -91,7 +91,7 @@ type MemoryAddOptions = {
 };
 
 class Memory {
-    memoryId: Promise<string>;
+    memoryId: PromiseLike<string>;
 
     clientOptions: InputClientOptions;
 
