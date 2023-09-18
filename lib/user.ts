@@ -71,14 +71,21 @@ async function getAuthID(clientOptions: InputClientOptions = {}) {
     }
 }
 
+async function getToken(clientOptions: InputClientOptions = {}) {
+    const { token } = await defaultOptions(clientOptions);
+    return token;
+}
+
 export type UserClient = {
     usage: () => Promise<{ usage: number; rateLimit?: number }>;
     getAuthID: () => Promise<string>;
+    getToken: () => Promise<string>;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): UserClient {
     return {
         usage: () => usage(clientOptions),
         getAuthID: () => getAuthID(clientOptions),
+        getToken: () => getToken(clientOptions),
     };
 }

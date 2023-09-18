@@ -11,29 +11,20 @@ export type Message = {
 };
 
 export default function useChat(): {
-    messages?: Message[];
-    sendMessage?: (message: string) => void;
+    messages: Message[];
+    sendMessage: (message: string) => void;
     loading: boolean;
 } {
-    const { polyfactPromise } = usePolyfact(null);
+    const {
+        utils: { Chat },
+    } = usePolyfact();
 
-    const [chat, setChat] = useState<Chat>();
+    const [chat] = useState<Chat>(new Chat());
     const [history, setHistory] = useState<Message[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        polyfactPromise.then((polyfact) => {
-            setChat(new polyfact.Chat());
-            setHistory([]);
-            setLoading(false);
-        });
-    }, []);
+    const [loading, setLoading] = useState(false);
 
     async function sendMessage(message: string) {
-        if (chat === undefined) {
-            throw new Error("Chat not initialized");
-        }
         const userMessage = {
             id: null,
             chat_id: await chat.chatId,

@@ -69,7 +69,9 @@ const useAgent = (
     actions: DefinitionAction[],
     options: GenerationSimpleOptions = { provider: "openai", model: "gpt-3.5-turbo" },
 ): Agent => {
-    const { polyfactPromise } = usePolyfact(null);
+    const {
+        models: { generateWithType },
+    } = usePolyfact();
 
     const [isRunning, setIsRunning] = useState(true);
 
@@ -100,7 +102,6 @@ const useAgent = (
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         progress: (step: string, result: string) => void = () => {},
     ): Promise<string> => {
-        const polyfact = await polyfactPromise;
         console.info("Starting...");
         let history = `
         ====
@@ -118,7 +119,7 @@ const useAgent = (
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            const result = await polyfact.generateWithType(history, ActionAgent, options);
+            const result = await generateWithType(history, ActionAgent, options);
 
             if (!ActionAgent.is(result)) {
                 throw new Error("Expected ActionAgent");

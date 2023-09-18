@@ -1,3 +1,5 @@
-import Polyfact from "../lib/client";
+import PolyfactClientBuilder from "../lib/client";
 
-(window as any).Polyfact = Polyfact;
+declare const window: any;
+
+window.PolyfactClientBuilder = PolyfactClientBuilder;
