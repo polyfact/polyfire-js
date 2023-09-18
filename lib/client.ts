@@ -24,7 +24,7 @@ export type Client = {
 
 export function client(
     co: MutablePromise<Partial<ClientOptions>>,
-    projectOptions: { projectId: string; endpoint: string },
+    projectOptions: { project: string; endpoint: string },
 ): Client {
     return {
         models: {
@@ -48,11 +48,14 @@ export function client(
     };
 }
 
-export default function PolyfactClientBuilder(projectOptions: {
-    projectId: string;
-    endpoint: string;
+export default function PolyfactClientBuilder({
+    project,
+    endpoint = "https://api.polyfact.com",
+}: {
+    project: string;
+    endpoint?: string;
 }): Client {
     const clientOptionsPromise = new MutablePromise<Partial<ClientOptions>>();
 
-    return client(clientOptionsPromise, projectOptions);
+    return client(clientOptionsPromise, { project, endpoint });
 }
