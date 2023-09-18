@@ -1,5 +1,5 @@
-import usePolyfact from "./usePolyfact";
+import usePolyfact, { PolyfactProvider } from "./usePolyfact";
 import useChat from "./useChat";
 import useAgent, { ActionAgent, Agent, DefinitionAction } from "./useAgent";
 
-export { usePolyfact, useChat, useAgent, ActionAgent, Agent, DefinitionAction };
+export { usePolyfact, PolyfactProvider, useChat, useAgent, ActionAgent, Agent, DefinitionAction };
