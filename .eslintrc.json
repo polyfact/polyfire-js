@@ -67,6 +67,8 @@
         "prefer-promise-reject-errors": ["off"],
         "no-param-reassign": ["off"],
         "no-useless-return": ["off"],
+        "no-use-before-define": "off",
+        "@typescript-eslint/no-use-before-define": ["error"],
         "no-undef": ["error"],
         "no-plusplus": ["off"],
         "radix": ["off"],

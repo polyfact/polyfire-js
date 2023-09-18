@@ -11,50 +11,63 @@ if (typeof process !== "undefined") {
 export const POLYFACT_TOKEN = token;
 export const POLYFACT_ENDPOINT = endpoint;
 
-type UnresolvedResult = { isResolved: false };
-type ResolvedResult<T> = { value: T; isResolved: true };
-type Result<T> = UnresolvedResult | ResolvedResult<T>;
+type UnresolvedResult = { status: "pending" };
+type ResolvedResult<T> = { value: T; status: "resolved" };
+type ErrorResult = { error: Error; status: "rejected" };
+type Result<T> = UnresolvedResult | ResolvedResult<T> | ErrorResult;
 
 export class MutablePromise<T> implements PromiseLike<T> {
     result: Result<T> = {
-        isResolved: false,
+        status: "pending",
     };
 
-    promiseResult: Promise<ResolvedResult<T>>;
+    promiseResult: Promise<ResolvedResult<T> | ErrorResult>;
 
-    resolver: (v: ResolvedResult<T>) => void;
+    resolver: (v: ResolvedResult<T> | ErrorResult) => void;
 
     mutex = new Mutex();
 
     constructor() {
-        let resolver: (v: ResolvedResult<T>) => void;
-        this.promiseResult = new Promise<ResolvedResult<T>>((resolve) => {
+        let resolver: (v: ResolvedResult<T> | ErrorResult) => void;
+        this.promiseResult = new Promise<ResolvedResult<T> | ErrorResult>((resolve, reject) => {
             resolver = resolve;
         });
         this.resolver = resolver!;
     }
 
     set(value: T): void {
-        const { isResolved } = this.result;
+        const { status } = this.result;
         const resolved: ResolvedResult<T> = Object.assign(this.result, {
             value,
-            isResolved: true as const,
+            status: "resolved" as const,
         });
 
-        if (!isResolved) {
+        if (status === "pending") {
             this.resolver(resolved);
+        }
+    }
+
+    throw(error: Error): void {
+        const { status } = this.result;
+        const rejected: ErrorResult = Object.assign(this.result, {
+            error,
+            status: "rejected" as const,
+        });
+
+        if (status === "pending") {
+            this.resolver(rejected);
         }
     }
 
     async deresolve(): Promise<void> {
         await this.mutex.runExclusive(() => {
-            let resolver: (v: ResolvedResult<T>) => void;
-            this.promiseResult = new Promise<ResolvedResult<T>>((resolve) => {
+            let resolver: (v: ResolvedResult<T> | ErrorResult) => void;
+            this.promiseResult = new Promise<ResolvedResult<T> | ErrorResult>((resolve) => {
                 resolver = resolve;
             });
             this.resolver = resolver!;
             Object.assign(this.result, {
-                isResolved: false as const,
+                status: "pending" as const,
                 value: undefined,
             });
         });
@@ -62,14 +75,28 @@ export class MutablePromise<T> implements PromiseLike<T> {
 
     async then<R1 = never, R2 = never>(
         res?: null | ((c: T) => R1 | Promise<R1>),
-        _rej?: null | ((e: Error) => R2 | Promise<R2>),
+        rej?: null | ((e: Error) => R2 | Promise<R2>),
     ): Promise<R1 | R2> {
-        const value = await this.mutex.runExclusive(async () => {
-            return this.promiseResult.then((r: { value: T }) => r.value);
-        });
+        try {
+            const value = await this.mutex.runExclusive(async () => {
+                const result = await this.promiseResult;
 
-        if (res) {
-            return res(value);
+                if (result.status === "rejected") {
+                    throw result.error;
+                }
+
+                return result.value;
+            });
+
+            if (res) {
+                return res(value);
+            }
+        } catch (e: unknown) {
+            if (rej) {
+                return rej(e as Error);
+            }
+
+            throw e;
         }
 
         throw new Error("Missing function in then");

@@ -45,26 +45,24 @@ export async function getSession(): Promise<{ token?: string; email?: string }> 
             window.history.replaceState({}, window.document.title, ".");
         }
 
-        if (refreshToken) {
+        if (!refreshToken) {
+            return {};
+        }
+        if (!token) {
+            const { data } = await supabase.auth.refreshSession({
+                refresh_token: refreshToken,
+            });
+
+            token = data.session?.access_token || "";
+
             if (!token) {
-                const { data } = await supabase.auth.refreshSession({
-                    refresh_token: refreshToken,
-                });
-
-                token = data.session?.access_token || "";
-
-                if (!token) {
-                    window.localStorage.removeItem("polyfact_refresh_token");
-                    return {};
-                }
-
-                window.localStorage.setItem("polyfact_refresh_token", data.session?.refresh_token);
+                window.localStorage.removeItem("polyfact_refresh_token");
+                return {};
             }
 
-            return { token };
+            window.localStorage.setItem("polyfact_refresh_token", data.session?.refresh_token);
         }
-
-        return {};
+        return { token };
     });
 }
 
@@ -118,6 +116,7 @@ export async function login(
     projectOptions: { projectId: string; endpoint: string },
     co: MutablePromise<Partial<ClientOptions>>,
 ): Promise<void> {
+    await co.deresolve();
     console.log("login", input);
     if (typeof input === "object" && input.provider === "firebase") {
         return signInWithOAuthToken(input.token, "firebase", co, projectOptions);
@@ -131,8 +130,9 @@ export async function login(
 }
 
 export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promise<void> {
+    await co.deresolve();
     window.localStorage.removeItem("polyfact_refresh_token");
-    return co.deresolve();
+    co.throw(new Error("You need to be authenticated to use this function"));
 }
 
 export async function init(
@@ -140,6 +140,7 @@ export async function init(
     projectOptions: { projectId: string; endpoint: string },
 ): Promise<boolean> {
     if (typeof window === "undefined") {
+        co.throw(new Error("You need to be authenticated to use this function"));
         return false;
     }
 
@@ -148,6 +149,7 @@ export async function init(
         await signInWithOAuthToken(session.token, "token", co, projectOptions);
         return true;
     }
+    co.throw(new Error("You need to be authenticated to use this function"));
     return false;
 }
 

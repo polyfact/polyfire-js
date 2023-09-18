@@ -6,6 +6,7 @@
         "strict": true,
         "esModuleInterop": true,
         "allowJs": false,
+        "jsx": "react",
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "strictNullChecks": true,
