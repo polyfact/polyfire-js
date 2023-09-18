@@ -95,10 +95,10 @@ export async function signInWithOAuthToken(
     token: string,
     authType: "token" | "firebase",
     co: MutablePromise<Partial<ClientOptions>>,
-    { projectId, endpoint }: { projectId: string; endpoint: string },
+    { project, endpoint }: { project: string; endpoint: string },
 ): Promise<void> {
     try {
-        const { data } = await axios.get(`${endpoint}/project/${projectId}/auth/${authType}`, {
+        const { data } = await axios.get(`${endpoint}/project/${project}/auth/${authType}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -113,7 +113,7 @@ export async function signInWithOAuthToken(
 
 export async function login(
     input: LoginFunctionInput,
-    projectOptions: { projectId: string; endpoint: string },
+    projectOptions: { project: string; endpoint: string },
     co: MutablePromise<Partial<ClientOptions>>,
 ): Promise<void> {
     await co.deresolve();
@@ -137,7 +137,7 @@ export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promis
 
 export async function init(
     co: MutablePromise<Partial<ClientOptions>>,
-    projectOptions: { projectId: string; endpoint: string },
+    projectOptions: { project: string; endpoint: string },
 ): Promise<boolean> {
     if (typeof window === "undefined") {
         co.throw(new Error("You need to be authenticated to use this function"));
@@ -161,7 +161,7 @@ export type AuthClient = {
 
 export default function authClient(
     co: MutablePromise<Partial<ClientOptions>>,
-    projectOptions: { projectId: string; endpoint: string },
+    projectOptions: { project: string; endpoint: string },
 ): AuthClient {
     return {
         init: () => init(co, projectOptions),

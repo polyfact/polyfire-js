@@ -20,7 +20,7 @@ export function PolyfactProvider({
 }): JSX.Element {
     const [status, setStatus] = useState<AuthStatus>("loading");
     const [polyfact] = useState<Client>(() => {
-        const client = PolyfactClientBuilder({ projectId: project, endpoint });
+        const client = PolyfactClientBuilder({ project, endpoint });
 
         client.auth.init().then((isAuthenticated) => {
             setStatus(isAuthenticated ? "authenticated" : "unauthenticated");
