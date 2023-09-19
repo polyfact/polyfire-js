@@ -15,7 +15,7 @@ import authClient, { AuthClient } from "./auth";
 
 export type Client = {
     models: GenerationClient & GenerationWithTypeClient & TranscribeClient & ImageGenerationClient;
-    data: MemoryClient & KVClient;
+    data: MemoryClient & { kv: KVClient };
     utils: ChatClient & PromptClient;
     auth: {
         user: UserClient;
@@ -35,7 +35,7 @@ export function client(
         },
         data: {
             ...memoryClient(co),
-            ...kvClient(co),
+            kv: kvClient(co),
         },
         utils: {
             ...chatClient(co),
