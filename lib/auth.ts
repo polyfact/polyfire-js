@@ -102,7 +102,7 @@ export async function signInWithOAuthToken(
             headers: { Authorization: `Bearer ${token}` },
         });
 
-        co.set({ token: data });
+        co.set({ token: data, endpoint });
     } catch (e: unknown) {
         if (e instanceof AxiosError) {
             throw new ApiError(e?.response?.data as ErrorData);
