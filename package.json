@@ -1,6 +1,6 @@
 {
     "name": "polyfact",
-    "version": "0.1.70",
+    "version": "0.1.71",
     "main": "index.js",
     "types": "index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
