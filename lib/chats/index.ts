@@ -5,9 +5,7 @@ import { UUID } from "crypto";
 import {
     generate,
     GenerationOptions,
-    GenerationOptionsWithoutResponseTypeChange,
-    GenerationResult,
-    GenerationStream,
+    Generation,
     GenerationWithoutWebOptions,
     GenerationCompleteOptions,
 } from "../generate";
@@ -98,51 +96,9 @@ export class Chat {
         }
     }
 
-    private async sendMessageWithTokenUsage(
-        message: string,
-        options: GenerationOptionsWithoutResponseTypeChange = {},
-    ): Promise<GenerationResult> {
-        const chatId = await this.chatId;
-        const genOptions = options as GenerationCompleteOptions;
-
-        if (this.autoMemory && !genOptions.memory && !genOptions.memoryId) {
-            genOptions.memory = await this.autoMemory;
-        }
-
-        if (this.options.systemPromptId) {
-            genOptions.systemPromptId = this.options.systemPromptId;
-        }
-
-        if (this.memoryId) {
-            genOptions.memoryId = this.memoryId;
-        }
-
-        const result = await generate(
-            message,
-            {
-                ...options,
-                stream: false,
-                web: false,
-                infos: true,
-                chatId,
-            },
-            this.clientOptions,
-        );
-
-        if (this.autoMemory) {
-            (await this.autoMemory).add(`Human: ${message}`);
-            (await this.autoMemory).add(`AI: ${result.result}`);
-        }
-
-        return result;
-    }
-
-    private sendMessageStream(
-        message: string,
-        options: GenerationOptionsWithoutResponseTypeChange = {},
-    ): GenerationStream {
+    sendMessage(message: string, options: GenerationOptions = {}): Generation {
         let stopped = false;
-        const resultStream = new GenerationStream({
+        const resultStream = new Generation({
             stop: () => {
                 stopped = true;
                 resultStream.push(null);
@@ -171,7 +127,7 @@ export class Chat {
 
             const result = generate(
                 message,
-                { ...options, web: false, chatId, infos: true, stream: true },
+                { ...options, web: false, chatId },
                 await this.clientOptions,
             ).pipeInto(resultStream);
 
@@ -190,25 +146,6 @@ export class Chat {
         })();
 
         return resultStream;
-    }
-
-    sendMessage<T extends GenerationOptions>(
-        message: string,
-        options?: T,
-    ): T extends { stream: true }
-        ? GenerationStream
-        : T extends { infos: true }
-        ? Promise<GenerationResult>
-        : Promise<string> {
-        if (options?.stream) {
-            return this.sendMessageStream(message, options) as any;
-        }
-
-        if (options?.infos) {
-            return this.sendMessageWithTokenUsage(message, options) as any;
-        }
-
-        return this.sendMessageWithTokenUsage(message, options).then((r) => r.result) as any;
     }
 
     async getMessages(): Promise<t.TypeOf<typeof Message>[]> {

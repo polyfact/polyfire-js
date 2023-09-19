@@ -42,7 +42,7 @@ export default function useChat(): {
         setLoading(true);
 
         setMessages([userMessage, ...history]);
-        const stream = chat.sendMessage(message, { stream: true });
+        const stream = chat.sendMessage(message);
 
         stream.on("data", (d: string) => {
             aiMessage.content += d;
