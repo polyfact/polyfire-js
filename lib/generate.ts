@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
+import fakeProcess from "process";
 import { Readable } from "readable-stream";
 import WebSocket from "isomorphic-ws";
 import { UUID } from "crypto";
@@ -8,6 +9,12 @@ import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
 import { ApiError, ErrorData } from "./helpers/error";
 import { loaderToMemory, LoaderFunction } from "./dataloader";
+
+declare const window: any;
+
+if (typeof window !== "undefined") {
+    window.process = fakeProcess;
+}
 
 const PartialResultType = t.partial({
     ressources: t.array(t.type({ id: t.string, content: t.string, similarity: t.number })),
@@ -123,40 +130,6 @@ export type GenerationResult = {
     };
     ressources?: Ressource[];
 };
-
-async function generateRequest(
-    requestBody: Record<string, unknown>,
-    clientOptions: InputClientOptions,
-): Promise<GenerationResult> {
-    const { token, endpoint } = await defaultOptions(clientOptions);
-
-    try {
-        const res = await axios.post(`${endpoint}/generate`, requestBody, {
-            headers: {
-                "Content-Type": "application/json",
-                "X-Access-Token": token,
-            },
-        });
-
-        if (!GenerationAPIResponse.is(res.data)) {
-            throw new ApiError({
-                code: "mismatched_response",
-                message: "The response from the API does not match the expected format",
-            });
-        }
-
-        return {
-            result: res.data.result,
-            tokenUsage: res.data.token_usage,
-            ressources: res.data.ressources,
-        };
-    } catch (e: unknown) {
-        if (e instanceof AxiosError) {
-            throw new ApiError(e?.response?.data as ErrorData);
-        }
-        throw e;
-    }
-}
 
 async function getMemoryIds(
     dataMemory: string | undefined,
