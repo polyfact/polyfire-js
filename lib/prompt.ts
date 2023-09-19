@@ -2,7 +2,21 @@ import axios, { AxiosError } from "axios";
 import { defaultOptions, InputClientOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
-export type FilterOperation = "eq" | "neq" | "gt" | "lt" | "gte" | "lte" | "like" | "ilike" | "cs";
+export type FilterOperation =
+    | "eq"
+    | "neq"
+    | "gt"
+    | "lt"
+    | "gte"
+    | "lte"
+    | "like"
+    | "ilike"
+    | "cs"
+    | "is"
+    | "in"
+    | "fts"
+    | "plfts"
+    | "phfts";
 
 export type Filter = {
     column: string;
