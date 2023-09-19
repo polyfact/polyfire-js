@@ -1,4 +1,4 @@
-/* eslint-disable no-use-before-define */
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import * as t from "polyfact-io-ts";
 import { generate, GenerationOptions } from "../generate";
 import { InputClientOptions } from "../clientOpts";
@@ -82,7 +82,10 @@ function generateTypedPrompt(typeFormat: string, task: string) {
     return `Your goal is to write a JSON object that will accomplish a specific task.\nThe string inside the JSON must be plain text, and not contain any markdown or HTML unless explicitely mentionned in the task.\nThe JSON object should follow this type:\n\`\`\`\n${typeFormat}\n\`\`\` The task you must accomplish:\n${task}\n\nPlease only provide the JSON in a single json markdown code block with the keys described above. Do not include any other text.\nPlease make sure the JSON is a single line and does not contain any newlines outside of the strings.`;
 }
 
-export async function generateWithType<T extends t.Props, O extends GenerationOptions>(
+export async function generateWithType<
+    T extends t.Props,
+    O extends GenerationOptions & { infos?: boolean },
+>(
     task: string,
     type: t.TypeC<T>,
     options?: O,
@@ -97,9 +100,9 @@ export async function generateWithType<T extends t.Props, O extends GenerationOp
     for (let tryCount = 0; tryCount < 5; tryCount++) {
         const { result: resultJson, tokenUsage: tu } = await generate(
             generateTypedPrompt(typeFormat, task),
-            { ...(options || {}), infos: true, stream: false },
+            options || {},
             clientOptions,
-        );
+        ).infos();
 
         tokenUsage.output += tu.output;
         tokenUsage.input += tu.input;
@@ -130,7 +133,7 @@ export async function generateWithType<T extends t.Props, O extends GenerationOp
 }
 
 export type GenerationWithTypeClient = {
-    generateWithType: <T extends t.Props, O extends GenerationOptions>(
+    generateWithType: <T extends t.Props, O extends GenerationOptions & { infos?: boolean }>(
         task: string,
         type: t.TypeC<T>,
         options?: O,
@@ -143,10 +146,10 @@ export type GenerationWithTypeClient = {
 
 export default function client(clientOptions: InputClientOptions = {}): GenerationWithTypeClient {
     return {
-        generateWithType: <T extends t.Props, O extends GenerationOptions>(
+        generateWithType: <T extends t.Props, O extends GenerationOptions & { infos?: boolean }>(
             task: string,
             type: t.TypeC<T>,
             options?: O,
-        ) => generateWithType(task, type, options, clientOptions) as any,
+        ) => generateWithType(task, type, options, clientOptions),
     };
 }

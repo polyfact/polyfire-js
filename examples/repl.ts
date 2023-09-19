@@ -14,10 +14,12 @@ async function main() {
     while (true) {
         const userInput = await rl.question("> ");
 
-        const stream = chat.sendMessage(userInput, { stream: true });
+        const stream = await chat.sendMessage(userInput);
 
-        stream.pipe(output);
-        await new Promise((res) => stream.on("end", res));
+        output.write(stream);
+
+        // stream.pipe(output);
+        // await new Promise((res) => stream.on("end", res));
 
         output.write("\n");
     }

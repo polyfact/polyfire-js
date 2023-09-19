@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
+import fakeProcess from "process";
 import { Readable } from "readable-stream";
 import WebSocket from "isomorphic-ws";
 import { UUID } from "crypto";
@@ -8,6 +9,12 @@ import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
 import { ApiError, ErrorData } from "./helpers/error";
 import { loaderToMemory, LoaderFunction } from "./dataloader";
+
+declare const window: any;
+
+if (typeof window !== "undefined") {
+    window.process = fakeProcess;
+}
 
 const PartialResultType = t.partial({
     ressources: t.array(t.type({ id: t.string, content: t.string, similarity: t.number })),
@@ -97,21 +104,12 @@ export type GenerationWithoutWebOptions = GenerationSimpleOptions &
     ExclusiveN<MemoryOptions> &
     ExclusiveN<SystemPromptOptions> & { web?: false };
 
-export type GenerationResponseTypes = { stream?: boolean };
-
-export type GenerationOptionsWithoutResponseTypeChange =
-    | GenerationWithWebOptions
-    | GenerationWithoutWebOptions;
-
-export type GenerationOptions = GenerationOptionsWithoutResponseTypeChange & {
-    stream?: boolean;
-    infos?: boolean;
-};
+export type GenerationOptions = GenerationWithWebOptions | GenerationWithoutWebOptions;
 
 export type GenerationCompleteOptions = GenerationSimpleOptions &
     AndN<ChatOptions> &
     AndN<MemoryOptions> &
-    AndN<SystemPromptOptions> & { web?: boolean; stream?: boolean; infos?: boolean };
+    AndN<SystemPromptOptions> & { web?: boolean };
 
 export type TokenUsage = {
     input: number;
@@ -132,40 +130,6 @@ export type GenerationResult = {
     };
     ressources?: Ressource[];
 };
-
-async function generateRequest(
-    requestBody: Record<string, unknown>,
-    clientOptions: InputClientOptions,
-): Promise<GenerationResult> {
-    const { token, endpoint } = await defaultOptions(clientOptions);
-
-    try {
-        const res = await axios.post(`${endpoint}/generate`, requestBody, {
-            headers: {
-                "Content-Type": "application/json",
-                "X-Access-Token": token,
-            },
-        });
-
-        if (!GenerationAPIResponse.is(res.data)) {
-            throw new ApiError({
-                code: "mismatched_response",
-                message: "The response from the API does not match the expected format",
-            });
-        }
-
-        return {
-            result: res.data.result,
-            tokenUsage: res.data.token_usage,
-            ressources: res.data.ressources,
-        };
-    } catch (e: unknown) {
-        if (e instanceof AxiosError) {
-            throw new ApiError(e?.response?.data as ErrorData);
-        }
-        throw e;
-    }
-}
 
 async function getMemoryIds(
     dataMemory: string | undefined,
@@ -189,7 +153,9 @@ async function getMemoryIds(
     }
 }
 
-export class GenerationStream extends Readable {
+export class Generation extends Readable implements Promise<string> {
+    [Symbol.toStringTag] = "Generation";
+
     stop: () => void;
 
     constructor({ stop }: { stop?: () => void } = {}) {
@@ -197,7 +163,7 @@ export class GenerationStream extends Readable {
         this.stop = stop || (() => {});
     }
 
-    pipeInto(stream: GenerationStream): GenerationStream {
+    pipeInto(stream: Generation): Generation {
         this.on("infos", (data) => {
             stream.emit("infos", data);
         });
@@ -215,8 +181,52 @@ export class GenerationStream extends Readable {
         return this;
     }
 
-    stopWrap() {
+    stopWrap(): void {
         this.stop();
+    }
+
+    async then<TResult1 = string, TResult2 = never>(
+        onfulfilled?: (value: string) => TResult1 | PromiseLike<TResult1>,
+        onrejected?: (reason: unknown) => TResult2 | PromiseLike<TResult2>,
+    ): Promise<TResult1 | TResult2> {
+        let data = "";
+        return new Promise<string>((resolve, reject) => {
+            this.on("error", reject);
+            this.on("end", () => {
+                resolve(data);
+            });
+            this.on("data", (d) => {
+                data += d;
+            });
+        }).then(onfulfilled, onrejected);
+    }
+
+    async catch<TResult = never>(
+        onrejected?: (reason: unknown) => TResult | PromiseLike<TResult>,
+    ): Promise<string | TResult> {
+        return this.then(undefined, onrejected);
+    }
+
+    async finally(onfinally?: () => void): Promise<string> {
+        return this.then(
+            (data) => {
+                onfinally?.();
+                return data;
+            },
+            (data) => {
+                onfinally?.();
+                throw data;
+            },
+        );
+    }
+
+    async infos(): Promise<GenerationResult> {
+        return new Promise<GenerationResult>((resolve, reject) => {
+            this.on("error", reject);
+            this.on("infos", (data) => {
+                resolve(data);
+            });
+        });
     }
 }
 
@@ -224,10 +234,10 @@ function stream(
     task: string,
     options: GenerationOptions = {},
     clientOptions: InputClientOptions = {},
-    onMessage: (data: unknown, resultStream: GenerationStream) => void,
-): GenerationStream {
+    onMessage: (data: unknown, resultStream: Generation) => void,
+): Generation {
     let stopped = false;
-    const resultStream = new GenerationStream({
+    const resultStream = new Generation({
         stop: () => {
             stopped = true;
             resultStream.push(null);
@@ -254,7 +264,7 @@ function stream(
             model: genOptions.model,
             memory_id: memoryIdAssignment,
             stop: genOptions.stop || [],
-            infos: genOptions.infos || false,
+            infos: true,
             system_prompt_id: genOptions.systemPromptId,
             temperature: genOptions.temperature,
             chat_id: genOptions.chatId,
@@ -277,42 +287,21 @@ function stream(
     return resultStream;
 }
 
-function generateStream(
+export function generate(
     task: string,
-    options: GenerationOptions = {},
-    clientOptions: InputClientOptions = {},
-): GenerationStream {
-    if (options.infos) {
-        return stream(
-            task,
-            { ...options, infos: true },
-            clientOptions,
-            (data: any, resultStream: GenerationStream) => {
-                if (data.data === "") {
-                    resultStream.push(null);
-                } else if (data.data.startsWith("[INFOS]:")) {
-                    try {
-                        const potentialRessources = JSON.parse(data.data.replace("[INFOS]:", ""));
-                        resultStream.emit("infos", potentialRessources);
-                    } catch (e) {
-                        resultStream.push("");
-                    }
-                } else if (data.data.startsWith("[ERROR]:")) {
-                    try {
-                        const potentialRessources = JSON.parse(data.data.replace("[ERROR]:", ""));
-                        resultStream.emit("error", potentialRessources);
-                    } catch (e) {
-                        resultStream.push("");
-                    }
-                } else {
-                    resultStream.push(data.data);
-                }
-            },
-        );
-    }
-    return stream(task, options, clientOptions, (data: any, resultStream: GenerationStream) => {
+    options: GenerationOptions,
+    clientOptions?: InputClientOptions,
+): Generation {
+    return stream(task, options, clientOptions, (data: any, resultStream: Generation) => {
         if (data.data === "") {
             resultStream.push(null);
+        } else if (data.data.startsWith("[INFOS]:")) {
+            try {
+                const potentialRessources = JSON.parse(data.data.replace("[INFOS]:", ""));
+                resultStream.emit("infos", potentialRessources);
+            } catch (e) {
+                resultStream.push("");
+            }
         } else if (data.data.startsWith("[ERROR]:")) {
             try {
                 const potentialRessources = JSON.parse(data.data.replace("[ERROR]:", ""));
@@ -326,101 +315,14 @@ function generateStream(
     });
 }
 
-/**
- * Generates a result based on provided options.
- *
- * If `options.stream` is set to `true`, this function will return a `GenerationStream`.
- * Otherwise, if `options.infos` is set to `true`, this function will return a `GenerationResult`.
- * And if `options.infos` as well as `options.stream` are set to `false` or left `undefined`, this
- * function will return a `string`.
- *
- * @param task - The task string.
- * @param options - The generation options.
- * @param clientOptions - The client options.
- * @returns Either a `string` or a `GenerationResult` based on `options.infos`.
- */
-
-export function generate(
-    task: string,
-    options: GenerationOptions & { stream: true },
-    clientOptions?: InputClientOptions,
-): GenerationStream;
-export function generate(
-    task: string,
-    options?:
-        | (GenerationOptions & { infos?: false | undefined; stream?: false | undefined })
-        | undefined,
-    clientOptions?: InputClientOptions,
-): Promise<string>;
-export function generate(
-    task: string,
-    options: GenerationOptions & { infos: true; stream?: false | undefined },
-    clientOptions?: InputClientOptions,
-): Promise<GenerationResult>;
-export function generate(
-    task: string,
-    options: GenerationOptions = {},
-    clientOptions: InputClientOptions = {},
-): Promise<string | GenerationResult> | GenerationStream {
-    if (options.stream) {
-        return generateStream(task, options, clientOptions);
-    }
-
-    return (async () => {
-        const genOptions = options as GenerationCompleteOptions;
-
-        let dataMemory;
-        if (genOptions.data) {
-            dataMemory = await loaderToMemory(genOptions.data, clientOptions).then(
-                (memory) => memory.memoryId,
-            );
-        }
-
-        const memoryIdAssignment = await getMemoryIds(
-            dataMemory,
-            genOptions.memoryId,
-            genOptions.memory,
-        );
-
-        const requestBody = {
-            task,
-            provider: genOptions.provider || "",
-            model: genOptions.model,
-            memory_id: memoryIdAssignment,
-            stop: genOptions.stop || [],
-            infos: genOptions.infos || false,
-            system_prompt_id: genOptions.systemPromptId,
-            temperature: genOptions.temperature,
-            chat_id: genOptions.chatId,
-            web: genOptions.web,
-            language: genOptions.language,
-        };
-
-        const res = await generateRequest(requestBody, clientOptions);
-
-        if (options?.infos) {
-            return res;
-        }
-
-        return res.result;
-    })();
-}
-
 export type GenerationClient = {
-    generate: <T extends GenerationOptions>(
-        task: string,
-        options?: T,
-    ) => T extends { stream: true }
-        ? GenerationStream
-        : T extends { infos: true }
-        ? Promise<GenerationResult>
-        : Promise<string>;
+    generate: (task: string, options?: GenerationOptions) => Generation;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): GenerationClient {
     return {
         generate: (task: string, options: GenerationOptions = {}) => {
-            return generate(task, options as any, clientOptions) as any;
+            return generate(task, options, clientOptions);
         },
     };
 }
