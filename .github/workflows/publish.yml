@@ -28,7 +28,7 @@ jobs:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
             - name: Build Vanilla JS
-              run: npm run cmd:vanilla-js
+              run: npm run build:vanilla-js
 
             - name: Parse the package.json for the version
               run: |
