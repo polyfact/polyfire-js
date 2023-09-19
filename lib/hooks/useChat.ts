@@ -16,15 +16,26 @@ export default function useChat(): {
     loading: boolean;
 } {
     const {
+        auth: { status },
         utils: { Chat },
     } = usePolyfact();
 
-    const [chat] = useState<Chat>(new Chat());
+    const [chat, setChat] = useState<Chat>();
     const [history, setHistory] = useState<Message[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        if (status === "authenticated") {
+            setChat(new Chat());
+        }
+    }, [status]);
+
     async function sendMessage(message: string) {
+        if (!chat) {
+            throw new Error("sendMessage: You need to be authenticated to use this function");
+        }
+
         const userMessage = {
             id: null,
             chat_id: await chat.chatId,
