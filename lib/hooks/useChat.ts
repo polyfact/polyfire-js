@@ -4,10 +4,10 @@ import type { Chat } from "../chats";
 
 export type Message = {
     id: string | null;
-    chat_id: string; // eslint-disable-line
-    is_user_message: boolean; // eslint-disable-line
-    content: string; // eslint-disable-line
-    created_at: string | null; // eslint-disable-line
+    chat_id: string; // eslint-disable-line camelcase
+    is_user_message: boolean; // eslint-disable-line camelcase
+    content: string; // eslint-disable-line camelcase
+    created_at: string | null; // eslint-disable-line camelcase
 };
 
 export default function useChat(): {
