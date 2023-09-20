@@ -18,4 +18,4 @@ jobs:
     - name: Install modules
       run: yarn
     - name: Run ESLint
-      run: eslint . --max-warnings 0
+      run: ./node_modules/eslint/bin/eslint.js . --max-warnings 0
