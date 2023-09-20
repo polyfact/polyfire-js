@@ -3,6 +3,10 @@ import * as t from "polyfact-io-ts";
 import { generate, GenerationOptions } from "../generate";
 import { InputClientOptions } from "../clientOpts";
 
+// The ts.io types are way too complex for me to write, I didn't want to spend 2 days fixing this so I
+// decided to bypass the typechecker and throw an error at runtime if the type is not supported.
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function typePartial2String(entries: [string, any][], indent: number, partial: boolean): string {
     const leftpad = Array(2 * (indent + 1))
         .fill(" ")
@@ -22,6 +26,7 @@ function typePartial2String(entries: [string, any][], indent: number, partial: b
         );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function internalTsio2String(type: any, indent: number): string {
     const leftpad = Array(2 * indent)
         .fill(" ")
@@ -46,6 +51,7 @@ function internalTsio2String(type: any, indent: number): string {
         return type.name;
     }
     if (type._tag === "UnionType") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return type.types.map((t: any) => internalTsio2String(t, indent + 1)).join(" | ");
     }
     if (type._tag === "LiteralType") {
@@ -72,7 +78,7 @@ function internalTsio2String(type: any, indent: number): string {
     );
 }
 
-function tsio2String(type: t.TypeC<any>): string {
+function tsio2String<T extends t.Props>(type: t.TypeC<T>): string {
     const res = JSON.parse(JSON.stringify(type));
 
     return internalTsio2String(res, 0);
@@ -124,9 +130,9 @@ export async function generateWithType<
         }
 
         if (!options?.infos) {
-            return result as any;
+            return result as unknown as ReturnType<typeof generateWithType<T, O>>;
         }
-        return { result, tokenUsage } as any;
+        return { result, tokenUsage } as unknown as ReturnType<typeof generateWithType<T, O>>;
     }
 
     throw new Error("Generation failed to match the given type after 5 retry");

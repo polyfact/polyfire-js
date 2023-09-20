@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { createClient } from "@supabase/supabase-js";
 import { Readable } from "readable-stream";
 import * as t from "polyfact-io-ts";
-import { Buffer } from "buffer";
+import { FileInput, fileInputToBuffer } from "./utils";
 import { InputClientOptions, defaultOptions, supabaseDefaultClient } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
@@ -10,39 +10,20 @@ const ResultType = t.type({
     text: t.string,
 });
 
-interface MinimalStream {
-    on(event: string | symbol, listener: (...args: any[]) => void): this;
-}
-
-function stream2buffer(stream: MinimalStream): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-        const buf: any[] = [];
-
-        stream.on("data", (chunk) => buf.push(chunk));
-        stream.on("end", () => resolve(Buffer.concat(buf)));
-        stream.on("error", (err) => reject(err));
-    });
-}
-
 function randomString() {
     const a = () => Math.floor(Math.random() * 1e16).toString(36);
     return a() + a() + a();
 }
 
 export async function transcribe(
-    file: Buffer | MinimalStream,
+    file: FileInput,
     clientOptions: InputClientOptions = {},
     supabaseClient: { supabaseUrl: string; supabaseKey: string } = supabaseDefaultClient,
 ): Promise<string> {
     try {
         const { token, endpoint } = await defaultOptions(clientOptions);
 
-        let buf: Buffer;
-        if (file instanceof Buffer) {
-            buf = file;
-        } else {
-            buf = await stream2buffer(file);
-        }
+        const buf = await fileInputToBuffer(file);
 
         const supa = createClient(supabaseClient.supabaseUrl, supabaseClient.supabaseKey, {
             auth: { persistSession: false },

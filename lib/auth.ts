@@ -6,7 +6,6 @@ import { MutablePromise } from "./utils";
 import { ApiError, ErrorData } from "./helpers/error";
 
 type SimpleProvider = "github" | "google";
-type Provider = SimpleProvider | "firebase";
 type LoginWithFirebaseInput = { token: string; provider: "firebase" };
 type LoginFunctionInput = SimpleProvider | { provider: SimpleProvider } | LoginWithFirebaseInput;
 
@@ -18,7 +17,7 @@ const supabaseClient = createClient(
     },
 );
 
-declare const window: any;
+declare const window: Window;
 
 const getSessionMutex = new Mutex();
 
@@ -55,7 +54,7 @@ export async function getSession(): Promise<{ token?: string; email?: string }> 
 
             token = data.session?.access_token || "";
 
-            if (!token) {
+            if (!token || !data.session?.refresh_token) {
                 window.localStorage.removeItem("polyfact_refresh_token");
                 return {};
             }
@@ -79,7 +78,7 @@ export async function oAuthRedirect(
     const { data } = await supabaseClient.auth.signInWithOAuth({
         ...credentials,
         options: {
-            redirectTo: window?.location,
+            redirectTo: `${window?.location}`,
             skipBrowserRedirect: !browserRedirect,
         },
     });
@@ -117,9 +116,9 @@ export async function login(
     co: MutablePromise<Partial<ClientOptions>>,
 ): Promise<void> {
     await co.deresolve();
-    console.log("login", input);
     if (typeof input === "object" && input.provider === "firebase") {
-        return signInWithOAuthToken(input.token, "firebase", co, projectOptions);
+        signInWithOAuthToken(input.token, "firebase", co, projectOptions);
+        return;
     }
 
     const provider = typeof input === "string" ? input : input.provider;

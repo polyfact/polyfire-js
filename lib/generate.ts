@@ -1,5 +1,3 @@
-/* eslint-disable camelcase */
-import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
 import fakeProcess from "process";
 import { Readable } from "readable-stream";
@@ -7,28 +5,15 @@ import WebSocket from "isomorphic-ws";
 import { UUID } from "crypto";
 import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
-import { ApiError, ErrorData } from "./helpers/error";
 import { loaderToMemory, LoaderFunction } from "./dataloader";
 
-declare const window: any;
+declare const window: {
+    process: typeof fakeProcess;
+};
 
 if (typeof window !== "undefined") {
     window.process = fakeProcess;
 }
-
-const PartialResultType = t.partial({
-    ressources: t.array(t.type({ id: t.string, content: t.string, similarity: t.number })),
-});
-
-const Required = t.type({
-    result: t.string,
-    token_usage: t.type({
-        input: t.number,
-        output: t.number,
-    }),
-});
-
-const GenerationAPIResponse = t.intersection([Required, PartialResultType]);
 
 export type Exclusive<T, U> =
     | (T & Partial<Record<Exclude<keyof U, keyof T>, never>>)
@@ -76,23 +61,22 @@ export type Language =
     | "";
 
 export type GenerationSimpleOptions = {
-    provider?: "openai" | "cohere" | "llama" | "";
+    provider?: "openai" | "cohere" | "llama" | "" | undefined;
     model?: string;
     stop?: string[];
     temperature?: number;
     language?: Language;
 };
 
-export type ChatOptions = [{ chatId: string }, {}];
+export type ChatOptions = [{ chatId: string }];
 
 export type MemoryOptions = [
     { memoryId: string },
     { memory: Memory },
     { data: [LoaderFunction] | LoaderFunction },
-    {},
 ];
 
-export type SystemPromptOptions = [{ systemPromptId: UUID }, { systemPrompt: string }, {}];
+export type SystemPromptOptions = [{ systemPromptId: UUID }, { systemPrompt: string }];
 
 export type GenerationWithWebOptions = GenerationSimpleOptions &
     NeverN<ChatOptions> &
@@ -287,12 +271,20 @@ function stream(
     return resultStream;
 }
 
+const GenerateDataType = t.type({
+    data: t.string,
+});
+
 export function generate(
     task: string,
     options: GenerationOptions,
     clientOptions?: InputClientOptions,
 ): Generation {
-    return stream(task, options, clientOptions, (data: any, resultStream: Generation) => {
+    return stream(task, options, clientOptions, (data: unknown, resultStream: Generation) => {
+        if (!GenerateDataType.is(data)) {
+            resultStream.emit("error", "Invalid data");
+            return;
+        }
         if (data.data === "") {
             resultStream.push(null);
         } else if (data.data.startsWith("[INFOS]:")) {

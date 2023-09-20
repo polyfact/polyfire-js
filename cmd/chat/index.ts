@@ -250,8 +250,8 @@ export default async function chat(token: string): Promise<boolean> {
         console.info(
             `You can now make "cd ${repoName} ; npm install ; npm run dev" to start the chatbot.`,
         );
-    } catch (error: any) {
-        console.error("An error occurred:", error.message);
+    } catch (error: unknown) {
+        console.error("An error occurred:", error instanceof Error ? error.message : error);
     }
 
     return true;

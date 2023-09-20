@@ -66,7 +66,7 @@ export default async function agent(token: string): Promise<void> {
         );
         console.info("Don't forget to set your PROJECT_ID.\n");
         console.info("you can get one at https://app.polyfact.com.\n\n");
-    } catch (error: any) {
-        console.error("An error occurred:", error.message);
+    } catch (error: unknown) {
+        console.error("An error occurred:", error instanceof Error ? error.message : error);
     }
 }
