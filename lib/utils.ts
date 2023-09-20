@@ -1,4 +1,5 @@
 import { Mutex } from "async-mutex";
+import { Buffer } from "buffer";
 
 let token: string | undefined;
 let endpoint: string | undefined;
@@ -10,6 +11,15 @@ if (typeof process !== "undefined") {
 
 export const POLYFACT_TOKEN = token;
 export const POLYFACT_ENDPOINT = endpoint;
+
+function splitPromiseResolver<T>(): [Promise<T>, (value: T) => void] {
+    let resolver: (value: T) => void;
+    const promise = new Promise<T>((resolve) => {
+        resolver = resolve;
+    });
+
+    return [promise, resolver!]; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+}
 
 type UnresolvedResult = { status: "pending" };
 type ResolvedResult<T> = { value: T; status: "resolved" };
@@ -28,11 +38,7 @@ export class MutablePromise<T> implements PromiseLike<T> {
     mutex = new Mutex();
 
     constructor() {
-        let resolver: (v: ResolvedResult<T> | ErrorResult) => void;
-        this.promiseResult = new Promise<ResolvedResult<T> | ErrorResult>((resolve, reject) => {
-            resolver = resolve;
-        });
-        this.resolver = resolver!;
+        [this.promiseResult, this.resolver] = splitPromiseResolver();
     }
 
     set(value: T): void {
@@ -61,11 +67,7 @@ export class MutablePromise<T> implements PromiseLike<T> {
 
     async deresolve(): Promise<void> {
         await this.mutex.runExclusive(() => {
-            let resolver: (v: ResolvedResult<T> | ErrorResult) => void;
-            this.promiseResult = new Promise<ResolvedResult<T> | ErrorResult>((resolve) => {
-                resolver = resolve;
-            });
-            this.resolver = resolver!;
+            [this.promiseResult, this.resolver] = splitPromiseResolver();
             Object.assign(this.result, {
                 status: "pending" as const,
                 value: undefined,
@@ -101,4 +103,63 @@ export class MutablePromise<T> implements PromiseLike<T> {
 
         throw new Error("Missing function in then");
     }
+}
+
+export type OnFn<R> = ((t: "data", listener: (chunk: Buffer) => void) => R) &
+    ((t: "error", listener: (err: Error) => void) => R) &
+    ((t: string, listener: (...args: unknown[]) => void) => R);
+
+export interface MinimalStream {
+    on: OnFn<this>;
+}
+
+export interface FetchReadableStream {
+    getReader(): {
+        read(): Promise<{ done: boolean; value?: Uint8Array | undefined }>;
+    };
+}
+
+export type FileInput = MinimalStream | Buffer | FetchReadableStream;
+
+function stream2buffer(stream: MinimalStream): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        const buf: Buffer[] = [];
+
+        stream.on("data", (chunk) => buf.push(chunk));
+        stream.on("end", () => resolve(Buffer.concat(buf)));
+        stream.on("error", (err) => reject(err));
+    });
+}
+
+async function fetchStream2buffer(stream: FetchReadableStream): Promise<Buffer> {
+    const reader = stream.getReader();
+    const chunks: Uint8Array[] = [];
+
+    let done = false;
+    let value: Uint8Array | undefined;
+    while (!done) {
+        // eslint-disable-next-line no-await-in-loop
+        ({ done, value } = await reader.read());
+        if (value) {
+            chunks.push(value);
+        }
+    }
+
+    return Buffer.concat(chunks);
+}
+
+export async function fileInputToBuffer(input: FileInput): Promise<Buffer> {
+    if (input instanceof Buffer) {
+        return input;
+    }
+
+    if ("on" in input) {
+        return stream2buffer(input);
+    }
+
+    if ("getReader" in input) {
+        return fetchStream2buffer(input);
+    }
+
+    return null as never;
 }

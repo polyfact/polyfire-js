@@ -99,7 +99,6 @@ const useAgent = (
 
     const start = async (
         question: string,
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         progress: (step: string, result: string) => void = () => {},
     ): Promise<string> => {
         console.info("Starting...");

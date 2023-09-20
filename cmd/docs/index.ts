@@ -48,7 +48,7 @@ async function waitSimpleGeneration<T extends GetResult>(
     const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 
     progressBar.start(1, 0);
-    await new Promise<void>((res, rej) => {
+    await new Promise<void>((res) => {
         const interval = setInterval(async () => {
             const { status } = await getFunction(docId, token).catch(() => ({ status: undefined }));
 
@@ -137,8 +137,8 @@ export default async function generateDocs(): Promise<string> {
         }
 
         return docId;
-    } catch (error: any) {
-        console.error("An error occurred:", error.message);
+    } catch (error: unknown) {
+        console.error("An error occurred:", error instanceof Error ? error.message : error);
         throw error;
     }
 }

@@ -80,6 +80,7 @@
         "no-await-in-loop": ["off"],
         "no-continue": ["off"],
         "no-console": ["off"],
-        "tsdoc/syntax": "warn"
+        "tsdoc/syntax": "warn",
+        "@typescript-eslint/no-empty-function": ["off"]
     }
 }

@@ -131,7 +131,7 @@ export class Chat {
                 await this.clientOptions,
             ).pipeInto(resultStream);
 
-            result.on("data", (d: any) => {
+            result.on("data", (d: string) => {
                 aiMessage = aiMessage.concat(d);
             });
 
@@ -159,7 +159,7 @@ export class Chat {
                 },
             );
 
-            return response?.data?.filter((message: any): message is t.TypeOf<typeof Message> =>
+            return response?.data?.filter((message: unknown): message is t.TypeOf<typeof Message> =>
                 Message.is(message),
             );
         } catch (e: unknown) {
