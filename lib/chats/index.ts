@@ -127,7 +127,12 @@ export class Chat {
 
             const result = generate(
                 message,
-                { ...options, web: false, chatId },
+                {
+                    ...this.options,
+                    ...options,
+                    web: false,
+                    chatId,
+                } as GenerationOptions,
                 await this.clientOptions,
             ).pipeInto(resultStream);
 

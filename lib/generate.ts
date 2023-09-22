@@ -86,9 +86,11 @@ export type GenerationWithWebOptions = GenerationSimpleOptions &
 export type GenerationWithoutWebOptions = GenerationSimpleOptions &
     ExclusiveN<ChatOptions> &
     ExclusiveN<MemoryOptions> &
-    ExclusiveN<SystemPromptOptions> & { web?: false };
+    ExclusiveN<SystemPromptOptions>;
 
-export type GenerationOptions = GenerationWithWebOptions | GenerationWithoutWebOptions;
+export type GenerationOptions =
+    | GenerationWithWebOptions
+    | (GenerationWithoutWebOptions & { web?: false });
 
 export type GenerationCompleteOptions = GenerationSimpleOptions &
     AndN<ChatOptions> &
