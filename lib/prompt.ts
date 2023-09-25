@@ -34,15 +34,17 @@ export type Prompt = {
     like?: number;
     use?: number;
     tags?: string[];
+    user_id?: string; // eslint-disable-line camelcase
+    public: boolean;
 };
 
-export type PromptInsert = Pick<Prompt, "name" | "description" | "prompt" | "tags">;
+export type PromptInsert = Pick<Prompt, "name" | "description" | "prompt" | "tags" | "public">;
 export type PromptUpdate = Partial<PromptInsert>;
 
 async function axiosWrapper<T>(
     method: "get" | "post" | "put" | "delete",
     url: string,
-    data?: Record<string, string | string[]> | undefined,
+    data?: Record<string, string | string[] | boolean> | undefined,
     clientOptions: InputClientOptions = {},
 ): Promise<T> {
     const { token, endpoint } = await defaultOptions(clientOptions);
