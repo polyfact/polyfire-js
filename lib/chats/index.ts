@@ -103,6 +103,7 @@ export class Chat {
                 stopped = true;
                 resultStream.push(null);
             },
+            clientOptions: this.clientOptions,
         });
         let aiMessage = "";
 

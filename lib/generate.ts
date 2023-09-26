@@ -144,9 +144,12 @@ export class Generation extends Readable implements Promise<string> {
 
     stop: () => void;
 
-    constructor({ stop }: { stop?: () => void } = {}) {
+    clientOptions: InputClientOptions;
+
+    constructor({ stop, clientOptions }: { stop?: () => void; clientOptions: InputClientOptions }) {
         super({ read() {}, objectMode: true });
         this.stop = stop || (() => {});
+        this.clientOptions = clientOptions;
     }
 
     pipeInto(stream: Generation): Generation {
@@ -214,6 +217,16 @@ export class Generation extends Readable implements Promise<string> {
             });
         });
     }
+
+    generate(task: string, options: GenerationOptions = {}): Generation {
+        const resultStream = new Generation({ clientOptions: this.clientOptions });
+        (async () => {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            generate(`${await this} ${task}`, options).pipeInto(resultStream);
+        })();
+
+        return resultStream;
+    }
 }
 
 function stream(
@@ -228,6 +241,7 @@ function stream(
             stopped = true;
             resultStream.push(null);
         },
+        clientOptions,
     });
     (async () => {
         const genOptions = options as GenerationCompleteOptions;
@@ -279,7 +293,7 @@ const GenerateDataType = t.type({
 
 export function generate(
     task: string,
-    options: GenerationOptions,
+    options?: GenerationOptions,
     clientOptions?: InputClientOptions,
 ): Generation {
     return stream(task, options, clientOptions, (data: unknown, resultStream: Generation) => {
