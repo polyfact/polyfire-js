@@ -10,7 +10,7 @@ import { usage } from "./user";
 import { get as KVGet, set as KVSet } from "./kv";
 import PolyfactClientBuilder from "./client";
 import { generateImage } from "./image";
-import { TextFileLoader, StringLoader, AudioLoader } from "./dataloader";
+import { TextFileLoader, StringLoader, AudioLoader, PdfLoader } from "./dataloader";
 
 import {
     getAllPrompts,
@@ -73,6 +73,7 @@ export {
     TextFileLoader,
     StringLoader,
     AudioLoader,
+    PdfLoader,
 };
 
 export default PolyfactClientBuilder;
