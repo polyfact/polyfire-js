@@ -113,6 +113,7 @@ export type KVClient = {
     set: (key: string, value: string) => Promise<void>;
     del: (key: string) => Promise<void>;
     all: () => Promise<KV[]>;
+
 };
 
 export default function client(clientOptions: InputClientOptions = {}): KVClient {
