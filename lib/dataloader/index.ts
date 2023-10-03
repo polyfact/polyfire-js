@@ -72,7 +72,7 @@ export async function loaderToMemory(
     loaders: LoaderFunction | LoaderFunction[],
     clientOptions: InputClientOptions = {},
 ): Promise<Memory> {
-    const memory = new Memory(clientOptions);
+    const memory = new Memory(undefined, clientOptions);
 
     if (typeof loaders === "function") {
         await loaders(memory, clientOptions);

@@ -90,21 +90,41 @@ type MemoryAddOptions = {
     maxToken?: number;
 };
 
+type MemoryOptions =
+    | {
+          id: string;
+      }
+    | {
+          public?: boolean;
+      }
+    | string;
+
 class Memory {
     memoryId: PromiseLike<string>;
 
     clientOptions: InputClientOptions;
 
-    constructor(clientOptions: InputClientOptions = {}, isPublic = true) {
+    constructor(memoryOptions?: MemoryOptions, clientOptions: InputClientOptions = {}) {
         this.clientOptions = defaultOptions(clientOptions);
-        this.memoryId = this.clientOptions
-            .then((co) => createMemory(co, isPublic))
-            .then((res) => res.id);
+        if (memoryOptions !== undefined && typeof memoryOptions === "string") {
+            this.memoryId = Promise.resolve(memoryOptions);
+        } else if (memoryOptions && typeof memoryOptions === "object" && "id" in memoryOptions) {
+            this.memoryId = Promise.resolve(memoryOptions.id);
+        } else {
+            const isPublic = (memoryOptions || {}).public;
+            this.memoryId = this.clientOptions
+                .then((co) => createMemory(co, isPublic))
+                .then((res) => res.id);
+        }
     }
 
     async add(input: string, { maxToken = 0 }: MemoryAddOptions = {}): Promise<void> {
         const id = await this.memoryId;
         await updateMemory(id, input, maxToken, await this.clientOptions);
+    }
+
+    async getId(): Promise<string> {
+        return this.memoryId;
     }
 }
 
@@ -123,6 +143,6 @@ export default function client(clientOptions: InputClientOptions = {}): MemoryCl
         updateMemory: (id: string, input: string, maxToken?: number) =>
             updateMemory(id, input, maxToken, clientOptions),
         getAllMemories: () => getAllMemories(clientOptions),
-        Memory: () => new Memory(clientOptions),
+        Memory: (memoryOptions?: MemoryOptions) => new Memory(memoryOptions, clientOptions),
     };
 }
