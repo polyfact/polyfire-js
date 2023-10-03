@@ -44,6 +44,7 @@ export async function createChat(
         return response?.data?.id;
     } catch (e: unknown) {
         if (e instanceof AxiosError) {
+            console.log(e);
             throw new ApiError(e?.response?.data as ErrorData);
         }
         throw e;
@@ -74,7 +75,7 @@ export class Chat {
         this.options.provider = options.provider || "";
 
         if (options.autoMemory) {
-            this.autoMemory = this.clientOptions.then((co) => new Memory(co));
+            this.autoMemory = this.clientOptions.then((co) => new Memory({ public: false }, co));
         }
     }
 
@@ -170,6 +171,7 @@ export class Chat {
             );
         } catch (e: unknown) {
             if (e instanceof AxiosError) {
+                console.log(e);
                 throw new ApiError(e?.response?.data as ErrorData);
             }
             throw e;
