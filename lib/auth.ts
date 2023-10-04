@@ -7,7 +7,12 @@ import { ApiError, ErrorData } from "./helpers/error";
 
 type SimpleProvider = "github" | "google";
 type LoginWithFirebaseInput = { token: string; provider: "firebase" };
-type LoginFunctionInput = SimpleProvider | { provider: SimpleProvider } | LoginWithFirebaseInput;
+type LoginWithCustomInput = { token: string; provider: "custom" };
+type LoginFunctionInput =
+    | SimpleProvider
+    | { provider: SimpleProvider }
+    | LoginWithFirebaseInput
+    | LoginWithCustomInput;
 
 const supabaseClient = createClient(
     supabaseDefaultClient.supabaseUrl,
@@ -92,7 +97,7 @@ export async function oAuthRedirect(
 
 export async function signInWithOAuthToken(
     token: string,
-    authType: "token" | "firebase",
+    authType: "token" | "firebase" | "custom",
     co: MutablePromise<Partial<ClientOptions>>,
     { project, endpoint }: { project: string; endpoint: string },
 ): Promise<void> {
@@ -116,8 +121,11 @@ export async function login(
     co: MutablePromise<Partial<ClientOptions>>,
 ): Promise<void> {
     await co.deresolve();
-    if (typeof input === "object" && input.provider === "firebase") {
-        signInWithOAuthToken(input.token, "firebase", co, projectOptions);
+    if (
+        typeof input === "object" &&
+        (input.provider === "firebase" || input.provider === "custom")
+    ) {
+        signInWithOAuthToken(input.token, input.provider, co, projectOptions);
         return;
     }
 
