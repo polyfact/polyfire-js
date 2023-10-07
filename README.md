@@ -6,30 +6,27 @@
     <a href="https://discord.gg/8mkBfDXNTM">Discord</a>
 </h4>
 
-<p align="center">⚡ A managed backend for AI apps. Call AI models from the frontend 🪶</p>
+<p align="center">⚡ An all-in-one managed backend for AI apps. Build AI apps from the frontend 🪶</p>
 
-PolyFact's goal is to make it possible to code every AI tool/Chatbot you could want in only a couple of lines of code in the frontend without the need for complex abstractions and having to deploy anything.
-
-<p align="center"><img src="demo.gif" /></p>
-
+PolyFact helps you build much faster by centralizing all the AI backend tools in one easy-to-use Front End SDK. 
 
 ## ✨ Getting started
 
 We also made a couple of tutorials you can use to get started with Polyfact:
 
-- **[Getting Started](https://polyfact.readme.io/reference/getting-started)**
-- **[Tutorial: How to make a clone of ChatGPT](https://polyfact.readme.io/reference/chatgpt-clone)**
-- **[Tutorial: Add stripe subscriptions](https://polyfact.readme.io/reference/react-stripe-subscriptions)**
+- **[Getting Started](https://polyfact.readme.io/docs/basic-usage)**
+- **[Tutorial: How to make a clone of ChatGPT](https://polyfact.readme.io/docs/chatgpt-clone)**
+- **[Tutorial: Add stripe subscriptions](https://polyfact.readme.io/docs/react-stripe-subscriptions)**
 
 ## 📚 Documentation
 
-- **[Generate Simple Text](https://polyfact.readme.io/reference/generate-1)**: Answer to simple requests as text
-- **[Create Chatbots](https://polyfact.readme.io/reference/chats)**: Easily create chatbots
-- **[Transcribe](https://polyfact.readme.io/reference/transcribe)**: Transcribe audio files to text
-- **[Memory](https://polyfact.readme.io/reference/memory)**: Easily create a long-term memory and simplify the use of large amounts of information
-- **[GenerateImage](https://polyfact.readme.io/reference/generate-image)**: Generate images with Dall-E
-- **[Call Polyfact from React](https://polyfact.readme.io/reference/usepolyfact)**: The usePolyfact hooks lets you use Polyfact and handle authentification without having to deploy any backend
-- **[Call Polyfact from other browser environments](https://polyfact.readme.io/reference/polyfact-client-object)**: The Polyfact Client Object allows you to use Polyfact and handle authentification without having to deploy any backend in any environment
+- **[Generate Simple Text](https://polyfact.readme.io/docs/generate)**: Answer to simple requests as text
+- **[Create Chatbots](https://polyfact.readme.io/docs/chats)**: Easily create chatbots
+- **[Transcribe](https://polyfact.readme.io/docs/transcribe)**: Transcribe audio files to text
+- **[Memory](https://polyfact.readme.io/docs/memory)**: Easily create a long-term memory and simplify the use of large amounts of information
+- **[GenerateImage](https://polyfact.readme.io/docs/generate-image)**: Generate images with Dall-E
+- **[Call Polyfact from React](https://polyfact.readme.io/docs/usepolyfact)**: The usePolyfact hooks lets you use Polyfact and handle authentification without having to deploy any backend
+- **[Call Polyfact from other browser environments](https://polyfact.readme.io/docs/javascript)**: The Polyfact Client Object allows you to use Polyfact and handle authentification without having to deploy any backend in any environment
 
 ## 📫 Contact us
 
@@ -37,4 +34,4 @@ We strive for feedback and want to understand everyone's needs, and you can hang
 
 ## 🧑‍💻 Contributing
 
-PolyFact is open-source! You can contribute to this package or the [API](https://github.com/polyfact/polyfact-api-go) by opening an issue or a PR!
+PolyFact is open-source! You can contribute to the [Javascript SDK](https://github.com/polyfact/polyfact-js) or the [API](https://github.com/polyfact/polyfact-api-go) by opening an issue or a PR!
