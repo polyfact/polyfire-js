@@ -21,8 +21,31 @@ declare const window: Window;
 
 const getSessionMutex = new Mutex();
 
-export async function getSession(): Promise<{ token?: string; email?: string }> {
+function setSessionStorage(refreshToken: string, projectId: string) {
+    window.localStorage.setItem("polyfact_refresh_token", refreshToken);
+    window.localStorage.setItem("polyfact_project_id", projectId);
+}
+
+function clearSessionStorage() {
+    window.localStorage.removeItem("polyfact_refresh_token");
+    window.localStorage.removeItem("polyfact_project_id");
+}
+
+function getSessionStorage(): { refreshToken: string | null; projectId: string | null } {
+    const refreshToken = window.localStorage.getItem("polyfact_refresh_token");
+    const projectId = window.localStorage.getItem("polyfact_project_id");
+    return { refreshToken, projectId };
+}
+
+export async function getSession(projectId: string): Promise<{ token?: string; email?: string }> {
     return getSessionMutex.runExclusive(async () => {
+        let { refreshToken: storedRefreshToken, projectId: storedProjectId } = getSessionStorage();
+        if (storedProjectId && storedProjectId !== projectId) {
+            clearSessionStorage();
+            storedRefreshToken = null;
+            storedProjectId = null;
+        }
+
         let token = new URLSearchParams(
             window.location.hash.replace(/^#+/, "#").replace(/^#/, "?"),
         ).get("access_token");
@@ -37,10 +60,10 @@ export async function getSession(): Promise<{ token?: string; email?: string }> 
                 auth: { persistSession: false },
             },
         );
-        if (!refreshToken && window.localStorage.getItem("polyfact_refresh_token")) {
-            refreshToken = window.localStorage.getItem("polyfact_refresh_token");
+        if (!refreshToken && storedRefreshToken) {
+            refreshToken = storedRefreshToken;
         } else if (refreshToken) {
-            window.localStorage.setItem("polyfact_refresh_token", refreshToken);
+            setSessionStorage(refreshToken, projectId);
             window.history.replaceState({}, window.document.title, ".");
         }
 
@@ -55,11 +78,11 @@ export async function getSession(): Promise<{ token?: string; email?: string }> 
             token = data.session?.access_token || "";
 
             if (!token || !data.session?.refresh_token) {
-                window.localStorage.removeItem("polyfact_refresh_token");
+                clearSessionStorage();
                 return {};
             }
 
-            window.localStorage.setItem("polyfact_refresh_token", data.session?.refresh_token);
+            setSessionStorage(data.session?.refresh_token, projectId);
         }
         return { token };
     });
@@ -130,7 +153,7 @@ export async function login(
 
 export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promise<void> {
     await co.deresolve();
-    window.localStorage.removeItem("polyfact_refresh_token");
+    clearSessionStorage();
     co.throw(new Error("You need to be authenticated to use this function"));
 }
 
@@ -143,7 +166,7 @@ export async function init(
         return false;
     }
 
-    const session = await getSession();
+    const session = await getSession(projectOptions.project);
     if (session.token) {
         await signInWithOAuthToken(session.token, "token", co, projectOptions);
         return true;
