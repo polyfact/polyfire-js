@@ -11,12 +11,12 @@ export async function defaultOptions(popts: InputClientOptions): Promise<ClientO
     const opts = await popts;
     if (!opts.token && !POLYFACT_TOKEN) {
         throw new Error(
-            "Please put your polyfact token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfact.com",
+            "Please put your polyfire token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfire.com",
         );
     }
 
     return {
-        endpoint: POLYFACT_ENDPOINT || "https://api.polyfact.com",
+        endpoint: POLYFACT_ENDPOINT || "https://api.polyfire.com",
         token: POLYFACT_TOKEN || "",
 
         ...opts,

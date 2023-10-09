@@ -8,7 +8,7 @@ import { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
 import { splitString, tokenCount } from "./split";
 import { usage } from "./user";
 import { get as KVGet, set as KVSet, del as KVDel, all as KVAll } from "./kv";
-import PolyfactClientBuilder from "./client";
+import PolyfireClientBuilder from "./client";
 import { generateImage } from "./image";
 import { TextFileLoader, StringLoader, AudioLoader } from "./dataloader";
 
@@ -77,4 +77,4 @@ export {
     AudioLoader,
 };
 
-export default PolyfactClientBuilder;
+export default PolyfireClientBuilder;

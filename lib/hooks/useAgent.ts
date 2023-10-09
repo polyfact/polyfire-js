@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import usePolyfact from "./usePolyfact";
+import usePolyfire from "./usePolyfire";
 
 import { GenerationSimpleOptions } from "../generate";
 import { t } from "..";
@@ -71,7 +71,7 @@ const useAgent = (
 ): Agent => {
     const {
         models: { generateWithType },
-    } = usePolyfact();
+    } = usePolyfire();
 
     const [isRunning, setIsRunning] = useState(true);
 

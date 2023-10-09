@@ -1,10 +1,10 @@
 import { Readable } from "readable-stream";
 import { generate } from "../lib/generate";
 
-// Client-side configuration for interfacing with the Polyfact API.
+// Client-side configuration for interfacing with the Polyfire API.
 const config = {
-    endpoint: "https://api.polyfact.com",
-    token: "<YOUR_POLYFACT_TOKEN>", // API authentication token. Obtain yours from https://app.polyfact.com.
+    endpoint: "https://api.polyfire.com",
+    token: "<YOUR_POLYFACT_TOKEN>", // API authentication token. Obtain yours from https://app.polyfire.com.
 };
 
 function handleStreamData(stream: Readable): Promise<void> {

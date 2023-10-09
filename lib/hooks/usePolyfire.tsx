@@ -1,26 +1,26 @@
 import React, { ReactNode, JSX, useState, createContext, useContext } from "react";
-import PolyfactClientBuilder, { Client } from "../client";
+import PolyfireClientBuilder, { Client } from "../client";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
-const PolyfactContext = createContext<{
+const PolyfireContext = createContext<{
     client: Client;
     status: AuthStatus;
     setStatus: (status: AuthStatus) => void;
 } | null>(null);
 
-export function PolyfactProvider({
+export function PolyfireProvider({
     children,
     project,
-    endpoint = "https://api.polyfact.com",
+    endpoint = "https://api.polyfire.com",
 }: {
     children: ReactNode;
     project: string;
     endpoint?: string;
 }): JSX.Element {
     const [status, setStatus] = useState<AuthStatus>("loading");
-    const [polyfact] = useState<Client>(() => {
-        const client = PolyfactClientBuilder({ project, endpoint });
+    const [polyfire] = useState<Client>(() => {
+        const client = PolyfireClientBuilder({ project, endpoint });
 
         client.auth.init().then((isAuthenticated) => {
             setStatus(isAuthenticated ? "authenticated" : "unauthenticated");
@@ -30,30 +30,30 @@ export function PolyfactProvider({
     });
 
     return (
-        <PolyfactContext.Provider
+        <PolyfireContext.Provider
             value={{
-                client: polyfact,
+                client: polyfire,
                 status,
                 setStatus,
             }}
         >
             {children}
-        </PolyfactContext.Provider>
+        </PolyfireContext.Provider>
     );
 }
 
-export default function usePolyfact(): Omit<Client, "auth"> & {
+export default function usePolyfire(): Omit<Client, "auth"> & {
     auth: Omit<Client["auth"], "init"> & { status: AuthStatus };
 } {
-    const polyfact = useContext(PolyfactContext);
+    const polyfire = useContext(PolyfireContext);
 
-    if (!polyfact) {
+    if (!polyfire) {
         throw new Error(
-            "PolyfactProvider not found, did you forget to wrap your app in <PolyfactProvider>...</PolyfactProvider>?",
+            "PolyfireProvider not found, did you forget to wrap your app in <PolyfireProvider>...</PolyfireProvider>?",
         );
     }
 
-    const { client, status, setStatus } = polyfact;
+    const { client, status, setStatus } = polyfire;
 
     return {
         ...client,

@@ -9,15 +9,15 @@ const REACT_BOILERPLATE = "Vite     | React       | TypeScript | Styled Componen
 const NEXT_BOILERPLATE = "Next.js  | React       | TypeScript | Styled Components";
 
 const BOILERPLATES = {
-    [REACT_BOILERPLATE]: "https://github.com/kevin-btc/polyfact-chat-template.git",
-    [NEXT_BOILERPLATE]: "https://github.com/kevin-btc/polyfact-chat-nextjs-boilerplate.git",
+    [REACT_BOILERPLATE]: "https://github.com/kevin-btc/polyfire-chat-template.git",
+    [NEXT_BOILERPLATE]: "https://github.com/kevin-btc/polyfire-chat-nextjs-boilerplate.git",
 };
 
 type BoilerplateKey = keyof typeof BOILERPLATES;
 
 const DEFAULT_SETTINGS = {
     PROMPT_ID: "49735ec7-6c20-4ceb-9741-3de1db4fe6cd",
-    REPO_NAME: "polyfact-chat-template",
+    REPO_NAME: "polyfire-chat-template",
     TOPIC: "Love, Amour, Heart, Kiss, Valen",
 };
 
@@ -127,7 +127,7 @@ async function generateTheme(options: Record<string, string>, token: string): Pr
     const { result } = await generate(
         prompt,
         { model: "gpt-4", provider: "openai", infos: true, stream: false },
-        { token, endpoint: "https://api2.polyfact.com" },
+        { token, endpoint: "https://api2.polyfire.com" },
     ).catch((e) => {
         throw new Error(`Error during OpenAI request: ${e.message}`);
     });
@@ -194,7 +194,7 @@ export default async function chat(token: string): Promise<boolean> {
             type: "input",
             name: "name",
             message: "What is the name of the repository you wish to clone?",
-            default: "polyfact-chat-template",
+            default: "polyfire-chat-template",
             when: (answers: { testBoilerplate: string }) => answers.testBoilerplate === "No",
         },
         {
