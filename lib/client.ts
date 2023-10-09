@@ -48,9 +48,9 @@ export function client(
     };
 }
 
-export default function PolyfactClientBuilder({
+export default function PolyfireClientBuilder({
     project,
-    endpoint = "https://api.polyfact.com",
+    endpoint = "https://api.polyfire.com",
 }: {
     project: string;
     endpoint?: string;

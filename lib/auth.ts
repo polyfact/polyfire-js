@@ -37,10 +37,10 @@ export async function getSession(): Promise<{ token?: string; email?: string }> 
                 auth: { persistSession: false },
             },
         );
-        if (!refreshToken && window.localStorage.getItem("polyfact_refresh_token")) {
-            refreshToken = window.localStorage.getItem("polyfact_refresh_token");
+        if (!refreshToken && window.localStorage.getItem("polyfire_refresh_token")) {
+            refreshToken = window.localStorage.getItem("polyfire_refresh_token");
         } else if (refreshToken) {
-            window.localStorage.setItem("polyfact_refresh_token", refreshToken);
+            window.localStorage.setItem("polyfire_refresh_token", refreshToken);
             window.history.replaceState({}, window.document.title, ".");
         }
 
@@ -55,11 +55,11 @@ export async function getSession(): Promise<{ token?: string; email?: string }> 
             token = data.session?.access_token || "";
 
             if (!token || !data.session?.refresh_token) {
-                window.localStorage.removeItem("polyfact_refresh_token");
+                window.localStorage.removeItem("polyfire_refresh_token");
                 return {};
             }
 
-            window.localStorage.setItem("polyfact_refresh_token", data.session?.refresh_token);
+            window.localStorage.setItem("polyfire_refresh_token", data.session?.refresh_token);
         }
         return { token };
     });
@@ -130,7 +130,7 @@ export async function login(
 
 export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promise<void> {
     await co.deresolve();
-    window.localStorage.removeItem("polyfact_refresh_token");
+    window.localStorage.removeItem("polyfire_refresh_token");
     co.throw(new Error("You need to be authenticated to use this function"));
 }
 

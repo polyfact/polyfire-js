@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import usePolyfact from "./usePolyfact";
+import usePolyfire from "./usePolyfire";
 import type { Chat } from "../chats";
 
 export type Message = {
@@ -18,7 +18,7 @@ export default function useChat(): {
     const {
         auth: { status },
         utils: { Chat },
-    } = usePolyfact();
+    } = usePolyfire();
 
     const [chat, setChat] = useState<Chat>();
     const [history, setHistory] = useState<Message[]>([]);
