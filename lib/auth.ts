@@ -21,8 +21,14 @@ declare const window: Window;
 
 const getSessionMutex = new Mutex();
 
-export async function getSession(): Promise<{ token?: string; email?: string }> {
+export async function getSession(projectId: string): Promise<{ token?: string; email?: string }> {
     return getSessionMutex.runExclusive(async () => {
+        const storedProjectId = window.localStorage.getItem("polyfact_project_id");
+        if (storedProjectId && storedProjectId !== projectId) {
+            window.localStorage.removeItem("polyfact_refresh_token");
+            window.localStorage.removeItem("polyfact_project_id");
+        }
+
         let token = new URLSearchParams(
             window.location.hash.replace(/^#+/, "#").replace(/^#/, "?"),
         ).get("access_token");
@@ -41,6 +47,7 @@ export async function getSession(): Promise<{ token?: string; email?: string }> 
             refreshToken = window.localStorage.getItem("polyfact_refresh_token");
         } else if (refreshToken) {
             window.localStorage.setItem("polyfact_refresh_token", refreshToken);
+            window.localStorage.setItem("polyfact_project_id", projectId);
             window.history.replaceState({}, window.document.title, ".");
         }
 
@@ -56,10 +63,12 @@ export async function getSession(): Promise<{ token?: string; email?: string }> 
 
             if (!token || !data.session?.refresh_token) {
                 window.localStorage.removeItem("polyfact_refresh_token");
+                window.localStorage.removeItem("polyfact_project_id");
                 return {};
             }
 
             window.localStorage.setItem("polyfact_refresh_token", data.session?.refresh_token);
+            window.localStorage.setItem("polyfact_project_id", projectId);
         }
         return { token };
     });
@@ -131,6 +140,7 @@ export async function login(
 export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promise<void> {
     await co.deresolve();
     window.localStorage.removeItem("polyfact_refresh_token");
+    window.localStorage.removeItem("polyfact_project_id");
     co.throw(new Error("You need to be authenticated to use this function"));
 }
 
@@ -143,7 +153,7 @@ export async function init(
         return false;
     }
 
-    const session = await getSession();
+    const session = await getSession(projectOptions.project);
     if (session.token) {
         await signInWithOAuthToken(session.token, "token", co, projectOptions);
         return true;
