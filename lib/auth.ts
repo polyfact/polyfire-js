@@ -21,12 +21,29 @@ declare const window: Window;
 
 const getSessionMutex = new Mutex();
 
+function setSessionStorage(refreshToken: string, projectId: string) {
+    window.localStorage.setItem("polyfact_refresh_token", refreshToken);
+    window.localStorage.setItem("polyfact_project_id", projectId);
+}
+
+function clearSessionStorage() {
+    window.localStorage.removeItem("polyfact_refresh_token");
+    window.localStorage.removeItem("polyfact_project_id");
+}
+
+function getSessionStorage(): { refreshToken: string | null; projectId: string | null } {
+    const refreshToken = window.localStorage.getItem("polyfact_refresh_token");
+    const projectId = window.localStorage.getItem("polyfact_project_id");
+    return { refreshToken, projectId };
+}
+
 export async function getSession(projectId: string): Promise<{ token?: string; email?: string }> {
     return getSessionMutex.runExclusive(async () => {
-        const storedProjectId = window.localStorage.getItem("polyfact_project_id");
+        let { refreshToken: storedRefreshToken, projectId: storedProjectId } = getSessionStorage();
         if (storedProjectId && storedProjectId !== projectId) {
-            window.localStorage.removeItem("polyfact_refresh_token");
-            window.localStorage.removeItem("polyfact_project_id");
+            clearSessionStorage();
+            storedRefreshToken = null;
+            storedProjectId = null;
         }
 
         let token = new URLSearchParams(
@@ -43,11 +60,10 @@ export async function getSession(projectId: string): Promise<{ token?: string; e
                 auth: { persistSession: false },
             },
         );
-        if (!refreshToken && window.localStorage.getItem("polyfact_refresh_token")) {
-            refreshToken = window.localStorage.getItem("polyfact_refresh_token");
+        if (!refreshToken && storedRefreshToken) {
+            refreshToken = storedRefreshToken;
         } else if (refreshToken) {
-            window.localStorage.setItem("polyfact_refresh_token", refreshToken);
-            window.localStorage.setItem("polyfact_project_id", projectId);
+            setSessionStorage(refreshToken, projectId);
             window.history.replaceState({}, window.document.title, ".");
         }
 
@@ -62,13 +78,11 @@ export async function getSession(projectId: string): Promise<{ token?: string; e
             token = data.session?.access_token || "";
 
             if (!token || !data.session?.refresh_token) {
-                window.localStorage.removeItem("polyfact_refresh_token");
-                window.localStorage.removeItem("polyfact_project_id");
+                clearSessionStorage();
                 return {};
             }
 
-            window.localStorage.setItem("polyfact_refresh_token", data.session?.refresh_token);
-            window.localStorage.setItem("polyfact_project_id", projectId);
+            setSessionStorage(data.session?.refresh_token, projectId);
         }
         return { token };
     });
@@ -139,8 +153,7 @@ export async function login(
 
 export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promise<void> {
     await co.deresolve();
-    window.localStorage.removeItem("polyfact_refresh_token");
-    window.localStorage.removeItem("polyfact_project_id");
+    clearSessionStorage();
     co.throw(new Error("You need to be authenticated to use this function"));
 }
 
