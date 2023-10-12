@@ -11,12 +11,12 @@ export async function defaultOptions(popts: InputClientOptions): Promise<ClientO
     const opts = await popts;
     if (!opts.token && !POLYFACT_TOKEN) {
         throw new Error(
-            "Please put your polyfact token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfact.com",
+            "Please put your polyfire token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfire.com",
         );
     }
 
     return {
-        endpoint: POLYFACT_ENDPOINT || "https://api.polyfact.com",
+        endpoint: POLYFACT_ENDPOINT || "https://api.polyfire.com",
         token: POLYFACT_TOKEN || "",
 
         ...opts,
@@ -24,9 +24,9 @@ export async function defaultOptions(popts: InputClientOptions): Promise<ClientO
 }
 
 export const supabaseDefaultClient = {
-    supabaseUrl: "https://hqyxaayiizqwlknddokk.supabase.co",
+    supabaseUrl: "https://sb.polyfire.com",
     supabaseKey:
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxeXhhYXlpaXpxd2xrbmRkb2trIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODk4NjIyODksImV4cCI6MjAwNTQzODI4OX0.Ae1eJU6C3e1FO5X7ES1eStnbTM87IljnuuujZ83wwzM",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcnBwbWxkcmttd3J0cXdubnVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTY4NDAwMTgsImV4cCI6MjAxMjQxNjAxOH0.oBFkqo9r31dXUVEdOJy7RnNzhZkugjxDaaTTf6RM26U",
 };
 
 export type ClientState = {

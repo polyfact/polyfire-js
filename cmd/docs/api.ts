@@ -3,7 +3,7 @@ import * as t from "polyfact-io-ts";
 
 import { File } from "./folder_to_json";
 
-const API_URL = "https://api.polyfact.com/api/v1";
+const API_URL = "https://api.polyfire.com/api/v1";
 
 const GenerateResponse = t.type({
     docs_id: t.string,

@@ -27,18 +27,18 @@ declare const window: Window;
 const getSessionMutex = new Mutex();
 
 function setSessionStorage(refreshToken: string, projectId: string) {
-    window.localStorage.setItem("polyfact_refresh_token", refreshToken);
-    window.localStorage.setItem("polyfact_project_id", projectId);
+    window.localStorage.setItem("polyfire_refresh_token", refreshToken);
+    window.localStorage.setItem("polyfire_project_id", projectId);
 }
 
 function clearSessionStorage() {
-    window.localStorage.removeItem("polyfact_refresh_token");
-    window.localStorage.removeItem("polyfact_project_id");
+    window.localStorage.removeItem("polyfire_refresh_token");
+    window.localStorage.removeItem("polyfire_project_id");
 }
 
 function getSessionStorage(): { refreshToken: string | null; projectId: string | null } {
-    const refreshToken = window.localStorage.getItem("polyfact_refresh_token");
-    const projectId = window.localStorage.getItem("polyfact_project_id");
+    const refreshToken = window.localStorage.getItem("polyfire_refresh_token");
+    const projectId = window.localStorage.getItem("polyfire_project_id");
     return { refreshToken, projectId };
 }
 

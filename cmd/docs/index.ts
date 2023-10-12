@@ -89,7 +89,7 @@ export default async function generateDocs(): Promise<string> {
             {
                 type: "input",
                 name: "token",
-                message: "Your polyfact token:",
+                message: "Your polyfire token:",
                 default: process.env.POLYFACT_TOKEN,
             },
         ]);

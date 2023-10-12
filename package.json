@@ -1,11 +1,11 @@
 {
-    "name": "polyfact",
+    "name": "polyfire",
     "version": "0.1.79",
     "main": "index.js",
     "types": "index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
     "license": "MIT",
-    "bin": "polyfact",
+    "bin": "polyfire",
     "dependencies": {
         "@supabase/supabase-js": "^2.31.0",
         "async-mutex": "^0.4.0",
@@ -67,9 +67,9 @@
         "start": "ts-node cmd/index.ts",
         "lint": "prettier --check lib/ cmd/ ; eslint lib/ cmd/",
         "lint:fix": "prettier --write lib/ cmd/ ; eslint --fix lib/ cmd/",
-        "build:cmd": "esbuild cmd/index.ts --bundle --outfile=build/polyfact.tmp --platform=node && echo '#!/usr/bin/env node\n' | cat - build/polyfact.tmp > build/polyfact && rm build/polyfact.tmp",
+        "build:cmd": "esbuild cmd/index.ts --bundle --outfile=build/polyfire.tmp --platform=node && echo '#!/usr/bin/env node\n' | cat - build/polyfire.tmp > build/polyfire && rm build/polyfire.tmp",
         "build:vanilla-js": "esbuild target/vanilla-js.ts --bundle --minify --target=chrome67,firefox68,edge79,safari15 --outfile=build/vanilla-js.js",
-        "build": "tsc --target es5 --lib es2021,DOM --moduleResolution node --strict --esModuleInterop --declaration --jsx react --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts && npm run build:cmd && cp build/polyfact package.json README.md dist/",
+        "build": "tsc --target es5 --lib es2021,DOM --moduleResolution node --strict --esModuleInterop --declaration --jsx react --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts && npm run build:cmd && cp build/polyfire package.json README.md dist/",
         "npm-publish": "npm run build && cd dist && npm publish && cd .."
     }
 }

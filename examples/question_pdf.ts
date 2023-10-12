@@ -1,9 +1,9 @@
 import { generate, PDFLoader } from "../lib/index";
 
 async function main() {
-    const response = await generate("What is polyfact ?", {
+    const response = await generate("What is polyfire ?", {
         data: PDFLoader(
-            "/home/lancelot/Downloads/Polyfact_-_Open-Source_Library_of_LLM-based_Dev_Tool_Packages.pdf",
+            "/home/lancelot/Downloads/Polyfire_-_Open-Source_Library_of_LLM-based_Dev_Tool_Packages.pdf",
         ),
     });
 
