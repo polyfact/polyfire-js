@@ -43,7 +43,7 @@ export default async function agent(token: string): Promise<void> {
             type: "input",
             name: "name",
             message: "What is the name of the repository you wish to clone?",
-            default: "polyfact-agent-boilerplate",
+            default: "polyfire-agent-boilerplate",
             when: (answers: { boilerplate: string }) => answers.boilerplate === "Yes",
         },
     ];
@@ -55,9 +55,9 @@ export default async function agent(token: string): Promise<void> {
 
         if (!answers?.token && !token) throw new Error("POLYFACT_TOKEN is required.");
 
-        const repoName = answers?.name || "polyfact-agent-boilerplate";
+        const repoName = answers?.name || "polyfire-agent-boilerplate";
 
-        const repoURL = "https://github.com/polyfact/polyfact-use-agent-boilerplate.git";
+        const repoURL = "https://github.com/polyfire/polyfire-use-agent-boilerplate.git";
 
         await cloneRepo(repoURL, repoName);
 
@@ -65,7 +65,7 @@ export default async function agent(token: string): Promise<void> {
             `You can now make "cd ${repoName} ; npm install ; npm run start" to start the Agent.\n\n`,
         );
         console.info("Don't forget to set your PROJECT_ID.\n");
-        console.info("you can get one at https://app.polyfact.com.\n\n");
+        console.info("you can get one at https://app.polyfire.com.\n\n");
     } catch (error: unknown) {
         console.error("An error occurred:", error instanceof Error ? error.message : error);
     }
