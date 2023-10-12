@@ -1,7 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { Mutex } from "async-mutex";
-import { createClient } from "@supabase/supabase-js";
-import { ClientOptions, supabaseDefaultClient } from "./clientOpts";
+import { ClientOptions } from "./clientOpts";
 import { MutablePromise } from "./utils";
 import { ApiError, ErrorData } from "./helpers/error";
 
@@ -13,14 +12,6 @@ type LoginFunctionInput =
     | { provider: SimpleProvider }
     | LoginWithFirebaseInput
     | LoginWithCustomInput;
-
-const supabaseClient = createClient(
-    supabaseDefaultClient.supabaseUrl,
-    supabaseDefaultClient.supabaseKey,
-    {
-        auth: { persistSession: false },
-    },
-);
 
 declare const window: Window;
 
@@ -42,7 +33,10 @@ function getSessionStorage(): { refreshToken: string | null; projectId: string |
     return { refreshToken, projectId };
 }
 
-export async function getSession(projectId: string): Promise<{ token?: string; email?: string }> {
+export async function getSession(
+    projectId: string,
+    { endpoint }: { endpoint: string },
+): Promise<{ token?: string; email?: string }> {
     return getSessionMutex.runExclusive(async () => {
         let { refreshToken: storedRefreshToken, projectId: storedProjectId } = getSessionStorage();
         if (storedProjectId && storedProjectId !== projectId) {
@@ -58,13 +52,6 @@ export async function getSession(projectId: string): Promise<{ token?: string; e
             window.location.hash.replace(/^#+/, "#").replace(/^#/, "?"),
         ).get("refresh_token");
 
-        const supabase = createClient(
-            supabaseDefaultClient.supabaseUrl,
-            supabaseDefaultClient.supabaseKey,
-            {
-                auth: { persistSession: false },
-            },
-        );
         if (!refreshToken && storedRefreshToken) {
             refreshToken = storedRefreshToken;
         } else if (refreshToken) {
@@ -76,51 +63,48 @@ export async function getSession(projectId: string): Promise<{ token?: string; e
             return {};
         }
         if (!token) {
-            const { data } = await supabase.auth.refreshSession({
-                refresh_token: refreshToken,
-            });
+            const { data } = await axios.post(
+                `${endpoint}/project/${projectId}/auth/provider/refresh`,
+                {
+                    refresh_token: refreshToken,
+                },
+            );
 
-            token = data.session?.access_token || "";
+            token = data?.access_token || "";
 
-            if (!token || !data.session?.refresh_token) {
+            if (!token || !data?.refresh_token) {
                 clearSessionStorage();
                 return {};
             }
 
-            setSessionStorage(data.session?.refresh_token, projectId);
+            setSessionStorage(data?.refresh_token, projectId);
         }
         return { token };
     });
 }
 
-type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
-
-export async function oAuthRedirect(
-    credentials: Awaited<Parameters<ReturnType<typeof createClient>["auth"]["signInWithOAuth"]>[0]>,
+export function oAuthRedirect(
+    { project, provider, endpoint }: { project: string; provider: string; endpoint: string },
     browserRedirect = true,
-): Promise<string> {
+): string {
     if (typeof window === "undefined") {
         throw new Error("signInWithOAuth not usable outside of the browser environment");
     }
 
-    const { data } = await supabaseClient.auth.signInWithOAuth({
-        ...credentials,
-        options: {
-            redirectTo: `${window?.location}`,
-            skipBrowserRedirect: !browserRedirect,
-        },
-    });
+    const url = `${endpoint}/project/${project}/auth/provider/redirect?provider=${provider}&redirect_to=${encodeURIComponent(
+        `${window?.location}`,
+    )}`;
 
-    if (!data?.url) {
-        throw new Error("signInWithOAuth failed");
+    if (browserRedirect) {
+        window.location = url;
     }
 
-    return data.url;
+    return url;
 }
 
 export async function signInWithOAuthToken(
     token: string,
-    authType: "token" | "firebase" | "custom",
+    authType: "firebase" | "custom",
     co: MutablePromise<Partial<ClientOptions>>,
     { project, endpoint }: { project: string; endpoint: string },
 ): Promise<void> {
@@ -154,7 +138,7 @@ export async function login(
 
     const provider = typeof input === "string" ? input : input.provider;
 
-    await oAuthRedirect({ provider });
+    oAuthRedirect({ provider, ...projectOptions });
 
     await new Promise((_res, _rej) => {});
 }
@@ -174,9 +158,9 @@ export async function init(
         return false;
     }
 
-    const session = await getSession(projectOptions.project);
+    const session = await getSession(projectOptions.project, projectOptions);
     if (session.token) {
-        await signInWithOAuthToken(session.token, "token", co, projectOptions);
+        co.set({ token: session.token, endpoint: projectOptions.endpoint });
         return true;
     }
     co.throw(new Error("You need to be authenticated to use this function"));
