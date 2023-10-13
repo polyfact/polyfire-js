@@ -1,3 +1,4 @@
+"use client"
 import React, { ReactNode, JSX, useState, createContext, useContext } from "react";
 import PolyfireClientBuilder, { Client } from "../client";
 
