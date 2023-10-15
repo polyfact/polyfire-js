@@ -10,7 +10,7 @@
 Why use Polyfire?
 * Just code from the frontend, no backend needed
 * If you already have backend, less code to write
-* Most services you'd need in a couple lines of code
+* Most backend services you'd need in a couple lines of code
 
 It's a **managed backend**, we help you save time, by managing your AI backend.
 
@@ -37,7 +37,6 @@ We also made a couple of tutorials you can use to get started with Polyfire:
 - **[Transcribe](https://docs.polyfire.com/reference/transcribe)**: Transcribe audio files to text
 - **[Memory](https://docs.polyfire.com/reference/embeddings)**: Easily create a long-term memory and simplify the use of large amounts of information
 - **[GenerateImage](https://docs.polyfire.com/reference/generate-image)**: Generate images with Dall-E
--
 
 ## 🔗 Links
 
