@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { Buffer } from "buffer";
 import { Mutex } from "async-mutex";
 import { ClientOptions } from "./clientOpts";
 import { MutablePromise } from "./utils";
@@ -7,11 +8,13 @@ import { ApiError, ErrorData } from "./helpers/error";
 type SimpleProvider = "github" | "google";
 type LoginWithFirebaseInput = { token: string; provider: "firebase" };
 type LoginWithCustomInput = { token: string; provider: "custom" };
+type LoginAnonymousInput = { provider: "anonymous"; email: string };
 type LoginFunctionInput =
     | SimpleProvider
     | { provider: SimpleProvider }
     | LoginWithFirebaseInput
-    | LoginWithCustomInput;
+    | LoginWithCustomInput
+    | LoginAnonymousInput;
 
 declare const window: Window;
 
@@ -122,6 +125,26 @@ export async function signInWithOAuthToken(
     }
 }
 
+export async function signInAnon(
+    email: string,
+    co: MutablePromise<Partial<ClientOptions>>,
+    { project, endpoint }: { project: string; endpoint: string },
+): Promise<void> {
+    const emailBase64 = Buffer.from(email).toString("base64");
+    try {
+        const { data } = await axios.post(`${endpoint}/project/${project}/auth/anonymous`, {
+            headers: { Authorization: `Bearer ${emailBase64}` },
+        });
+
+        co.set({ token: data, endpoint });
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
+        }
+        throw e;
+    }
+}
+
 export async function login(
     input: LoginFunctionInput,
     projectOptions: { project: string; endpoint: string },
@@ -133,6 +156,11 @@ export async function login(
         (input.provider === "firebase" || input.provider === "custom")
     ) {
         signInWithOAuthToken(input.token, input.provider, co, projectOptions);
+        return;
+    }
+
+    if (typeof input === "object" && input.provider === "anonymous") {
+        signInAnon(input.email, co, projectOptions);
         return;
     }
 
