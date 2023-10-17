@@ -222,7 +222,7 @@ export class Generation extends Readable implements Promise<string> {
         const resultStream = new Generation({ clientOptions: this.clientOptions });
         (async () => {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            generate(`${await this} ${task}`, options).pipeInto(resultStream);
+            generate(`${await this} ${task}`, options, this.clientOptions).pipeInto(resultStream);
         })();
 
         return resultStream;
