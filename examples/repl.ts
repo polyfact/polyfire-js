@@ -5,8 +5,7 @@ import { Chat } from "../lib/index";
 async function main() {
     const chat = new Chat({
         autoMemory: true,
-        provider: "openai",
-        model: "gpt-3.5-turbo-16k",
+        model: "llama-2-70b-chat",
     });
 
     const rl = readline.createInterface({ input, output });
@@ -14,12 +13,12 @@ async function main() {
     while (true) {
         const userInput = await rl.question("> ");
 
-        const stream = await chat.sendMessage(userInput);
+        const stream = chat.sendMessage(userInput);
 
-        output.write(stream);
+        // output.write(stream);
 
-        // stream.pipe(output);
-        // await new Promise((res) => stream.on("end", res));
+        stream.pipe(output);
+        await new Promise((res) => stream.on("end", res));
 
         output.write("\n");
     }
