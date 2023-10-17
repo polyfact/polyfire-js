@@ -1,5 +1,6 @@
-"use client"
-import React, { ReactNode, JSX, useState, createContext, useContext } from "react";
+"use client";
+
+import React, { ReactNode, JSX, useState, createContext, useContext, useEffect } from "react";
 import PolyfireClientBuilder, { Client } from "../client";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
@@ -20,14 +21,12 @@ export function PolyfireProvider({
     endpoint?: string;
 }): JSX.Element {
     const [status, setStatus] = useState<AuthStatus>("loading");
-    const [polyfire] = useState<Client>(() => {
-        const client = PolyfireClientBuilder({ project, endpoint });
+    const [polyfire] = useState<Client>(() => PolyfireClientBuilder({ project, endpoint }));
 
-        client.auth.init().then((isAuthenticated) => {
+    useEffect(() => {
+        polyfire.auth.init().then((isAuthenticated) => {
             setStatus(isAuthenticated ? "authenticated" : "unauthenticated");
         });
-
-        return client;
     });
 
     return (
