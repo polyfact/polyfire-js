@@ -266,6 +266,7 @@ function stream(
             stop: genOptions.stop || [],
             infos: true,
             system_prompt_id: genOptions.systemPromptId,
+            system_prompt: genOptions.systemPrompt,
             temperature: genOptions.temperature,
             chat_id: genOptions.chatId,
             web: genOptions.web,
