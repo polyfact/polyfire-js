@@ -59,7 +59,7 @@ export async function getSession(
             refreshToken = storedRefreshToken;
         } else if (refreshToken) {
             setSessionStorage(refreshToken, projectId);
-            window.history.replaceState({}, window.document.title, ".");
+            window.history.replaceState({}, window.document.title, window.location.pathname);
         }
 
         if (!refreshToken) {
@@ -186,7 +186,10 @@ export async function init(
         return false;
     }
 
-    const session = await getSession(projectOptions.project, projectOptions);
+    const session = await getSession(projectOptions.project, projectOptions).catch(() => {
+        clearSessionStorage();
+        return {} as { token?: string; email?: string };
+    });
     if (session.token) {
         co.set({ token: session.token, endpoint: projectOptions.endpoint });
         return true;
