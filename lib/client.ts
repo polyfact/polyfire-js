@@ -12,9 +12,14 @@ import kvClient, { KVClient } from "./kv";
 import imageGenerationClient, { ImageGenerationClient } from "./image";
 import { MutablePromise } from "./utils";
 import authClient, { AuthClient } from "./auth";
+import ttsClient, { TTSClient } from "./tts";
 
 export type Client = {
-    models: GenerationClient & GenerationWithTypeClient & TranscribeClient & ImageGenerationClient;
+    models: GenerationClient &
+        GenerationWithTypeClient &
+        TranscribeClient &
+        ImageGenerationClient &
+        TTSClient;
     data: MemoryClient & { kv: KVClient };
     utils: ChatClient & PromptClient;
     auth: {
@@ -32,6 +37,7 @@ export function client(
             ...generateWithTypeClient(co),
             ...transcribeClient(co),
             ...imageGenerationClient(co),
+            ...ttsClient(co),
         },
         data: {
             ...memoryClient(co),
