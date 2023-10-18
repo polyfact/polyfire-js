@@ -1,4 +1,4 @@
-<h1 align="center">Polyfire</h1>
+<h1 align="center">🔥 polyfire</h1>
 
 <h4 align="center">
     <a href="https://docs.polyfire.com">Documentation</a> |
@@ -12,7 +12,7 @@ Why use Polyfire?
 * If you already have backend, less code to write
 * Most backend services you'd need in a couple lines of code
 
-It's a **managed backend**, we help you save time, by managing your AI backend.
+We **manage your AI backend** so you don't have to.
 
 ![Demo Gif](https://files.readme.io/7442014-demo.gif)
 
