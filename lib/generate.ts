@@ -72,7 +72,7 @@ export type ChatOptions = [{ chatId: string }];
 
 export type MemoryOptions = [
     { memoryId: string },
-    { memory: Memory },
+    { memory: Memory | string },
     { data: [LoaderFunction] | LoaderFunction },
 ];
 
@@ -120,12 +120,12 @@ export type GenerationResult = {
 async function getMemoryIds(
     dataMemory: string | undefined,
     genOptionsMemoryId: string | undefined,
-    genOptionsMemory: Memory | undefined,
+    genOptionsMemory: Memory | string | undefined,
 ): Promise<string[] | string | undefined> {
     const memoryIds: (string | undefined)[] = [
         dataMemory,
         genOptionsMemoryId,
-        await genOptionsMemory?.memoryId,
+        typeof genOptionsMemory === "string" ? genOptionsMemory : await genOptionsMemory?.memoryId,
     ];
 
     const validMemoryIds: string[] = memoryIds.filter((id): id is string => id !== undefined);
