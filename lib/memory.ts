@@ -86,6 +86,36 @@ async function getAllMemories(clientOptions: InputClientOptions = {}): Promise<{
     }
 }
 
+async function searchMemory(
+    id: string,
+    input: string,
+    clientOptions: InputClientOptions = {},
+): Promise<{ id: string; content: string; similarity: number }[]> {
+    const { token, endpoint } = await defaultOptions(clientOptions);
+
+    try {
+        const res = await axios.post(
+            `${endpoint}/memory/${id}/search`,
+            {
+                input,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Access-Token": token,
+                },
+            },
+        );
+
+        return res.data.results;
+    } catch (e: unknown) {
+        if (e instanceof AxiosError) {
+            throw new ApiError(e?.response?.data as ErrorData);
+        }
+        throw e;
+    }
+}
+
 type MemoryAddOptions = {
     maxToken?: number;
 };
@@ -125,6 +155,11 @@ class Memory {
 
     async getId(): Promise<string> {
         return this.memoryId;
+    }
+
+    async search(input: string): Promise<{ id: string; content: string; similarity: number }[]> {
+        const id = await this.memoryId;
+        return searchMemory(id, input, await this.clientOptions);
     }
 }
 
