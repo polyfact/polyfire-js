@@ -32,14 +32,20 @@ class AudioTTS {
 
     async play(): Promise<void> {
         const buffer = await this.getAudioBuffer();
-        return new Promise((resolve) => {
-            const source = this.audioCtx!.createBufferSource();
-            source.buffer = buffer;
-            source.connect(this.audioCtx!.destination);
-            source.start();
-            source.onended = () => {
-                resolve();
-            };
+        return new Promise((resolve, reject) => {
+            if (this.audioCtx) {
+                const source = this.audioCtx.createBufferSource();
+
+                source.buffer = buffer;
+                source.connect(this.audioCtx.destination);
+
+                source.start();
+                source.onended = () => {
+                    resolve();
+                };
+            } else {
+                reject(Error("AudioContext is not supported in this environment"));
+            }
         });
     }
 }
