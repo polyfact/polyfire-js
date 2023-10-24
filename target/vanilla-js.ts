@@ -1,7 +1,7 @@
-import PolyfactClientBuilder from "../lib/client";
+import PolyfireClientBuilder from "../lib/client";
 
 declare const window: Window & {
-    PolyfactClientBuilder: typeof PolyfactClientBuilder;
+    PolyfireClientBuilder: typeof PolyfireClientBuilder;
 };
 
-window.PolyfactClientBuilder = PolyfactClientBuilder;
+window.PolyfireClientBuilder = PolyfireClientBuilder;
