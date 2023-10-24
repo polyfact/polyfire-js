@@ -16,6 +16,57 @@ We **manage your AI backend** so you don't have to.
 
 ![Demo Gif](https://files.readme.io/7442014-demo.gif)
 
+## 🧰 Examples
+
+We have several examples in our [documentation](https://docs.polyfire.com/). But here are two simple ones to get you started
+
+### React
+
+```js
+import { useState, useEffect } from "react";
+import { createRoot } from "react-dom/client";
+import { PolyfireProvider, usePolyfire } from "polyfire-js/hooks";
+
+function App() {
+  const { auth: { login, status }, models: { generate } } = usePolyfire();
+  const [haiku, setHaiku] = useState();
+
+  useEffect(() => {
+    if (status === "authenticated") generate("haiku").then(setHaiku);
+  }, [status]);
+
+  if (status === "unauthenticated")
+    return <button onClick={() => login("github")}>Login with Github</button>;
+  else if (status === "loading" || !haiku) return <h1>Loading...</h1>;
+  return <h1>{haiku}</h1>;
+}
+
+document.body.innerHTML = '<div id="app"></div>';
+const root = createRoot(document.getElementById("app"));
+root.render(<PolyfireProvider project="your_project_id"><App /></PolyfireProvider>);
+```
+> Don't forget to change the **your_project_id** by your project ID you will have got on https://beta.polyfire.com
+
+### Vanilla JS
+
+```html
+<script src="https://github.com/polyfire-ai/polyfire-js/releases/download/0.2.7/polyfire-min-0.2.7.js"></script>
+<script>
+	(async () => {
+		const polyfire = window.PolyfireClientBuilder({ project: "your_project_id" })
+		
+		const isAuthenticated = await polyfire.auth.init();
+		if (!isAuthenticated) {
+		  await polyfire.auth.login("github")
+		}
+		
+		const helloWorld = await polyfire.models.generate("Write me a hello world haiku");
+		console.log(helloWorld);
+	})()
+</script>
+```
+> Don't forget to change the **your_project_id** by your project ID you will have got on https://beta.polyfire.com
+
 ## 🆕 Getting Started
 
 To get an overview of Polyfire follow this **[Basic Usage](https://docs.polyfire.com/docs/basic-usage)** tutorial.
