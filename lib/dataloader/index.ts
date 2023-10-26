@@ -57,7 +57,7 @@ export function AudioLoader(file: FileInput, maxTokenPerChunk = 100): LoaderFunc
         clientOptions: InputClientOptions = {},
     ) {
         const fileBuffer = await fileInputToBuffer(file);
-        const transcription = await transcribe(fileBuffer, clientOptions);
+        const transcription = await transcribe(fileBuffer, {}, clientOptions);
         const transcriptions = splitString(transcription, maxTokenPerChunk);
 
         async function addBatchIntoMemory(batches: string[]) {
