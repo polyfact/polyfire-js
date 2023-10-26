@@ -54,13 +54,13 @@ export class Transcription implements Promise<string> {
 
     then<TResult1 = string, TResult2 = never>(
         onfulfilled?: ((value: string) => TResult1 | PromiseLike<TResult1>) | null | undefined,
-        onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined,
+        onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null | undefined,
     ): Promise<TResult1 | TResult2> {
         return this.promise.then(onfulfilled && (({ text }) => onfulfilled(text)), onrejected);
     }
 
     catch<TResult = never>(
-        onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined,
+        onrejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | null | undefined,
     ): Promise<string | TResult> {
         return this.promise.then(({ text }) => text).catch(onrejected);
     }
