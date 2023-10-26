@@ -96,6 +96,6 @@ We also made a couple of tutorials you can use to get started with Polyfire:
 * Dashboard: [beta.polyfire.com](https://beta.polyfire.com)
 * Discord: [polyfire.com/discord](https://www.polyfire.com/discord)
 * Javascript SDK: [github.com/polyfire-ai/polyfire-js](https://www.github.com/polyfire-ai/polyfire-js)
-* Open Source API (your managed backend!): [github.com/polyfire-ai/polyfire-api-go](https://www.github.com/polyfire-ai/polyfact-api-go)
+* Open Source API (your managed backend!): [github.com/polyfire-ai/polyfire-api](https://github.com/polyfire-ai/polyfire-api)
 
 We're open source! Make a good PR to the JS SDK or the API and we'll merge it.
