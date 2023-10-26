@@ -24,7 +24,7 @@ function ChatBox({
             <div className="border-black border border-solid p-4 mb-2 w-[800px] grow overflow-y-scroll">
                 <pre>
                     {messages.map((elem) => (
-                        <p className="whitespace-pre-wrap">
+                        <p className="whitespace-pre-wrap" key={elem.content}>
                             <b>{elem.is_user_message ? "Human:" : "AI:"}</b> {elem.content}
                         </p>
                     ))}

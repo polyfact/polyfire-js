@@ -9,7 +9,7 @@ import { loaderToMemory, LoaderFunction } from "./dataloader";
 
 declare const window: {
     process: typeof fakeProcess;
-};
+} & Window;
 
 if (typeof window !== "undefined") {
     window.process = fakeProcess;
@@ -164,7 +164,13 @@ export class Generation extends Readable implements Promise<string> {
         });
         this.on("end", () => {
             stream.push(null);
+            stream.stop();
         });
+        if (window) {
+            window.addEventListener("beforeunload", () => {
+                this.stop();
+            });
+        }
         stream.stop = () => this.stopWrap();
 
         return this;
