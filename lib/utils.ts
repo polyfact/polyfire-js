@@ -119,7 +119,7 @@ export interface FetchReadableStream {
     };
 }
 
-export type FileInput = MinimalStream | Buffer | FetchReadableStream;
+export type FileInput = MinimalStream | Buffer | FetchReadableStream | Uint8Array;
 
 function stream2buffer(stream: MinimalStream): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -151,6 +151,10 @@ async function fetchStream2buffer(stream: FetchReadableStream): Promise<Buffer> 
 export async function fileInputToBuffer(input: FileInput): Promise<Buffer> {
     if (input instanceof Buffer) {
         return input;
+    }
+
+    if (input instanceof Uint8Array) {
+        return Buffer.from(input);
     }
 
     if ("on" in input) {

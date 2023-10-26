@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import usePolyfire from "./usePolyfire";
 import type { Chat } from "../chats";
 
+declare const window: Window;
+
 export type Message = {
     id: string | null;
     chat_id: string; // eslint-disable-line camelcase
@@ -72,6 +74,12 @@ export default function useChat(): {
             setMessages(history);
             setLoading(false);
         });
+
+        if (window) {
+            window.addEventListener("beforeunload", () => {
+                stream.stop();
+            });
+        }
     }
 
     return { messages, sendMessage, loading };
