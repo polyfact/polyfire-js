@@ -132,7 +132,7 @@ export async function signInAnon(
 ): Promise<void> {
     const emailBase64 = Buffer.from(email).toString("base64");
     try {
-        const { data } = await axios.post(`${endpoint}/project/${project}/auth/anonymous`, {
+        const { data } = await axios.get(`${endpoint}/project/${project}/auth/anonymous`, {
             headers: { Authorization: `Bearer ${emailBase64}` },
         });
 
@@ -155,12 +155,12 @@ export async function login(
         typeof input === "object" &&
         (input.provider === "firebase" || input.provider === "custom")
     ) {
-        signInWithOAuthToken(input.token, input.provider, co, projectOptions);
+        await signInWithOAuthToken(input.token, input.provider, co, projectOptions);
         return;
     }
 
     if (typeof input === "object" && input.provider === "anonymous") {
-        signInAnon(input.email, co, projectOptions);
+        await signInAnon(input.email, co, projectOptions);
         return;
     }
 
