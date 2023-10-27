@@ -3,8 +3,6 @@ import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
 export type KV = {
-    id?: string;
-    userId?: string;
     key: string;
     value: string;
     createdAt?: string;
@@ -113,7 +111,6 @@ export type KVClient = {
     set: (key: string, value: string) => Promise<void>;
     del: (key: string) => Promise<void>;
     all: () => Promise<KV[]>;
-
 };
 
 export default function client(clientOptions: InputClientOptions = {}): KVClient {

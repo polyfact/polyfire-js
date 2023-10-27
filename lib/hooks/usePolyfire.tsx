@@ -27,7 +27,7 @@ export function PolyfireProvider({
         polyfire.auth.init().then((isAuthenticated) => {
             setStatus(isAuthenticated ? "authenticated" : "unauthenticated");
         });
-    });
+    }, []);
 
     return (
         <PolyfireContext.Provider
