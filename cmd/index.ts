@@ -2,7 +2,6 @@
 import inquirer from "inquirer";
 import docs from "./docs";
 import chat from "./chat";
-import prompt from "./prompt";
 import agent from "./agent";
 
 let token: string;
@@ -13,7 +12,7 @@ async function promptUser(initial = true) {
             type: "list",
             name: "appType",
             message: "What do you want to build?",
-            choices: ["Create chatbot", "Manage prompt", "Create agent", "Quit"],
+            choices: ["Create chatbot", "Create agent", "Quit"],
         },
     ]);
 
@@ -22,10 +21,6 @@ async function promptUser(initial = true) {
     switch (answer.appType) {
         case "Create chatbot":
             await chat(token);
-            promptUser(false);
-            break;
-        case "Manage prompt":
-            while (await prompt(token));
             promptUser(false);
             break;
         case "Create agent":
