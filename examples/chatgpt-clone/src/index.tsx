@@ -6,7 +6,10 @@ import reportWebVitals from "./reportWebVitals";
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(
-    <PolyfireProvider project={process.env.REACT_APP_PROJECT_ID || "your_project_id"}>
+    <PolyfireProvider
+        project={process.env.REACT_APP_PROJECT_ID || "your_project_id"}
+        endpoint={process.env.REACT_APP_ENDPOINT || "https://api.polyfire.com"}
+    >
         <App />
     </PolyfireProvider>,
 );
