@@ -12,16 +12,6 @@ import PolyfireClientBuilder from "./client";
 import { generateImage } from "./image";
 import { TextFileLoader, StringLoader, AudioLoader } from "./dataloader";
 
-import {
-    getAllPrompts,
-    getPromptById,
-    getPromptByName,
-    createPrompt,
-    updatePrompt,
-    deletePrompt,
-} from "./prompt";
-
-export type { PromptInsert, PromptUpdate, Prompt, FilterOperation, Filter } from "./prompt";
 export type { LoaderFunction } from "./dataloader";
 
 // Export types and models
@@ -62,14 +52,6 @@ export {
 
     // Image generation
     generateImage,
-
-    // Prompts
-    getAllPrompts,
-    getPromptById,
-    getPromptByName,
-    createPrompt,
-    updatePrompt,
-    deletePrompt,
 
     // Loader
     TextFileLoader,

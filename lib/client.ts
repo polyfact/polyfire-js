@@ -6,7 +6,6 @@ import transcribeClient, { TranscribeClient } from "./transcribe";
 import chatClient, { ChatClient } from "./chats";
 import memoryClient, { MemoryClient } from "./memory";
 import userClient, { UserClient } from "./user";
-import promptClient, { PromptClient } from "./prompt";
 import { ClientOptions } from "./clientOpts";
 import kvClient, { KVClient } from "./kv";
 import imageGenerationClient, { ImageGenerationClient } from "./image";
@@ -21,7 +20,7 @@ export type Client = {
         ImageGenerationClient &
         TTSClient;
     data: MemoryClient & { kv: KVClient };
-    utils: ChatClient & PromptClient;
+    utils: ChatClient;
     auth: {
         user: UserClient;
     } & AuthClient;
@@ -45,7 +44,6 @@ export function client(
         },
         utils: {
             ...chatClient(co),
-            ...promptClient(co),
         },
         auth: {
             ...authClient(co, projectOptions),
