@@ -313,6 +313,13 @@ export function generate(
         } else if (data.data.startsWith("[INFOS]:")) {
             try {
                 const potentialRessources = JSON.parse(data.data.replace("[INFOS]:", ""));
+
+                if (potentialRessources.warnings && potentialRessources.warnings.length > 0) {
+                    potentialRessources.warnings.forEach((warning: string) => {
+                        console.warn(warning);
+                    });
+                }
+
                 resultStream.emit("infos", potentialRessources);
             } catch (e) {
                 resultStream.push("");
