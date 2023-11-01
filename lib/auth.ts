@@ -8,7 +8,7 @@ import { ApiError, ErrorData } from "./helpers/error";
 type SimpleProvider = "github" | "google";
 type LoginWithFirebaseInput = { token: string; provider: "firebase" };
 type LoginWithCustomInput = { token: string; provider: "custom" };
-type LoginAnonymousInput = { provider: "anonymous"; email: string };
+type LoginAnonymousInput = { provider: "anonymous"; email?: string };
 type LoginFunctionInput =
     | SimpleProvider
     | { provider: SimpleProvider }
@@ -126,14 +126,17 @@ export async function signInWithOAuthToken(
 }
 
 export async function signInAnon(
-    email: string,
+    email: string | undefined,
     co: MutablePromise<Partial<ClientOptions>>,
     { project, endpoint }: { project: string; endpoint: string },
 ): Promise<void> {
-    const emailBase64 = Buffer.from(email).toString("base64");
+    let basic = "auto";
+    if (email) {
+        basic = Buffer.from(email).toString("base64");
+    }
     try {
         const { data } = await axios.get(`${endpoint}/project/${project}/auth/anonymous`, {
-            headers: { Authorization: `Bearer ${emailBase64}` },
+            headers: { Authorization: `Basic ${basic}` },
         });
 
         co.set({ token: data, endpoint });
