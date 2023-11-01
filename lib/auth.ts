@@ -8,13 +8,15 @@ import { ApiError, ErrorData } from "./helpers/error";
 type SimpleProvider = "github" | "google";
 type LoginWithFirebaseInput = { token: string; provider: "firebase" };
 type LoginWithCustomInput = { token: string; provider: "custom" };
+type LoginWithRawPolyfireTokenInput = { token: string; provider: "raw-polyfire" };
 type LoginAnonymousInput = { provider: "anonymous"; email?: string };
 type LoginFunctionInput =
     | SimpleProvider
     | { provider: SimpleProvider }
     | LoginWithFirebaseInput
     | LoginWithCustomInput
-    | LoginAnonymousInput;
+    | LoginAnonymousInput
+    | LoginWithRawPolyfireTokenInput;
 
 declare const window: Window;
 
@@ -148,6 +150,14 @@ export async function signInAnon(
     }
 }
 
+export async function signInWithPolyfireToken(
+    token: string,
+    co: MutablePromise<Partial<ClientOptions>>,
+    { endpoint }: { project: string; endpoint: string },
+): Promise<void> {
+    co.set({ token, endpoint });
+}
+
 export async function login(
     input: LoginFunctionInput,
     projectOptions: { project: string; endpoint: string },
@@ -164,6 +174,11 @@ export async function login(
 
     if (typeof input === "object" && input.provider === "anonymous") {
         await signInAnon(input.email, co, projectOptions);
+        return;
+    }
+
+    if (typeof input === "object" && input.provider === "raw-polyfire") {
+        await signInWithPolyfireToken(input.token, co, projectOptions);
         return;
     }
 
