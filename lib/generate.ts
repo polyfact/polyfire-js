@@ -2,7 +2,6 @@ import * as t from "polyfact-io-ts";
 import fakeProcess from "process";
 import { Readable } from "readable-stream";
 import WebSocket from "isomorphic-ws";
-import { UUID } from "crypto";
 import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { Memory } from "./memory";
 import { loaderToMemory, LoaderFunction } from "./dataloader";
@@ -76,7 +75,7 @@ export type MemoryOptions = [
     { data: [LoaderFunction] | LoaderFunction },
 ];
 
-export type SystemPromptOptions = [{ systemPromptId: UUID }, { systemPrompt: string }];
+export type SystemPromptOptions = [{ systemPromptId: string }, { systemPrompt: string }];
 
 export type GenerationWithWebOptions = GenerationSimpleOptions &
     NeverN<ChatOptions> &
