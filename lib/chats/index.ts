@@ -1,6 +1,5 @@
 import axios, { AxiosError } from "axios";
 import * as t from "polyfact-io-ts";
-import { UUID } from "crypto";
 
 import {
     generate,
@@ -24,7 +23,7 @@ const Message = t.type({
 
 export async function createChat(
     systemPrompt?: string,
-    systemPromptId?: UUID,
+    systemPromptId?: string,
     options: InputClientOptions = {},
 ): Promise<string> {
     try {
@@ -180,13 +179,13 @@ export class Chat {
 }
 
 export type ChatClient = {
-    createChat: (systemPrompt?: string, systemPromptId?: UUID) => Promise<string>;
+    createChat: (systemPrompt?: string, systemPromptId?: string) => Promise<string>;
     Chat: typeof Chat;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): ChatClient {
     return {
-        createChat: (systemPrompt?: string, systemPromptId?: UUID) =>
+        createChat: (systemPrompt?: string, systemPromptId?: string) =>
             createChat(systemPrompt, systemPromptId, clientOptions),
         Chat: class C extends Chat {
             constructor(options: ChatOptions = {}) {
