@@ -3,7 +3,7 @@ import fakeProcess from "process";
 import { Readable } from "readable-stream";
 import WebSocket from "isomorphic-ws";
 import { InputClientOptions, defaultOptions } from "./clientOpts";
-import { Memory } from "./memory";
+import { Embeddings } from "./embeddings";
 import { loaderToMemory, LoaderFunction } from "./dataloader";
 
 declare const window: {
@@ -71,7 +71,9 @@ export type ChatOptions = [{ chatId: string }];
 
 export type MemoryOptions = [
     { memoryId: string },
-    { memory: Memory | string },
+    { memory: Embeddings | string },
+    { embeddingsId: string },
+    { embeddings: Embeddings | string },
     { data: [LoaderFunction] | LoaderFunction },
 ];
 
@@ -119,7 +121,7 @@ export type GenerationResult = {
 async function getMemoryIds(
     dataMemory: string | undefined,
     genOptionsMemoryId: string | undefined,
-    genOptionsMemory: Memory | string | undefined,
+    genOptionsMemory: Embeddings | string | undefined,
 ): Promise<string[] | string | undefined> {
     const memoryIds: (string | undefined)[] = [
         dataMemory,
@@ -259,8 +261,8 @@ function stream(
 
         const memoryIdAssignment = await getMemoryIds(
             dataMemory,
-            genOptions.memoryId,
-            genOptions.memory,
+            genOptions.embeddingsId || genOptions.memoryId,
+            genOptions.embeddings || genOptions.memory,
         );
 
         const requestBody = {

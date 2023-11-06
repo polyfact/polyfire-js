@@ -4,7 +4,7 @@ import { generate, GenerationOptions } from "./generate";
 import { generateWithType } from "./probabilistic_helpers/generateWithType";
 import { transcribe } from "./transcribe";
 import { Chat } from "./chats";
-import { Memory, createMemory, updateMemory, getAllMemories } from "./memory";
+import { Embeddings, createEmbeddings, updateEmbeddings, getAllEmbeddings } from "./embeddings";
 import { splitString, tokenCount } from "./split";
 import { usage } from "./user";
 import { get as KVGet, set as KVSet, del as KVDel, all as KVAll } from "./kv";
@@ -26,6 +26,11 @@ const kv = {
     all: KVAll,
 };
 
+export const createMemory = createEmbeddings;
+export const updateMemory = updateEmbeddings;
+export const getAllMemories = getAllEmbeddings;
+export const Memory = Embeddings;
+
 // Export methods
 export {
     // text generation
@@ -38,10 +43,10 @@ export {
     transcribe,
 
     // memory
-    createMemory,
-    updateMemory,
-    getAllMemories,
-    Memory,
+    Embeddings,
+    createEmbeddings,
+    updateEmbeddings,
+    getAllEmbeddings,
 
     // utils
     usage,
