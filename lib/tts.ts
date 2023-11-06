@@ -7,6 +7,8 @@ declare const window: Window | undefined;
 class AudioTTS {
     audioCtx: AudioContext | null;
 
+    source: AudioBufferSourceNode | null = null;
+
     constructor(public data: Buffer) {
         this.data = data;
         this.audioCtx = window ? new AudioContext() : null;
@@ -34,19 +36,49 @@ class AudioTTS {
         const buffer = await this.getAudioBuffer();
         return new Promise((resolve, reject) => {
             if (this.audioCtx) {
-                const source = this.audioCtx.createBufferSource();
+                this.source = this.audioCtx.createBufferSource();
 
-                source.buffer = buffer;
-                source.connect(this.audioCtx.destination);
+                this.source.buffer = buffer;
+                this.source.connect(this.audioCtx.destination);
 
-                source.start();
-                source.onended = () => {
+                this.source.start();
+                this.source.onended = () => {
                     resolve();
                 };
             } else {
                 reject(Error("AudioContext is not supported in this environment"));
             }
         });
+    }
+
+    async stop(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.audioCtx && this.source) {
+                this.source.stop();
+                this.source.onended = () => {
+                    resolve();
+                };
+                this.source = null;
+            } else {
+                reject(Error("AudioSource is not playing"));
+            }
+        });
+    }
+
+    async pause(): Promise<void> {
+        if (this.audioCtx && this.source) {
+            return this.audioCtx.suspend();
+        } else {
+            throw Error("AudioSource is not playing");
+        }
+    }
+
+    async resume(): Promise<void> {
+        if (this.audioCtx && this.source) {
+            return this.audioCtx.resume();
+        } else {
+            throw Error("AudioSource does not exist");
+        }
     }
 }
 
