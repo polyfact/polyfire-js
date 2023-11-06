@@ -4,7 +4,7 @@ import generateWithTypeClient, {
 } from "./probabilistic_helpers/generateWithType";
 import transcribeClient, { TranscribeClient } from "./transcribe";
 import chatClient, { ChatClient } from "./chats";
-import memoryClient, { MemoryClient } from "./memory";
+import embeddingsClient, { EmbeddingsClient } from "./embeddings";
 import userClient, { UserClient } from "./user";
 import { ClientOptions } from "./clientOpts";
 import kvClient, { KVClient } from "./kv";
@@ -19,7 +19,7 @@ export type Client = {
         TranscribeClient &
         ImageGenerationClient &
         TTSClient;
-    data: MemoryClient & { kv: KVClient };
+    data: EmbeddingsClient & { kv: KVClient };
     utils: ChatClient;
     auth: {
         user: UserClient;
@@ -39,7 +39,7 @@ export function client(
             ...ttsClient(co),
         },
         data: {
-            ...memoryClient(co),
+            ...embeddingsClient(co),
             kv: kvClient(co),
         },
         utils: {

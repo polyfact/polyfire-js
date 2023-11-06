@@ -1,4 +1,4 @@
-import { Memory } from "../memory";
+import { Embeddings } from "../embeddings";
 import { transcribe } from "../transcribe";
 import { splitString } from "../split";
 import { FileInput, fileInputToBuffer } from "../utils";
@@ -18,67 +18,70 @@ async function batchify<T extends Array<unknown>>(
     await batchify(array.slice(size) as T, size, callback);
 }
 
-export type LoaderFunction = (memory: Memory, clientOptions: InputClientOptions) => Promise<void>;
+export type LoaderFunction = (
+    embeddings: Embeddings,
+    clientOptions: InputClientOptions,
+) => Promise<void>;
 
 export function TextFileLoader(file: FileInput, maxTokenPerChunk = 100): LoaderFunction {
-    return async function loadPdfIntoMemory(
-        memory: Memory,
+    return async function loadPdfIntoEmbeddings(
+        embeddings: Embeddings,
         _clientOptions: InputClientOptions = {},
     ) {
         const fileBuffer = await fileInputToBuffer(file);
         const splittedFile = splitString(fileBuffer.toString("utf8"), maxTokenPerChunk);
 
-        async function addBatchIntoMemory(batches: string[]) {
-            await Promise.all(batches.map(async (batch) => memory.add(batch)));
+        async function addBatchIntoEmbeddings(batches: string[]) {
+            await Promise.all(batches.map(async (batch) => embeddings.add(batch)));
         }
 
-        await batchify(splittedFile, 10, addBatchIntoMemory);
+        await batchify(splittedFile, 10, addBatchIntoEmbeddings);
     };
 }
 
 export function StringLoader(str: string, maxTokenPerChunk = 100): LoaderFunction {
-    return async function loadPdfIntoMemory(
-        memory: Memory,
+    return async function loadPdfIntoEmbeddings(
+        embeddings: Embeddings,
         _clientOptions: InputClientOptions = {},
     ) {
         const splittedStr = splitString(str, maxTokenPerChunk);
 
-        async function addBatchIntoMemory(batches: string[]) {
-            await Promise.all(batches.map(async (batch) => memory.add(batch)));
+        async function addBatchIntoEmbeddings(batches: string[]) {
+            await Promise.all(batches.map(async (batch) => embeddings.add(batch)));
         }
 
-        await batchify(splittedStr, 10, addBatchIntoMemory);
+        await batchify(splittedStr, 10, addBatchIntoEmbeddings);
     };
 }
 
 export function AudioLoader(file: FileInput, maxTokenPerChunk = 100): LoaderFunction {
-    return async function loadAudioIntoMemory(
-        memory: Memory,
+    return async function loadAudioIntoEmbeddings(
+        embeddings: Embeddings,
         clientOptions: InputClientOptions = {},
     ) {
         const fileBuffer = await fileInputToBuffer(file);
         const transcription = await transcribe(fileBuffer, {}, clientOptions);
         const transcriptions = splitString(transcription, maxTokenPerChunk);
 
-        async function addBatchIntoMemory(batches: string[]) {
-            await Promise.all(batches.map(async (batch) => memory.add(batch)));
+        async function addBatchIntoEmbeddings(batches: string[]) {
+            await Promise.all(batches.map(async (batch) => embeddings.add(batch)));
         }
 
-        await batchify(transcriptions, 10, addBatchIntoMemory);
+        await batchify(transcriptions, 10, addBatchIntoEmbeddings);
     };
 }
 
 export async function loaderToMemory(
     loaders: LoaderFunction | LoaderFunction[],
     clientOptions: InputClientOptions = {},
-): Promise<Memory> {
-    const memory = new Memory(undefined, clientOptions);
+): Promise<Embeddings> {
+    const embeddings = new Embeddings(undefined, clientOptions);
 
     if (typeof loaders === "function") {
-        await loaders(memory, clientOptions);
+        await loaders(embeddings, clientOptions);
     } else {
-        await Promise.all(loaders.map((loader) => loader(memory, clientOptions)));
+        await Promise.all(loaders.map((loader) => loader(embeddings, clientOptions)));
     }
 
-    return memory;
+    return embeddings;
 }

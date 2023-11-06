@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
-async function createMemory(
+async function createEmbeddings(
     clientOptions: InputClientOptions = {},
     isPublic = true,
 ): Promise<{ id: string }> {
@@ -32,7 +32,7 @@ async function createMemory(
     }
 }
 
-async function updateMemory(
+async function updateEmbeddings(
     id: string,
     input: string,
     maxToken = 0,
@@ -66,7 +66,9 @@ async function updateMemory(
     }
 }
 
-async function getAllMemories(clientOptions: InputClientOptions = {}): Promise<{ ids: string[] }> {
+async function getAllEmbeddings(
+    clientOptions: InputClientOptions = {},
+): Promise<{ ids: string[] }> {
     const { token, endpoint } = await defaultOptions(clientOptions);
 
     try {
@@ -86,7 +88,7 @@ async function getAllMemories(clientOptions: InputClientOptions = {}): Promise<{
     }
 }
 
-async function searchMemory(
+async function searchEmbeddings(
     id: string,
     input: string,
     clientOptions: InputClientOptions = {},
@@ -116,11 +118,11 @@ async function searchMemory(
     }
 }
 
-type MemoryAddOptions = {
+type EmbeddingsAddOptions = {
     maxToken?: number;
 };
 
-type MemoryOptions =
+type EmbeddingsOptions =
     | {
           id: string;
       }
@@ -129,28 +131,32 @@ type MemoryOptions =
       }
     | string;
 
-class Memory {
+class Embeddings {
     memoryId: PromiseLike<string>;
 
     clientOptions: InputClientOptions;
 
-    constructor(memoryOptions?: MemoryOptions, clientOptions: InputClientOptions = {}) {
+    constructor(embeddingsOptions?: EmbeddingsOptions, clientOptions: InputClientOptions = {}) {
         this.clientOptions = defaultOptions(clientOptions);
-        if (memoryOptions !== undefined && typeof memoryOptions === "string") {
-            this.memoryId = Promise.resolve(memoryOptions);
-        } else if (memoryOptions && typeof memoryOptions === "object" && "id" in memoryOptions) {
-            this.memoryId = Promise.resolve(memoryOptions.id);
+        if (embeddingsOptions !== undefined && typeof embeddingsOptions === "string") {
+            this.memoryId = Promise.resolve(embeddingsOptions);
+        } else if (
+            embeddingsOptions &&
+            typeof embeddingsOptions === "object" &&
+            "id" in embeddingsOptions
+        ) {
+            this.memoryId = Promise.resolve(embeddingsOptions.id);
         } else {
-            const isPublic = (memoryOptions || {}).public;
+            const isPublic = (embeddingsOptions || {}).public;
             this.memoryId = this.clientOptions
-                .then((co) => createMemory(co, isPublic))
+                .then((co) => createEmbeddings(co, isPublic))
                 .then((res) => res.id);
         }
     }
 
-    async add(input: string, { maxToken = 0 }: MemoryAddOptions = {}): Promise<void> {
+    async add(input: string, { maxToken = 0 }: EmbeddingsAddOptions = {}): Promise<void> {
         const id = await this.memoryId;
-        await updateMemory(id, input, maxToken, await this.clientOptions);
+        await updateEmbeddings(id, input, maxToken, await this.clientOptions);
     }
 
     async getId(): Promise<string> {
@@ -159,25 +165,40 @@ class Memory {
 
     async search(input: string): Promise<{ id: string; content: string; similarity: number }[]> {
         const id = await this.memoryId;
-        return searchMemory(id, input, await this.clientOptions);
+        return searchEmbeddings(id, input, await this.clientOptions);
     }
 }
 
-export { createMemory, updateMemory, getAllMemories, Memory };
+export { createEmbeddings, updateEmbeddings, getAllEmbeddings, Embeddings };
 
-export type MemoryClient = {
+export type EmbeddingsClient = {
     createMemory: (isPublic: true) => Promise<{ id: string }>;
     updateMemory: (id: string, input: string, maxToken?: number) => Promise<{ success: boolean }>;
     getAllMemories: () => Promise<{ ids: string[] }>;
-    Memory: () => Memory;
+    Memory: () => Embeddings;
+    createEmbeddings: (isPublic: true) => Promise<{ id: string }>;
+    updateEmbeddings: (
+        id: string,
+        input: string,
+        maxToken?: number,
+    ) => Promise<{ success: boolean }>;
+    getAllEmbeddings: () => Promise<{ ids: string[] }>;
+    Embeddings: () => Embeddings;
 };
 
-export default function client(clientOptions: InputClientOptions = {}): MemoryClient {
+export default function client(clientOptions: InputClientOptions = {}): EmbeddingsClient {
     return {
-        createMemory: () => createMemory(clientOptions),
+        createMemory: () => createEmbeddings(clientOptions),
         updateMemory: (id: string, input: string, maxToken?: number) =>
-            updateMemory(id, input, maxToken, clientOptions),
-        getAllMemories: () => getAllMemories(clientOptions),
-        Memory: (memoryOptions?: MemoryOptions) => new Memory(memoryOptions, clientOptions),
+            updateEmbeddings(id, input, maxToken, clientOptions),
+        getAllMemories: () => getAllEmbeddings(clientOptions),
+        Memory: (embeddingsOptions?: EmbeddingsOptions) =>
+            new Embeddings(embeddingsOptions, clientOptions),
+        createEmbeddings: () => createEmbeddings(clientOptions),
+        updateEmbeddings: (id: string, input: string, maxToken?: number) =>
+            updateEmbeddings(id, input, maxToken, clientOptions),
+        getAllEmbeddings: () => getAllEmbeddings(clientOptions),
+        Embeddings: (embeddingsOptions?: EmbeddingsOptions) =>
+            new Embeddings(embeddingsOptions, clientOptions),
     };
 }

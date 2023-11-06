@@ -10,7 +10,7 @@ import {
     GenerationCompleteOptions,
 } from "../generate";
 import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
-import { Memory } from "../memory";
+import { Embeddings } from "../embeddings";
 import { ApiError, ErrorData } from "../helpers/error";
 import { LoaderFunction, loaderToMemory } from "../dataloader";
 
@@ -53,6 +53,7 @@ export async function createChat(
 
 type ChatOptions = {
     autoMemory?: boolean;
+    autoEmbeddings?: boolean;
 } & GenerationWithoutWebOptions;
 
 type ProgressCallback = (step: string) => void;
@@ -62,7 +63,7 @@ export class Chat {
 
     clientOptions: Promise<ClientOptions>;
 
-    autoMemory?: Promise<Memory>;
+    autoMemory?: Promise<Embeddings>;
 
     memoryId?: string;
 
@@ -74,8 +75,10 @@ export class Chat {
         this.chatId = createChat(options.systemPrompt, options.systemPromptId, this.clientOptions);
         this.options.provider = options.provider || "";
 
-        if (options.autoMemory) {
-            this.autoMemory = this.clientOptions.then((co) => new Memory({ public: false }, co));
+        if (options.autoMemory || options.autoEmbeddings) {
+            this.autoMemory = this.clientOptions.then(
+                (co) => new Embeddings({ public: false }, co),
+            );
         }
     }
 
