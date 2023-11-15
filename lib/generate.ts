@@ -220,7 +220,11 @@ export class Generation extends Readable implements Promise<string> {
         return new Promise<GenerationResult>((resolve, reject) => {
             this.on("error", reject);
             this.on("infos", (data) => {
-                resolve(data);
+                resolve({
+                    result: data.result,
+                    tokenUsage: data.token_usage,
+                    ressources: data.ressources,
+                });
             });
         });
     }
