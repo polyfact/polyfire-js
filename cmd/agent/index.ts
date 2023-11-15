@@ -23,7 +23,7 @@ async function cloneRepo(repoURL: string, repo: string): Promise<void> {
     });
 }
 
-export default async function agent(token: string): Promise<void> {
+export default async function agent({ project }: { project?: string }): Promise<void> {
     const questions = [
         {
             type: "list",
@@ -34,30 +34,29 @@ export default async function agent(token: string): Promise<void> {
         },
         {
             type: "input",
-            name: "token",
-            message: "Please provide your POLYFACT_TOKEN:",
-            default: token,
-            when: (answers: { boilerplate: string }) => answers.boilerplate === "Yes" && !token,
-        },
-        {
-            type: "input",
             name: "name",
             message: "What is the name of the repository you wish to clone?",
             default: "polyfire-agent-boilerplate",
             when: (answers: { boilerplate: string }) => answers.boilerplate === "Yes",
         },
+        {
+            type: "input",
+            name: "project",
+            message: "What is your project Alias ?",
+            when: () => !project,
+        },
     ];
     try {
-        const answers: { boilerplate: string; token?: string; name?: string } =
+        const answers: { boilerplate: string; token?: string; name?: string; project?: string } =
             await inquirer.prompt(questions);
 
         if (answers.boilerplate === "No") return;
 
-        if (!answers?.token && !token) throw new Error("POLYFACT_TOKEN is required.");
+        const defaultProject = project || answers.project;
 
         const repoName = answers?.name || "polyfire-agent-boilerplate";
 
-        const repoURL = "https://github.com/polyfire/polyfire-use-agent-boilerplate.git";
+        const repoURL = "https://github.com/polyfire-ai/polyfire-use-agent-boilerplate";
 
         await cloneRepo(repoURL, repoName);
 
