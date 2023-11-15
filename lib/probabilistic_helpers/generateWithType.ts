@@ -104,12 +104,13 @@ export async function generateWithType<
     const typeFormat = tsio2String(type);
     const tokenUsage = { input: 0, output: 0 };
     for (let tryCount = 0; tryCount < 5; tryCount++) {
-        const { result: resultJson, tokenUsage: tu } = await generate(
+        const tutu = await generate(
             generateTypedPrompt(typeFormat, task),
             options || {},
             clientOptions,
         ).infos();
 
+        const { result: resultJson, tokenUsage: tu } = tutu;
         tokenUsage.output += tu.output;
         tokenUsage.input += tu.input;
 
