@@ -4,7 +4,7 @@ import { ApiError, ErrorData } from "./helpers/error";
 
 declare const window: Window | undefined;
 
-class AudioTTS {
+export class AudioTTS {
     audioCtx: AudioContext | null;
 
     source: AudioBufferSourceNode | null = null;
