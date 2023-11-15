@@ -71,26 +71,28 @@ async function promptUser<T extends Command | undefined>(
     }
 }
 
-program
-    .command("chat")
-    .description("Create a new chatbot")
-    .option("--stack <stack>", "The tech stack to use")
-    .option("--project <project>", "The project name")
-    .option("--botname <botname>", "The name of the bot")
-    .action((options) => {
-        promptUser("chat", options);
-    });
+const paramsNumber = process.argv.length - 2;
 
-program
-    .command("agent")
-    .description("Create a new chatbot")
-    .option("--project <project>", "The project name")
-    .action((options) => {
-        promptUser("agent", options);
-    });
+if (paramsNumber === 0) {
+    promptUser("", undefined);
+} else {
+    program
+        .command("chat")
+        .description("Create a new chatbot")
+        .option("--stack <stack>", "The tech stack to use")
+        .option("--project <project>", "The project name")
+        .option("--botname <botname>", "The name of the bot")
+        .action((options) => {
+            promptUser("chat", options);
+        });
 
-program.parse(process.argv);
+    program
+        .command("agent")
+        .description("Create a new chatbot")
+        .option("--project <project>", "The project name")
+        .action((options) => {
+            promptUser("agent", options);
+        });
 
-if (!knownCommands.includes(program.args[0])) {
-    promptUser();
+    program.parse(process.argv);
 }

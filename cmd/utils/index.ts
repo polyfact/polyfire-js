@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs/promises";
 
+import { exec } from "child_process";
 import { Stack } from "..";
 
 export async function generateEnvFile(
@@ -14,7 +15,7 @@ export async function generateEnvFile(
     const prefix = stack === "react" ? "VITE_" : "NEXT_PUBLIC_";
 
     const envContent = `
-        ${prefix}PROJECT_ID=${project}
+        ${prefix}POLYFIRE_PROJECT=${project}
         ${prefix}BOT_NAME=${botname}
     `;
 
@@ -35,4 +36,24 @@ export function sanitizeOptions(options: Record<string, string>): Record<string,
             keysToSkip.includes(key) || typeof value !== "string" ? value : sanitizeInput(value),
         ]),
     );
+}
+
+export async function cloneRepo(repoURL: string, repo: string): Promise<void> {
+    if (
+        await fs.access(repo).then(
+            () => true,
+            () => false,
+        )
+    ) {
+        console.log("Repository already exists. No action taken.");
+        process.exit(0);
+    }
+
+    return new Promise((resolve, reject) => {
+        exec(`git clone ${repoURL} ${repo}`, (error) => {
+            if (error) reject(`Error cloning the repository: ${error}`);
+            console.log("Repository cloned successfully.");
+            resolve();
+        });
+    });
 }
