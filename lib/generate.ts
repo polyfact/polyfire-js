@@ -140,7 +140,74 @@ async function getMemoryIds(
     }
 }
 
-export class Generation extends Readable implements Promise<string> {
+declare class _ReadableFallback {
+    // The following lines are required due to a weird behavior in ts-node
+    // not taking into account the inherited methods in its types
+
+    /**
+     * @returns \{void\}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    destroy(...args: Parameters<Readable["destroy"]>): any;
+
+    /**
+     * @returns \{void\}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pause(...args: Parameters<Readable["pause"]>): any;
+
+    read: Readable["read"];
+
+    /**
+     * @returns \{void\}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resume(...args: Parameters<Readable["resume"]>): any;
+
+    /**
+     * @returns \{void\}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setEncoding(...args: Parameters<Readable["setEncoding"]>): any;
+
+    /**
+     * @returns \{void\}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    unpipe(...args: Parameters<Readable["unpipe"]>): any;
+
+    unshift: Readable["unshift"];
+
+    /**
+     * @returns \{void\}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    wrap(...args: Parameters<Readable["wrap"]>): any;
+
+    compose: Readable["compose"];
+
+    pipe: Readable["pipe"];
+
+    /**
+     * @returns \{void\}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    on(...args: Parameters<Readable["on"]>): any;
+
+    push: Readable["push"];
+
+    emit: Readable["emit"];
+
+    /**
+     * @returns \{void\}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(...args: any);
+}
+
+const _Readable = Readable as typeof _ReadableFallback;
+
+export class Generation extends _Readable implements Promise<string> {
     [Symbol.toStringTag] = "Generation";
 
     stop: () => void;
