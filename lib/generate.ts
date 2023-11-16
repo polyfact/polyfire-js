@@ -177,9 +177,13 @@ export class Generation extends Readable implements Promise<string>, Readable {
         return this;
     }
 
+    // The following lines are required due to a weird behavior in ts-node
+    // not taking into account the inherited methods in its types
+
     /**
      * @returns \{void\}
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     destroy(...args: Parameters<Readable["destroy"]>): any {
         return super.destroy(...args);
     }
@@ -191,6 +195,7 @@ export class Generation extends Readable implements Promise<string>, Readable {
     /**
      * @returns \{void\}
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pause(...args: Parameters<Readable["pause"]>): any {
         return super.pause(...args);
     }
@@ -202,6 +207,7 @@ export class Generation extends Readable implements Promise<string>, Readable {
     /**
      * @returns \{void\}
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resume(...args: Parameters<Readable["resume"]>): any {
         return super.resume(...args);
     }
@@ -209,6 +215,7 @@ export class Generation extends Readable implements Promise<string>, Readable {
     /**
      * @returns \{void\}
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setEncoding(...args: Parameters<Readable["setEncoding"]>): any {
         return super.setEncoding(...args);
     }
@@ -216,6 +223,7 @@ export class Generation extends Readable implements Promise<string>, Readable {
     /**
      * @returns \{void\}
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     unpipe(...args: Parameters<Readable["unpipe"]>): any {
         return super.unpipe(...args);
     }
@@ -227,6 +235,7 @@ export class Generation extends Readable implements Promise<string>, Readable {
     /**
      * @returns \{void\}
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     wrap(...args: Parameters<Readable["wrap"]>): any {
         return super.wrap(...args);
     }
@@ -242,6 +251,7 @@ export class Generation extends Readable implements Promise<string>, Readable {
     /**
      * @returns \{void\}
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     on(...args: Parameters<Readable["on"]>): any {
         return this.on(...args);
     }
