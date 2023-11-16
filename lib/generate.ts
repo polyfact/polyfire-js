@@ -140,7 +140,7 @@ async function getMemoryIds(
     }
 }
 
-export class Generation extends Readable implements Promise<string> {
+export class Generation extends Readable implements Promise<string>, Readable {
     [Symbol.toStringTag] = "Generation";
 
     stop: () => void;
@@ -175,6 +175,75 @@ export class Generation extends Readable implements Promise<string> {
         stream.stop = () => this.stopWrap();
 
         return this;
+    }
+
+    /**
+     * @returns \{void\}
+     */
+    destroy(...args: Parameters<Readable["destroy"]>): any {
+        return super.destroy(...args);
+    }
+
+    isPaused: Readable["isPaused"] = (...args) => {
+        return super.isPaused(...args);
+    };
+
+    /**
+     * @returns \{void\}
+     */
+    pause(...args: Parameters<Readable["pause"]>): any {
+        return super.pause(...args);
+    }
+
+    read: Readable["read"] = (...args) => {
+        return super.read(...args);
+    };
+
+    /**
+     * @returns \{void\}
+     */
+    resume(...args: Parameters<Readable["resume"]>): any {
+        return super.resume(...args);
+    }
+
+    /**
+     * @returns \{void\}
+     */
+    setEncoding(...args: Parameters<Readable["setEncoding"]>): any {
+        return super.setEncoding(...args);
+    }
+
+    /**
+     * @returns \{void\}
+     */
+    unpipe(...args: Parameters<Readable["unpipe"]>): any {
+        return super.unpipe(...args);
+    }
+
+    unshift: Readable["unshift"] = (...args) => {
+        return super.unshift(...args);
+    };
+
+    /**
+     * @returns \{void\}
+     */
+    wrap(...args: Parameters<Readable["wrap"]>): any {
+        return super.wrap(...args);
+    }
+
+    compose: Readable["compose"] = (...args) => {
+        return super.compose(...args);
+    };
+
+    pipe: Readable["pipe"] = (...args) => {
+        return super.pipe(...args);
+    };
+
+    /**
+     * @returns \{void\}
+     */
+    on(...args: Parameters<Readable["on"]>): any {
+        return this.on(...args);
     }
 
     stopWrap(): void {
