@@ -1,11 +1,13 @@
 {
     "name": "polyfire-js",
-    "version": "0.2.15",
+    "version": "0.2.16",
     "main": "index.js",
     "types": "index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
     "license": "MIT",
-    "bin": "polyfire",
+    "bin": {
+        "create-polyfire-app": "./polyfire"
+    },
     "dependencies": {
         "@supabase/supabase-js": "^2.31.0",
         "async-mutex": "^0.4.0",
