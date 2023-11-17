@@ -62,12 +62,10 @@
         "last 2 ChromeAndroid versions"
     ],
     "scripts": {
-        "start": "ts-node cmd/index.ts",
-        "lint": "prettier --check lib/ cmd/ ; eslint lib/ cmd/",
-        "lint:fix": "prettier --write lib/ cmd/ ; eslint --fix lib/ cmd/",
-        "build:cmd": "esbuild cmd/index.ts --bundle --outfile=build/polyfire.tmp --platform=node && echo '#!/usr/bin/env node\n' | cat - build/polyfire.tmp > build/polyfire && rm build/polyfire.tmp",
+        "lint": "prettier --check lib/ ; eslint lib/",
+        "lint:fix": "prettier --write lib/; eslint --fix lib/",
         "build:vanilla-js": "esbuild target/vanilla-js.ts --bundle --minify --target=chrome67,firefox68,edge79,safari15 --outfile=build/vanilla-js.js",
-        "build": "tsc --target es5 --lib es2021,DOM --moduleResolution node --strict --esModuleInterop --declaration --jsx react --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts && npm run build:cmd && cp build/polyfire package.json README.md dist/",
+        "build": "tsc --target es5 --lib es2021,DOM --moduleResolution node --strict --esModuleInterop --declaration --jsx react --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts && cp package.json README.md dist/",
         "npm-publish": "npm run build && cd dist && npm publish && cd .."
     }
 }
