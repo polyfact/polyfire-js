@@ -1,66 +1,124 @@
 import { program } from "commander";
 import inquirer from "inquirer";
-import chat from "./chat";
-import agent from "./agent";
+import createApplication, { CustomQuestion } from "./createApplication";
 
-const knownCommands = ["chat", "agent"];
-const knownStacks = ["react", "nextjs"];
+enum ProjectType {
+    CHAT = "chat",
+    AGENT = "agent",
+}
 
-export type Stack = (typeof knownStacks)[number];
+type TemplateName = `${ProjectType.CHAT | ProjectType.AGENT}-${string}${string}`;
 
-type Command = (typeof knownCommands)[number];
+const CHAT_REACT_VITE: TemplateName = "chat-react-vite";
+const CHAT_NEXTJS: TemplateName = "chat-nextjs";
+const AGENT_REACT: TemplateName = "agent-react";
 
-type ChatOptions = {
-    stack?: Stack;
-    project?: string;
+const knownTemplates: TemplateName[] = [CHAT_REACT_VITE, CHAT_NEXTJS, AGENT_REACT];
+
+export type Template = (typeof knownTemplates)[number];
+
+type TemplateDetails = {
+    repositoryUrl: string;
+    envVariablePrefix: string;
+};
+
+const CREATE_CHATBOT = "Create chatbot";
+const CREATE_AGENT = "Create agent";
+
+export const TEMPLATE_DETAILS: Record<Template, TemplateDetails> = {
+    [CHAT_REACT_VITE]: {
+        repositoryUrl: "https://github.com/polyfire-ai/polyfire-chat-react-boilerplate.git",
+        envVariablePrefix: "VITE_",
+    },
+    [CHAT_NEXTJS]: {
+        repositoryUrl: "https://github.com/polyfire-ai/polyfire-chat-nextjs-boilerplate.git",
+        envVariablePrefix: "NEXT_PUBLIC_",
+    },
+    [AGENT_REACT]: {
+        repositoryUrl: "https://github.com/polyfire-ai/polyfire-use-agent-boilerplate",
+        envVariablePrefix: "REACT_APP_",
+    },
+};
+
+const questions = (
+    options: Record<string, string>,
+    template?: string,
+): Record<string, CustomQuestion[]> => ({
+    chat: [
+        {
+            type: "input",
+            name: "botname",
+            message: "Enter the name of the bot",
+            default: "polyfire-bot",
+            when: () => !options?.botname,
+        },
+        {
+            type: "list",
+            name: "template",
+            message: "Choose a template",
+            choices: knownTemplates.filter((t) => t.startsWith(ProjectType.CHAT)),
+            when: () => !template,
+        },
+    ],
+    agent: [
+        {
+            type: "list",
+            name: "template",
+            message: "Choose a template",
+            choices: knownTemplates.filter((t) => t.startsWith(ProjectType.AGENT)),
+            when: () => !template,
+        },
+    ],
+});
+
+async function handleCommand({
+    appName,
+    template,
+    ...options
+}: {
+    appName: string;
+    template?: Template;
     botname?: string;
-};
-
-type AgentOptions = {
     project?: string;
-};
-
-type Options<T extends Command | undefined> = T extends "chat"
-    ? ChatOptions
-    : T extends "agent"
-    ? AgentOptions
-    : never;
-
-async function promptUser<T extends Command | undefined>(
-    type?: T,
-    options?: Options<T>,
-): Promise<void> {
-    if (type === "chat") {
-        if (options && "stack" in options && !knownStacks.includes(options.stack as Stack)) {
-            console.error("Invalid stack option. Please choose between react and nextjs.");
-            return;
-        }
-
-        if (options) {
-            await chat(options as ChatOptions);
-            return;
-        }
-    } else if (type === "agent" && options) {
-        await agent(options as AgentOptions);
-        return;
-    }
-
+}): Promise<void> {
     const answer = await inquirer.prompt([
         {
             type: "list",
-            name: "appType",
+            name: "action",
             message: "What do you want to build?",
-            choices: ["Create chatbot", "Create agent", "Quit"],
-            when: () => !type,
+            choices: [CREATE_CHATBOT, CREATE_AGENT, "Quit"],
+            when: () => !template,
         },
     ]);
 
-    switch (answer.appType) {
-        case "Create chatbot":
-            await chat(options as ChatOptions);
-            break;
-        case "Create agent":
-            await agent(options as AgentOptions);
+    if (template && !knownTemplates.includes(template)) {
+        console.error(`Unknown template: ${template}`);
+        return;
+    } else if (!template && !answer.action) {
+        console.error("No template selected");
+        return;
+    }
+
+    let actionType: string = answer.action;
+
+    if (template) {
+        if (template.startsWith(ProjectType.CHAT)) {
+            actionType = ProjectType.CHAT;
+        } else if (template.startsWith(ProjectType.AGENT)) {
+            actionType = ProjectType.AGENT;
+        }
+    } else if (answer.action === CREATE_CHATBOT) {
+        actionType = ProjectType.CHAT;
+    } else if (answer.action === CREATE_AGENT) {
+        actionType = ProjectType.AGENT;
+    }
+
+    const additionalQuestions = questions(options, template)[actionType];
+
+    switch (actionType) {
+        case ProjectType.CHAT:
+        case ProjectType.AGENT:
+            await createApplication(template as Template, appName, options, additionalQuestions);
             break;
         case "Quit":
             console.info("Bye!");
@@ -71,28 +129,67 @@ async function promptUser<T extends Command | undefined>(
     }
 }
 
-const paramsNumber = process.argv.length - 2;
-
-if (paramsNumber === 0) {
-    promptUser("", undefined);
-} else {
-    program
-        .command("chat")
-        .description("Create a new chatbot")
-        .option("--stack <stack>", "The tech stack to use")
-        .option("--project <project>", "The project name")
-        .option("--botname <botname>", "The name of the bot")
-        .action((options) => {
-            promptUser("chat", options);
-        });
-
-    program
-        .command("agent")
-        .description("Create a new chatbot")
-        .option("--project <project>", "The project name")
-        .action((options) => {
-            promptUser("agent", options);
-        });
-
-    program.parse(process.argv);
+function displayHelpMessage() {
+    console.info("Please specify the project directory:");
+    console.info("  create-polyfire-app <project-directory>\n");
+    console.info("For example:");
+    console.info("  create-polyfire-app my-polyfire-app\n");
+    console.info("Run 'create-polyfire-app --help' to see all options.");
 }
+
+function groupTemplatesByType(templates: TemplateName[]) {
+    return templates.reduce<Record<string, TemplateName[]>>((groupedTemplates, template) => {
+        const [type] = template.split("-");
+        if (!groupedTemplates[type]) {
+            groupedTemplates[type] = [];
+        }
+        groupedTemplates[type].push(template);
+        return groupedTemplates;
+    }, {});
+}
+
+function displayGroupedTemplates(groupedTemplates: Record<string, TemplateName[]>) {
+    Object.entries(groupedTemplates).forEach(([type, templates]) => {
+        console.info(`${type.toUpperCase()}:\n`);
+        templates.forEach((template, index) => {
+            console.info(`  ${index + 1}. ${template}`);
+        });
+        console.info("\n");
+    });
+}
+
+function configureCLI() {
+    program
+        .name("create-polyfire-app")
+        .description("A tool to create new applications with specified templates.")
+        .argument("<app-name>", "The name of the new application")
+        .option("--template <template>", "Template to use (use --list to see available templates)")
+        .option("--project <project>", "The project name")
+        .option("--botname <botname>", "The name of the bot (only for chat templates)")
+        .action((appName, options) => {
+            handleCommand({ appName, ...options });
+        });
+
+    program
+        .command("list")
+        .description("List all available templates")
+        .action(() => {
+            console.info("Available templates:\n");
+            const groupedTemplates = groupTemplatesByType(knownTemplates);
+            displayGroupedTemplates(groupedTemplates);
+            console.info(
+                "Use 'create-polyfire-app <app-name> --template <template-name>' to create a new application.",
+            );
+        });
+}
+
+function main() {
+    if (process.argv.length <= 2) {
+        displayHelpMessage();
+    } else {
+        configureCLI();
+        program.parse(process.argv);
+    }
+}
+
+main();
