@@ -20,5 +20,5 @@
         "baseUrl": "lib/",
         "rootDir": "./"
     },
-    "include": ["lib/**/*", "cmd/**/*", "target/**/*"]
+    "include": ["lib/**/*", "target/**/*"]
 }
