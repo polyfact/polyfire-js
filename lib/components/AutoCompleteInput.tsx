@@ -3,7 +3,7 @@ import { usePolyfire } from "../hooks";
 import type { Generation } from "../generate";
 
 export interface AutoCompleteInputProps extends React.HTMLAttributes<HTMLElement> {
-    onChange: React.HTMLAttributes<HTMLInputElement>["onChange"];
+    onChange?: React.HTMLAttributes<HTMLInputElement>["onChange"];
 }
 
 export function AutoCompleteInput({
