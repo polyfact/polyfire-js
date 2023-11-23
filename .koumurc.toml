@@ -2,6 +2,15 @@ mergeKind = ":twisted_rightwards_arrows:"
 
 maxCommitLength = 72
 
+[scopes]
+models = "Related to the models (LLMs, ImageGen, TTS, etc...)"
+auth = "Related to user authentification"
+data = "Related to the data sent to the models (Embeddings, loaders, etc...)"
+"react/hooks" = "Related to the react hooks"
+"react/components" = "Related to the react components"
+docs = "Documentation"
+meta = "Anything about the project (Config files, tools, etc...)"
+
 [kinds]
 ":sparkles:" = "implement a new feature"
 ":zap:" = "update existing feature"
