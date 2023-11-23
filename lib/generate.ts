@@ -65,6 +65,7 @@ export type GenerationSimpleOptions = {
     stop?: string[];
     temperature?: number;
     language?: Language;
+    autoComplete?: boolean;
 };
 
 export type ChatOptions = [{ chatId: string }];
@@ -349,6 +350,7 @@ function stream(
             chat_id: genOptions.chatId,
             web: genOptions.web,
             language: genOptions.language,
+            auto_complete: genOptions.autoComplete,
         };
 
         const { token, endpoint } = await defaultOptions(clientOptions);

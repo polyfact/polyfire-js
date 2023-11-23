@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { usePolyfire } from "../hooks";
-import type { Generation } from "../generate";
+import { usePolyfire } from "polyfire-js/hooks";
+import type { Generation } from "polyfire-js/generate";
+
+export interface AutoCompleteInputProps extends React.HTMLAttributes<HTMLElement> {
+    onChange: React.HTMLAttributes<HTMLInputElement>["onChange"];
+}
 
 export function AutoCompleteInput({
+    onChange: onChangeProps,
     ...props
-}: React.HTMLAttributes<HTMLDivElement>): React.ReactElement {
+}: AutoCompleteInputProps): React.ReactElement {
     const {
         auth: { status },
         models: { generate },
@@ -14,7 +19,7 @@ export function AutoCompleteInput({
     const [scroll, setScroll] = useState<{ scrollLeft: number; scrollTop: number }>();
 
     const [completion, setCompletion] = useState<string>();
-    const [previousTimeout, setPreviousTimeout] = useState<ReturnType<typeof setTimeout> | null>(
+    const [previousTimeout, setPreviousTimeout] = useState<string | number | NodeJS.Timeout | null>(
         null,
     );
     const [previousGeneration, setPreviousGeneration] = useState<Generation | null>(null);
@@ -45,16 +50,13 @@ export function AutoCompleteInput({
                 // to avoid sending too many requests for nothing.
                 setTimeout(() => {
                     const generation = generate(prompt, {
-                        // TODO: This prompt doesn't work very well, I think a fix
-                        // will need to be done on the API side before deploying.
                         systemPrompt: `Your role is to predict what the user will type next.
                             Don't answer the user.
                             Only answer with the prediction until the end of the sentence.
-                            Don't forget punctation or spaces at the begining if needed don't say anything else.
                             Don't explain anything about the prediction. Don't repeat what the user said.
                             Complete from the where the user stopped typing.`,
+                        autoComplete: true,
                     });
-
                     setPreviousGeneration(generation);
                     generation.then(setCompletion);
                 }, 1000),
@@ -65,13 +67,20 @@ export function AutoCompleteInput({
     const inputRef = React.useRef<HTMLInputElement>(null);
     const outputRef = React.useRef<HTMLDivElement>(null);
 
-    const onChange: React.ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
-        setPrompt(e.target.value);
+    const onChange: React.ChangeEventHandler<HTMLInputElement> = useCallback(
+        (e) => {
+            setPrompt(e.target.value);
 
-        const { scrollTop, scrollLeft } = e.target;
-        setScroll({ scrollTop, scrollLeft });
-        setCompletion("");
-    }, []);
+            const { scrollTop, scrollLeft } = e.target;
+            setScroll({ scrollTop, scrollLeft });
+            setCompletion("");
+
+            if (onChangeProps) {
+                onChangeProps(e);
+            }
+        },
+        [onChangeProps],
+    );
 
     const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = useCallback(
         (e) => {
@@ -81,6 +90,7 @@ export function AutoCompleteInput({
                     if (inputRef.current && outputRef.current) {
                         inputRef.current.value = p + completion || "";
 
+                        // We fully scroll left after a completion
                         inputRef.current.scrollLeft = 99999999;
                         outputRef.current.scrollLeft = 99999999;
                     }
@@ -106,15 +116,46 @@ export function AutoCompleteInput({
         }
     }, [scroll]);
 
+    // And we need to also manually synchronize the output size and position to
+    // the input, to be sure it stays in the same place even if the style set in
+    // the props gets too weird
+    useEffect(() => {
+        if (outputRef.current && inputRef.current) {
+            console.log(
+                inputRef.current.getBoundingClientRect().left -
+                    outputRef.current.getBoundingClientRect().left,
+            );
+            outputRef.current.style.paddingLeft = `${
+                inputRef.current.getBoundingClientRect().left -
+                outputRef.current.getBoundingClientRect().left
+            }px`;
+            console.log(
+                inputRef.current.getBoundingClientRect().top -
+                    outputRef.current.getBoundingClientRect().top,
+            );
+            outputRef.current.style.paddingTop = `${
+                inputRef.current.getBoundingClientRect().top -
+                outputRef.current.getBoundingClientRect().top
+            }px`;
+
+            outputRef.current.style.width = `${inputRef.current.getBoundingClientRect().width}px`;
+        }
+    }, [outputRef, inputRef]);
+
     return (
         <label
+            {...(props as React.HTMLAttributes<HTMLElement>)}
             style={{
-                position: "relative",
                 display: "inline-block",
                 minHeight: 16,
                 minWidth: 176,
                 fontSize: 13.33333,
+                padding: "1px 2px",
+                border: "2px solid #ccc",
+                borderRadius: "3px",
+                backgroundColor: "white",
                 ...(props.style || {}),
+                position: "relative",
             }}
         >
             {/*
@@ -138,14 +179,15 @@ export function AutoCompleteInput({
             <div
                 style={{
                     fontFamily: props?.style?.fontFamily || "Cantarell",
-                    backgroundColor: props?.style?.backgroundColor || "white",
-                    border: "2px solid transparent",
+                    backgroundColor: "transparent",
+                    fontSize: "inherit",
                     position: "absolute",
+                    color: "inherit",
+                    maxWidth: "inherit",
                     width: "100%",
-                    height: "100%",
+                    height: "inherit",
                     overflow: "hidden",
-                    padding: "1px 2px",
-                    paddingRight: "0px",
+                    padding: "0",
                     display: "inline",
                     whiteSpace: "pre",
                 }}
@@ -157,17 +199,16 @@ export function AutoCompleteInput({
             <input
                 {...props}
                 style={{
-                    fontFamily: "Cantarell",
-                    caretColor: "black",
-                    ...(props.style || {}),
+                    fontFamily: props?.style?.fontFamily || "Cantarell",
+                    caretColor: props?.style?.caretColor || "black",
+                    fontSize: "inherit",
                     position: "relative",
-                    width: "100%",
-                    height: "100%",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    padding: "1px 2px",
+                    width: "inherit",
+                    minWidth: "100%",
+                    maxWidth: "100%",
+                    height: "inherit",
+                    padding: 0,
+                    border: 0,
                     display: "inline-block",
                     color: "transparent",
                     backgroundColor: "transparent",
