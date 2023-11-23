@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { usePolyfire } from "polyfire-js/hooks";
-import type { Generation } from "polyfire-js/generate";
+import { usePolyfire } from "../hooks";
+import type { Generation } from "../generate";
 
 export interface AutoCompleteInputProps extends React.HTMLAttributes<HTMLElement> {
     onChange: React.HTMLAttributes<HTMLInputElement>["onChange"];
@@ -19,7 +19,7 @@ export function AutoCompleteInput({
     const [scroll, setScroll] = useState<{ scrollLeft: number; scrollTop: number }>();
 
     const [completion, setCompletion] = useState<string>();
-    const [previousTimeout, setPreviousTimeout] = useState<string | number | NodeJS.Timeout | null>(
+    const [previousTimeout, setPreviousTimeout] = useState<ReturnType<typeof setTimeout> | null>(
         null,
     );
     const [previousGeneration, setPreviousGeneration] = useState<Generation | null>(null);

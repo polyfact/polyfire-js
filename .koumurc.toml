@@ -9,7 +9,7 @@ data = "Related to the data sent to the models (Embeddings, loaders, etc...)"
 "react/hooks" = "Related to the react hooks"
 "react/components" = "Related to the react components"
 docs = "Documentation"
-meta = "Anything about the project (Config files, tools, etc...)"
+meta = "Anything about the project / cross scopes"
 
 [kinds]
 ":sparkles:" = "implement a new feature"
