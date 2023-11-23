@@ -168,13 +168,6 @@ export function AutoCompleteInput({
                 This feels wrong and I'm not entirely sure it would withstand any
                 css style/browser config used on this but I didn't found any other
                 way.
-
-                This will probably needs some adjusting and more custom thing to
-                be sure each css style is set for the right element.
-
-                The default style of the input should probably be reset and
-                recreated on the label, then we could avoid passing the props.style
-                to input and probably avoid a few bugs.
             */}
             <div
                 style={{
