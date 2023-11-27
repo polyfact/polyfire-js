@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { usePolyfire } from "polyfire-js/hooks";
-import type { Generation } from "polyfire-js/generate";
+import { usePolyfire } from "../hooks";
+import type { Generation } from "../generate";
+import { useDebounce } from "./utils";
 
 export interface AutoCompleteTextAreaProps extends React.HTMLAttributes<HTMLElement> {
     onChange?: React.HTMLAttributes<HTMLTextAreaElement>["onChange"];
@@ -24,16 +25,13 @@ export function AutoCompleteTextArea({
 
     const [caretPosition, setCaretPosition] = useState<number>(0);
 
-    const [previousTimeout, setPreviousTimeout] = useState<ReturnType<typeof setTimeout> | null>(
-        null,
-    );
     const [previousGeneration, setPreviousGeneration] = useState<Generation | null>(null);
 
     const inputRef = React.useRef<HTMLTextAreaElement>(null);
     const outputRef = React.useRef<HTMLDivElement>(null);
     const insideOutputRef = React.useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    const cleanPreviousCompletion = useCallback(() => {
         if (previousGeneration) {
             try {
                 setCompletion({ text: "", position: caretPosition });
@@ -48,47 +46,36 @@ export function AutoCompleteTextArea({
                 // In any case, this error is unimportant and can be dismissed.
             }
         }
+    }, [caretPosition, previousGeneration]);
 
+    const sendCompletionRequest = useDebounce(() => {
         if (status === "authenticated" && prompt) {
-            if (inputRef.current) {
-                const promptBeforeCursor = prompt.slice(0, caretPosition);
-
-                // We need to stop the previous generations and timers to prevent the previous
-                // to appear after a change.
-                // TODO: For some reason it doesn't work anymore even though it worked with the
-                // input version. I don't understand and the workaround I thought about don't
-                // seem to work either ...
-                if (previousTimeout !== null) {
-                    clearTimeout(previousTimeout);
-                }
-                setPreviousTimeout(
-                    // We wait 1 second wihout anything typed before completing anything
-                    // to avoid sending too many requests for nothing.
-                    setTimeout(() => {
-                        const generation = generate(promptBeforeCursor, {
-                            systemPrompt: `Your role is to predict what the user will type next.
-                            Don't answer the user.
-                            Only answer with the prediction until the end of the sentence.
-                            Don't explain anything about the prediction. Don't repeat what the user said.
-                            Complete from the where the user stopped typing.`,
-                            autoComplete: true,
-                        });
-                        setPreviousGeneration(generation);
-                        generation.then((text) => setCompletion({ text, position: caretPosition }));
-                    }, 1000),
-                );
-            }
+            const promptBeforeCursor = prompt.slice(0, caretPosition);
+            const generation = generate(promptBeforeCursor, {
+                systemPrompt: `Your role is to predict what the user will type next.
+                    Don't answer the user.
+                    Only answer with the prediction until the end of the sentence.
+                    Don't explain anything about the prediction. Don't repeat what the user said.
+                    Complete from the where the user stopped typing.`,
+                autoComplete: true,
+            });
+            setPreviousGeneration(generation);
+            generation.then((text) => {
+                setCompletion({ text, position: caretPosition });
+            });
         }
-    }, [status, generate, prompt, caretPosition]);
+    }, 1000);
+
+    useEffect(() => {
+        cleanPreviousCompletion();
+        sendCompletionRequest();
+    }, [prompt, caretPosition]);
 
     // We need manually synchronize the output size, position and the scroll to
     // the input, to be sure it stays in the same place even if the style set in
     // the props gets too weird
     const resynchronize = useCallback(() => {
         if (outputRef.current && inputRef.current && insideOutputRef.current) {
-            (window as any).outputRef = outputRef.current;
-            (window as any).insideOutputRef = insideOutputRef.current;
-            (window as any).inputRef = inputRef.current;
             insideOutputRef.current.style.width = `${inputRef.current.scrollWidth}px`;
             insideOutputRef.current.style.height = `${inputRef.current.scrollHeight + 4}px`;
             outputRef.current.style.paddingLeft = `${
@@ -127,8 +114,6 @@ export function AutoCompleteTextArea({
         [onChangeProps, resynchronize],
     );
 
-    // This callback needs to be called everytime the caret might change.
-    // onKeyDown and onMouseDown should be enough.
     const checkCaretMove = useCallback(() => {
         if (caretPosition !== inputRef.current?.selectionStart) {
             setCaretPosition(inputRef.current?.selectionStart || 0);
@@ -141,23 +126,39 @@ export function AutoCompleteTextArea({
         [resynchronize],
     );
 
-    const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = useCallback((e) => {
-        if (e.key === "Tab" && completion) {
-            e.preventDefault();
-            setPrompt((p) => {
+    const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
+        (e) => {
+            if (e.key === "Tab" && completion) {
+                e.preventDefault();
+
                 if (inputRef.current && outputRef.current) {
-                    inputRef.current.value = p + completion || "";
+                    const newInput =
+                        prompt.slice(0, completion.position) +
+                        completion.text +
+                        prompt.slice(completion.position);
+
+                    const newCaretPosition = caretPosition + completion.text.length;
+
+                    inputRef.current.value = newInput;
+                    setPrompt(newInput);
+                    inputRef.current.setSelectionRange(newCaretPosition, newCaretPosition);
 
                     // We fully scroll left after a completion
                     inputRef.current.scrollLeft = 99999999;
                     outputRef.current.scrollLeft = 99999999;
                 }
-                return p + completion;
-            });
+            }
 
-            checkCaretMove();
-        }
-        checkCaretMove();
+            // I don't know how to wait until the caret has moved before executing
+            // checkCaretMove. This method defers it to the next event cycle, at which
+            // point it will have moved.
+            setTimeout(() => checkCaretMove(), 0);
+        },
+        [inputRef, outputRef, completion, prompt],
+    );
+
+    const onMouseDown: React.MouseEventHandler<HTMLTextAreaElement> = useCallback(() => {
+        setTimeout(() => checkCaretMove(), 0);
     }, []);
 
     return (
@@ -250,10 +251,10 @@ export function AutoCompleteTextArea({
                     backgroundColor: "transparent",
                 }}
                 onChange={onChange}
-                onScrollCapture={onScroll}
-                onSelectCapture={onScroll}
+                onScroll={onScroll}
+                onSelect={onScroll}
                 onKeyDown={onKeyDown}
-                onMouseDown={checkCaretMove}
+                onMouseDown={onMouseDown}
                 onResize={resynchronize}
                 ref={inputRef}
             />

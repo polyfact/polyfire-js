@@ -14,6 +14,7 @@
         "inquirer": "^9.2.10",
         "isomorphic-ws": "^5.0.0",
         "js-tiktoken": "^1.0.7",
+        "lodash.debounce": "^4.0.8",
         "polyfact-io-ts": "^2.2.20",
         "process": "^0.11.10",
         "react": "^18.2.0",
