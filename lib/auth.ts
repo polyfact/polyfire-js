@@ -212,8 +212,14 @@ export async function init(
         co.set({ token: session.token, endpoint: projectOptions.endpoint });
         return true;
     }
-    co.throw(new Error("You need to be authenticated to use this function"));
-    return false;
+
+    try {
+        await signInAnon(undefined, co, projectOptions);
+        return true;
+    } catch (e) {
+        co.throw(new Error("You need to be authenticated to use this function"));
+        return false;
+    }
 }
 
 export type AuthClient = {
