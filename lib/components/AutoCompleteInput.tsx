@@ -129,10 +129,6 @@ export function AutoCompleteInput({
                 inputRef.current.getBoundingClientRect().left -
                 outputRef.current.getBoundingClientRect().left
             }px`;
-            console.log(
-                inputRef.current.getBoundingClientRect().top -
-                    outputRef.current.getBoundingClientRect().top,
-            );
             outputRef.current.style.paddingTop = `${
                 inputRef.current.getBoundingClientRect().top -
                 outputRef.current.getBoundingClientRect().top
