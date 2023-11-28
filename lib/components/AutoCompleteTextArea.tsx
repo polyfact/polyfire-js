@@ -3,6 +3,8 @@ import { usePolyfire } from "../hooks";
 import type { Generation } from "../generate";
 import { useDebounce } from "./utils";
 
+declare const window: Window;
+
 export interface AutoCompleteTextAreaProps extends React.HTMLAttributes<HTMLElement> {
     onChange?: React.HTMLAttributes<HTMLTextAreaElement>["onChange"];
 }
@@ -149,16 +151,13 @@ export function AutoCompleteTextArea({
                 }
             }
 
-            // I don't know how to wait until the caret has moved before executing
-            // checkCaretMove. This method defers it to the next event cycle, at which
-            // point it will have moved.
-            setTimeout(() => checkCaretMove(), 0);
+            window.requestAnimationFrame(checkCaretMove);
         },
         [inputRef, outputRef, completion, prompt],
     );
 
     const onMouseDown: React.MouseEventHandler<HTMLTextAreaElement> = useCallback(() => {
-        setTimeout(() => checkCaretMove(), 0);
+        window.requestAnimationFrame(checkCaretMove);
     }, []);
 
     return (
