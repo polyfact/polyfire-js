@@ -121,10 +121,6 @@ export function AutoCompleteInput({
     // the props gets too weird
     useEffect(() => {
         if (outputRef.current && inputRef.current) {
-            console.log(
-                inputRef.current.getBoundingClientRect().left -
-                    outputRef.current.getBoundingClientRect().left,
-            );
             outputRef.current.style.paddingLeft = `${
                 inputRef.current.getBoundingClientRect().left -
                 outputRef.current.getBoundingClientRect().left
