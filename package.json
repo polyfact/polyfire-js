@@ -7,6 +7,7 @@
     "license": "MIT",
     "dependencies": {
         "@supabase/supabase-js": "^2.31.0",
+        "@types/lodash.debounce": "^4.0.9",
         "async-mutex": "^0.4.0",
         "axios": "^0.27.2",
         "buffer": "^6.0.3",
@@ -14,6 +15,7 @@
         "inquirer": "^9.2.10",
         "isomorphic-ws": "^5.0.0",
         "js-tiktoken": "^1.0.7",
+        "lodash.debounce": "^4.0.8",
         "polyfact-io-ts": "^2.2.20",
         "process": "^0.11.10",
         "react": "^18.2.0",
@@ -62,7 +64,7 @@
         "lint": "prettier --check lib/ ; eslint lib/",
         "lint:fix": "prettier --write lib/; eslint --fix lib/",
         "build:vanilla-js": "esbuild target/vanilla-js.ts --bundle --minify --target=chrome67,firefox68,edge79,safari15 --outfile=build/vanilla-js.js",
-        "build": "tsc --target es5 --lib es2021,DOM --moduleResolution node --strict --esModuleInterop --declaration --jsx react --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts && cp package.json README.md dist/",
+        "build": "tsc --target es5 --lib es2021,DOM --moduleResolution node --strict --esModuleInterop --declaration --jsx react --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.{ts,tsx} && cp package.json README.md dist/",
         "npm-publish": "npm run build && cd dist && npm publish && cd .."
     }
 }
