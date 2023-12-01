@@ -50,7 +50,7 @@ export async function createChat(
     }
 }
 
-type ChatOptions = {
+export type ChatOptions = {
     autoMemory?: boolean;
     autoEmbeddings?: boolean;
 } & GenerationWithoutWebOptions;
