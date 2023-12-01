@@ -71,7 +71,9 @@ export class Chat {
     constructor(options: ChatOptions = {}, clientOptions: InputClientOptions = {}) {
         this.options = options;
         this.clientOptions = defaultOptions(clientOptions);
-        this.chatId = createChat(options.systemPrompt, options.systemPromptId, this.clientOptions);
+        this.chatId = options?.chatId
+            ? Promise.resolve(options.chatId)
+            : createChat(options.systemPrompt, options.systemPromptId, this.clientOptions);
         this.options.provider = options.provider || "";
 
         if (options.autoMemory || options.autoEmbeddings) {
