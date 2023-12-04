@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-import { generateUUIDV4 } from "helpers/uuid";
+import { generateUUIDV4 } from "../helpers/uuid";
+
 import type { Chat, ChatOptions } from "../chats";
 import usePolyfire from "./usePolyfire";
 
