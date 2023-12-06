@@ -132,8 +132,8 @@ export default function useChat(
 
     // Chat answer
     const [answer, setAnswer] = useState<Message>();
-    const [AnswerError, setAnswerError] = useState<string | undefined>();
-    const [AnswerLoading, setAnswerLoading] = useState<boolean>(false);
+    const [answerError, setAnswerError] = useState<string | undefined>();
+    const [answerLoading, setAnswerLoading] = useState<boolean>(false);
 
     const getChats = useCallback(async () => {
         setChatsLoading(true);
@@ -250,7 +250,7 @@ export default function useChat(
     const onSendMessage = useCallback(
         async (message: string): Promise<void> => {
             try {
-                if (AnswerLoading) return;
+                if (answerLoading) return;
 
                 setAnswerLoading(true);
                 setAnswerError(undefined);
@@ -312,7 +312,7 @@ export default function useChat(
                 }
             }
         },
-        [chatInstance],
+        [chatInstance, answerLoading],
     );
 
     useEffect(() => {
@@ -336,8 +336,8 @@ export default function useChat(
             data: history,
         },
         answer: {
-            loading: AnswerLoading,
-            error: AnswerError,
+            loading: answerLoading,
+            error: answerError,
             data: answer,
         },
         utils: {
