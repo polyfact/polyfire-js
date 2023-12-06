@@ -36,7 +36,10 @@ const getChatList = async (getToken: () => Promise<string>): Promise<ChatInfos[]
         },
     })
         .then((res) => res.json())
-        .then((res) => res.reverse())
+        .then((res) => {
+            if (res && res instanceof Array) return res.reverse();
+            return [];
+        })
         .catch((err) => err);
 };
 
@@ -99,7 +102,11 @@ export type ChatInstance = {
     utils: ChatUtils;
 };
 
-export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInstance {
+export default function useChat(
+    options?: Omit<ChatOptions, "chatId">,
+    onError?: (error: string) => void,
+    onSuccess?: () => void,
+): ChatInstance {
     const {
         auth: {
             status,
@@ -287,6 +294,7 @@ export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInst
                 stream.on("error", (error: string) => {
                     console.error({ error });
                     setAnswerError(error);
+                    onError?.(error);
                     stream.stop();
                 });
 
@@ -294,11 +302,13 @@ export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInst
                     setAnswer(undefined);
                     aiMessage.created_at = new Date().getTime().toString();
                     setHistory((prev) => [aiMessage, ...prev]);
+                    onSuccess?.();
                 });
             } catch (error) {
                 console.error(error);
                 if (error instanceof Error) {
                     setAnswerError(error.message);
+                    onError?.(error.message);
                 }
             }
         },
