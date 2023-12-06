@@ -1,32 +1,39 @@
-import React, { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { usePolyfire } from "polyfire-js/hooks";
+import { TextGenerated } from "polyfire-js/components";
 
 function App() {
-    const { auth, models } = usePolyfire();
-    const [helloWorld, setHelloWorld] = useState<string>();
-
-    const { login, status } = auth;
-    const { generate } = models;
-
-    useEffect(() => {
-        if (status === "authenticated") {
-            generate("Write a hello world haiku").then(setHelloWorld);
-        }
-    }, [status, generate]);
+    const {
+        auth: { login, status },
+    } = usePolyfire();
 
     if (status === "unauthenticated") {
         return (
             <div>
-                <h1>Don't forget to change the project slug in src/index.tsx</h1>
+                <h1>Don't forget to set a REACT_APP_PROJECT_ID environment variable</h1>
                 <p>
                     After that you will be able to{" "}
-                    <button onClick={() => login("github")}>Login With GitHub</button>
+                    <button
+                        className="px-3 py-1 bg-black text-white"
+                        onClick={() => login("github")}
+                    >
+                        Login With GitHub
+                    </button>
                 </p>
             </div>
         );
-    } else if (status === "loading" || !helloWorld) return <div>Loading...</div>;
-    else if (status === "authenticated") return <div>{helloWorld}</div>;
-    else return <div />;
+    }
+
+    return (
+        <>
+            <h2 className="font-bold">Here's a little auto-generated haiku for you:</h2>
+            <TextGenerated
+                className="whitespace-pre font-mono p-3 rounded-lg text-left border-solid border border-gray-500 inline-block bg-gray-200"
+                prompt="Generate a hello world haiku"
+                loadingElement="loading..."
+            />
+        </>
+    );
 }
 
 export default App;

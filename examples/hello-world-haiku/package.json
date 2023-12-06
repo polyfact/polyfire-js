@@ -10,19 +10,21 @@
         "@types/node": "^16.18.59",
         "@types/react": "^18.2.31",
         "@types/react-dom": "^18.2.14",
+        "polyfire-js": "file:../../dist",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-scripts": "5.0.1",
+        "tailwindcss": "^1",
         "typescript": "^4.9.5",
-        "web-vitals": "^2.1.4",
-        "polyfire-js": "file:../../dist"
+        "web-vitals": "^2.1.4"
     },
     "scripts": {
         "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
-        "preinstall": "cd ../../ && npm install && npm run build"
+        "preinstall": "cd ../../ && npm install && npm run build",
+        "rmcache": "sed '/\"polyfire-js/,/^\\s*$/{d}' -i yarn.lock && rm -rf node_modules/.cache node_modules/polyfire-js"
     },
     "eslintConfig": {
         "extends": [
