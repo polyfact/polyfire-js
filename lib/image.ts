@@ -57,7 +57,7 @@ export type ImageGenerationClient = {
 
 export default function client(clientOptions: InputClientOptions = {}): ImageGenerationClient {
     return {
-        generateImage: (prompt: string, options: ImageGenerationOptions) =>
+        generateImage: (prompt: string, options: ImageGenerationOptions = {}) =>
             generateImage(prompt, options, clientOptions),
     };
 }
