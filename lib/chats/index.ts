@@ -53,6 +53,7 @@ export async function createChat(
 export type ChatOptions = {
     autoMemory?: boolean;
     autoEmbeddings?: boolean;
+    chatId?: string;
 } & GenerationWithoutWebOptions;
 
 type ProgressCallback = (step: string) => void;
@@ -68,19 +69,42 @@ export class Chat {
 
     options: ChatOptions;
 
-    constructor(options: ChatOptions = {}, clientOptions: InputClientOptions = {}) {
-        this.options = options;
+    constructor(options: ChatOptions | string = {}, clientOptions: InputClientOptions = {}) {
         this.clientOptions = defaultOptions(clientOptions);
-        this.chatId = options?.chatId
-            ? Promise.resolve(options.chatId)
-            : createChat(options.systemPrompt, options.systemPromptId, this.clientOptions);
-        this.options.provider = options.provider || "";
 
-        if (options.autoMemory || options.autoEmbeddings) {
+        if (typeof options === "string") {
+            this.options = { chatId: options };
+        } else {
+            this.options = options;
+        }
+
+        const { chatId, systemPrompt, systemPromptId, provider, autoMemory, autoEmbeddings } =
+            this.options;
+
+        this.chatId = chatId
+            ? Promise.resolve(chatId)
+            : createChat(systemPrompt, systemPromptId, this.clientOptions);
+        this.options.provider = provider || "";
+
+        if (autoMemory || autoEmbeddings) {
             this.autoMemory = this.clientOptions.then(
                 (co) => new Embeddings({ public: false }, co),
             );
         }
+    }
+
+    static async list(clientOptions: InputClientOptions = {}): Promise<Chat[]> {
+        const co = defaultOptions(clientOptions);
+
+        const response = await axios.get(`${(await co).endpoint}/chats`, {
+            headers: {
+                "X-Access-Token": (await co).token,
+            },
+        });
+
+        const { data }: { data: { id: string }[] } = response;
+
+        return data.map((e) => e.id).map((id) => new Chat(id, clientOptions));
     }
 
     async dataLoader(
@@ -195,6 +219,10 @@ export default function client(clientOptions: InputClientOptions = {}): ChatClie
         Chat: class C extends Chat {
             constructor(options: ChatOptions = {}) {
                 super(options, clientOptions);
+            }
+
+            static list() {
+                return super.list(clientOptions);
             }
         },
     };
