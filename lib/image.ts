@@ -4,7 +4,7 @@ import { InputClientOptions, defaultOptions } from "./clientOpts";
 import { ApiError, ErrorData } from "./helpers/error";
 
 export type ImageGenerationOptions = {
-    provider?: "openai";
+    model?: "dall-e-2" | "dall-e-3" | string;
 };
 
 const ImageGenerationResponseType = t.type({
@@ -13,23 +13,26 @@ const ImageGenerationResponseType = t.type({
 
 export async function generateImage(
     prompt: string,
-    options: ImageGenerationOptions = {},
+    { model }: ImageGenerationOptions = {},
     clientOptions: InputClientOptions = {},
 ): Promise<t.TypeOf<typeof ImageGenerationResponseType>> {
     try {
         const { token, endpoint } = await defaultOptions(clientOptions);
 
-        const { provider = "openai" } = options;
-        const image = await axios.get(
-            `${endpoint}/image/generate?p=${encodeURIComponent(
-                prompt,
-            )}&provider=${encodeURIComponent(provider)}&format=json`,
-            {
-                headers: {
-                    "X-Access-Token": token,
-                },
+        const url = new URL(`${endpoint}/image/generate`);
+
+        url.searchParams.append("p", prompt);
+        url.searchParams.append("format", "json");
+
+        if (model) {
+            url.searchParams.append("model", model);
+        }
+
+        const image = await axios.get(url.toString(), {
+            headers: {
+                "X-Access-Token": token,
             },
-        );
+        });
 
         if (!ImageGenerationResponseType.is(image.data)) {
             throw new ApiError({
@@ -57,7 +60,7 @@ export type ImageGenerationClient = {
 
 export default function client(clientOptions: InputClientOptions = {}): ImageGenerationClient {
     return {
-        generateImage: (prompt: string, options: ImageGenerationOptions) =>
+        generateImage: (prompt: string, options: ImageGenerationOptions = {}) =>
             generateImage(prompt, options, clientOptions),
     };
 }
