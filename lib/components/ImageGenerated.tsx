@@ -3,12 +3,14 @@ import { usePolyfire } from "../hooks";
 
 export interface ImageGeneratedProps extends React.HTMLAttributes<HTMLDivElement> {
     prompt: string;
+    model: string;
     loadingElement?: React.JSX.Element | string;
 }
 
 export function ImageGenerated({
     prompt,
     loadingElement,
+    model,
     ...props
 }: ImageGeneratedProps): React.ReactElement {
     const {
@@ -20,7 +22,7 @@ export function ImageGenerated({
 
     useEffect(() => {
         if (status === "authenticated" && prompt) {
-            generateImage(prompt, {}).then(({ url }) => setImageUrl(url));
+            generateImage(prompt, { model }).then(({ url }) => setImageUrl(url));
         }
     }, [status, generateImage, prompt]);
 
