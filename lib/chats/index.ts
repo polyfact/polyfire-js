@@ -183,16 +183,33 @@ export class Chat {
         return resultStream;
     }
 
-    async getMessages(): Promise<t.TypeOf<typeof Message>[]> {
+    async getMessages({
+        orderBy = "desc",
+        limit = 20,
+        offset = 0,
+    }: {
+        orderBy?: "desc" | "asc";
+        limit?: number;
+        offset?: number;
+    } = {}): Promise<t.TypeOf<typeof Message>[]> {
+        const url = new URL(
+            `${(await this.clientOptions).endpoint}/chat/${await this.chatId}/history`,
+        );
+
+        if (limit < 0 || limit % 1 !== 0 || offset < 0 || offset % 1 !== 0) {
+            throw new Error("limit and offset must be positive integers");
+        }
+
+        url.searchParams.append("orderBy", orderBy);
+        url.searchParams.append("limit", `${limit}`);
+        url.searchParams.append("offset", `${offset}`);
+
         try {
-            const response = await axios.get(
-                `${(await this.clientOptions).endpoint}/chat/${await this.chatId}/history`,
-                {
-                    headers: {
-                        "X-Access-Token": (await this.clientOptions).token,
-                    },
+            const response = await axios.get(url.toString(), {
+                headers: {
+                    "X-Access-Token": (await this.clientOptions).token,
                 },
-            );
+            });
 
             return response?.data?.filter((message: unknown): message is t.TypeOf<typeof Message> =>
                 Message.is(message),
