@@ -36,7 +36,10 @@ const getChatList = async (getToken: () => Promise<string>): Promise<ChatInfos[]
         },
     })
         .then((res) => res.json())
-        .then((res) => res.reverse())
+        .then((res) => {
+            if (res && res instanceof Array) return res.reverse();
+            return [];
+        })
         .catch((err) => err);
 };
 
@@ -99,7 +102,11 @@ export type ChatInstance = {
     utils: ChatUtils;
 };
 
-export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInstance {
+export default function useChat(
+    options?: Omit<ChatOptions, "chatId">,
+    onError?: (error: string) => void,
+    onSuccess?: () => void,
+): ChatInstance {
     const {
         auth: {
             status,
@@ -125,8 +132,8 @@ export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInst
 
     // Chat answer
     const [answer, setAnswer] = useState<Message>();
-    const [AnswerError, setAnswerError] = useState<string | undefined>();
-    const [AnswerLoading, setAnswerLoading] = useState<boolean>(false);
+    const [answerError, setAnswerError] = useState<string | undefined>();
+    const [answerLoading, setAnswerLoading] = useState<boolean>(false);
 
     const getChats = useCallback(async () => {
         setChatsLoading(true);
@@ -243,7 +250,7 @@ export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInst
     const onSendMessage = useCallback(
         async (message: string): Promise<void> => {
             try {
-                if (AnswerLoading) return;
+                if (answerLoading) return;
 
                 setAnswerLoading(true);
                 setAnswerError(undefined);
@@ -287,6 +294,7 @@ export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInst
                 stream.on("error", (error: string) => {
                     console.error({ error });
                     setAnswerError(error);
+                    onError?.(error);
                     stream.stop();
                 });
 
@@ -294,15 +302,17 @@ export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInst
                     setAnswer(undefined);
                     aiMessage.created_at = new Date().getTime().toString();
                     setHistory((prev) => [aiMessage, ...prev]);
+                    onSuccess?.();
                 });
             } catch (error) {
                 console.error(error);
                 if (error instanceof Error) {
                     setAnswerError(error.message);
+                    onError?.(error.message);
                 }
             }
         },
-        [chatInstance],
+        [chatInstance, answerLoading],
     );
 
     useEffect(() => {
@@ -326,8 +336,8 @@ export default function useChat(options?: Omit<ChatOptions, "chatId">): ChatInst
             data: history,
         },
         answer: {
-            loading: AnswerLoading,
-            error: AnswerError,
+            loading: answerLoading,
+            error: answerError,
             data: answer,
         },
         utils: {
