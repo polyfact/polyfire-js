@@ -16,5 +16,5 @@ export {
     TextTranslated,
     TextTranslatedProps,
     Paywall,
-    PaywallProps
+    PaywallProps,
 };

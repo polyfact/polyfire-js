@@ -55,6 +55,12 @@ export function Paywall({
         case "no-paywall":
             return <>{children}</>;
         case "paywall":
-            return paywall(`${paymentLink}?client_reference_id=${encodeURIComponent(userId || "")}`);
+            return paywall(
+                `${paymentLink}?client_reference_id=${encodeURIComponent(userId || "")}`,
+            );
+        default:
+            throw new Error(
+                "Should be unreachable. If you're getting this error while using polyfire, please submit an issue here: https://github.com/polyfire-ai/polyfire-js/issues/new",
+            );
     }
 }
