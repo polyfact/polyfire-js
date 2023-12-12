@@ -3,7 +3,14 @@ import { TextTranslated, TextTranslatedProps } from "./TextTranslated";
 import { TextSummary, TextSummaryProps } from "./TextSummary";
 import { AutoCompleteInput } from "./AutoCompleteInput";
 import { ImageGenerated, ImageGeneratedProps } from "./ImageGenerated";
-import { Paywall, PaywallProps } from "./Paywall";
+import {
+    Paywall,
+    PaywallRootProps,
+    PaywallAuthorizedProps,
+    PaywallNotAuthorizedProps,
+    PaywallLoadingProps,
+    PaywallPaymentLinkProps,
+} from "./Paywall";
 
 export {
     TextGenerated,
@@ -16,5 +23,9 @@ export {
     TextTranslated,
     TextTranslatedProps,
     Paywall,
-    PaywallProps,
+    PaywallRootProps,
+    PaywallAuthorizedProps,
+    PaywallNotAuthorizedProps,
+    PaywallLoadingProps,
+    PaywallPaymentLinkProps,
 };
