@@ -1,29 +1,29 @@
 /* eslint-disable camelcase */
-
 import { useState, useEffect, useCallback } from "react";
 
 import { generateUUIDV4 } from "../helpers/uuid";
+import type { Chat as ChatType, ChatOptions } from "../chats";
 
-import type { Chat, ChatOptions } from "../chats";
 import usePolyfire from "./usePolyfire";
 
 export type Message = {
-    id: string | null;
     chat_id: string;
-    is_user_message: boolean;
     content: string;
     created_at: string | null;
+    end_of_message?: boolean;
+    id: string | null;
+    is_user_message: boolean;
 };
 
 export type ChatInfos = {
+    created_at: string;
     id: string;
+    latest_message_content: string;
+    latest_message_created_at: string;
     name: string | null;
     system_prompt: string | null;
     system_prompt_id: string | null;
-    created_at: string;
     user_id: string;
-    latest_message_content: string;
-    latest_message_created_at: string;
 };
 
 const getChatList = async (getToken: () => Promise<string>): Promise<ChatInfos[]> => {
@@ -77,9 +77,9 @@ const renameChat = async (
 };
 
 type ChatBase<T> = {
-    loading: boolean;
-    error: string | undefined;
     data: T | undefined;
+    error: string | undefined;
+    loading: boolean;
 };
 
 export type Chats = ChatBase<ChatInfos[]>;
@@ -87,18 +87,18 @@ export type ChatHistory = ChatBase<Message[]>;
 export type ChatAnswer = ChatBase<Message>;
 
 export type ChatUtils = {
-    onSendMessage: (message: string) => Promise<void>;
-    onSelectChat: (chatId: string) => Promise<void>;
     onDeleteChat: (chatId: string) => Promise<void>;
     onRenameChat: (chatId: string, name: string) => Promise<void>;
     onResetChat: () => void;
+    onSelectChat: (chatId: string) => Promise<void>;
+    onSendMessage: (message: string) => Promise<void>;
 };
 
 export type ChatInstance = {
-    chats: Chats;
-    chat: ChatInfos | undefined;
-    history: ChatHistory;
     answer: ChatAnswer;
+    chat: ChatInfos | undefined;
+    chats: Chats;
+    history: ChatHistory;
     utils: ChatUtils;
 };
 
@@ -115,7 +115,7 @@ export default function useChat(
         utils: { Chat },
     } = usePolyfire();
 
-    const [chatInstance, setChatInstance] = useState<Chat>();
+    const [chatInstance, setChatInstance] = useState<ChatType>();
     const [chatId, setChatId] = useState<string>();
     // Chats list
     const [chatsData, setChatsData] = useState<ChatInfos[]>([]);
@@ -157,14 +157,20 @@ export default function useChat(
 
     const retrieveChat = useCallback(async (id: string) => {
         setHistoryLoading(true);
-        const chatInstance = new Chat({ ...options, chatId: id } as ChatOptions);
+        const prevchatInstance = new Chat({
+            ...options,
+            chatId: id,
+        } as ChatOptions);
 
-        setChatInstance(chatInstance);
+        setChatInstance(prevchatInstance);
         setChatId(id);
 
-        chatInstance
+        prevchatInstance
             .getMessages()
-            .then(setHistory)
+            .then((res) => {
+                if (res?.length) setHistory(res.reverse());
+                else setHistory([]);
+            })
             .catch(setHistoryError)
             .finally(() => {
                 setHistoryLoading(false);
@@ -175,53 +181,55 @@ export default function useChat(
         async (id: string) => {
             if (chatId === id) return;
 
-            const chat = chatsData.find((chat) => chat.id === id);
+            const chat = chatsData.find((c) => c.id === id);
 
             if (!chat) return;
 
-            setChatData(chatsData.find((chat) => chat.id === id));
+            setChatData(chatsData.find((c) => c.id === id));
             retrieveChat(id);
         },
         [chatsData, chatId],
     );
 
-    const onCreateChat = useCallback(async (message: string) => {
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise<Chat>(async (resolve) => {
-            const newChatInstance = new Chat(options as ChatOptions);
-            setChatInstance(newChatInstance);
+    const onCreateChat = useCallback(
+        async (message: string) =>
+            // eslint-disable-next-line no-async-promise-executor
+            new Promise<ChatType>(async (resolve) => {
+                const newChatInstance = new Chat(options as ChatOptions);
+                setChatInstance(newChatInstance);
 
-            const newChatId = await newChatInstance.chatId;
-            setChatId(newChatId);
+                const newChatId = await newChatInstance.chatId;
+                setChatId(newChatId);
 
-            const newChatInfos = {
-                id: newChatId,
-                name: message,
-                system_prompt: newChatInstance?.options?.systemPrompt || null,
-                system_prompt_id: newChatInstance?.options?.systemPromptId || null,
-                created_at: new Date().toISOString(),
-                user_id: "",
-                latest_message_content: message,
-                latest_message_created_at: new Date().toISOString(),
-            };
+                const newChatInfos = {
+                    id: newChatId,
+                    name: message,
+                    system_prompt: newChatInstance?.options?.systemPrompt || null,
+                    system_prompt_id: newChatInstance?.options?.systemPromptId || null,
+                    created_at: new Date().toISOString(),
+                    user_id: "",
+                    latest_message_content: message,
+                    latest_message_created_at: new Date().toISOString(),
+                };
 
-            setChatsData((prev) => [newChatInfos, ...prev]);
+                setChatsData((prev) => [newChatInfos, ...prev]);
 
-            await onSelectChat(newChatId);
+                await onSelectChat(newChatId);
 
-            setHistory([]);
-            setHistoryError(undefined);
+                setHistory([]);
+                setHistoryError(undefined);
 
-            setAnswer(undefined);
-            setAnswerError(undefined);
+                setAnswer(undefined);
+                setAnswerError(undefined);
 
-            resolve(newChatInstance);
-        });
-    }, []);
+                resolve(newChatInstance);
+            }),
+        [],
+    );
 
     const onRenameChat = useCallback(
         async (id: string, name: string): Promise<void> => {
-            const chat = chatsData.find((chat) => chat.id === id);
+            const chat = chatsData.find((c) => c.id === id);
 
             if (!chat) return;
 
@@ -234,16 +242,15 @@ export default function useChat(
     );
 
     const onDeleteChat = useCallback(
-        async (id: string): Promise<void> => {
-            return deleteChat(id, getToken).then(() => {
+        async (id: string): Promise<void> =>
+            deleteChat(id, getToken).then(() => {
                 if (chatId === id) {
                     setChatId(undefined);
                     setHistory([]);
                     setChatInstance(undefined);
                 }
                 setChatsData(chatsData.filter((chat) => chat.id !== id));
-            });
-        },
+            }),
         [chatsData, chatId],
     );
 
@@ -272,6 +279,7 @@ export default function useChat(
                     is_user_message: true,
                     content: message,
                     created_at: new Date().getTime().toString(),
+                    end_of_message: true,
                 };
                 const aiMessage: Message = {
                     id: generateUUIDV4(),
@@ -279,33 +287,40 @@ export default function useChat(
                     is_user_message: false,
                     content: "",
                     created_at: null,
+                    end_of_message: false,
                 };
 
-                setHistory((prev) => [userMessage, ...prev]);
+                setHistory((prev) => [...prev, userMessage]);
+                setAnswerError(undefined);
+
+                setAnswerLoading(true);
 
                 const stream = newChatInstance.sendMessage(message);
 
                 stream.on("data", (chunk: string) => {
                     aiMessage.content += chunk;
+
                     setAnswer({ ...aiMessage });
                     setAnswerLoading(false);
                 });
 
                 stream.on("error", (error: string) => {
-                    console.error({ error });
                     setAnswerError(error);
                     onError?.(error);
+
                     stream.stop();
                 });
 
                 stream.on("end", async () => {
-                    setAnswer(undefined);
                     aiMessage.created_at = new Date().getTime().toString();
-                    setHistory((prev) => [aiMessage, ...prev]);
+                    aiMessage.end_of_message = true;
+
+                    setHistory((prev) => [...prev, aiMessage]);
+                    setAnswer(undefined);
+
                     onSuccess?.();
                 });
             } catch (error) {
-                console.error(error);
                 if (error instanceof Error) {
                     setAnswerError(error.message);
                     onError?.(error.message);
