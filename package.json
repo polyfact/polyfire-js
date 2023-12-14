@@ -9,7 +9,7 @@
         "@supabase/supabase-js": "^2.31.0",
         "@types/lodash.debounce": "^4.0.9",
         "async-mutex": "^0.4.0",
-        "axios": "^0.27.2",
+        "axios": "^1.6.0",
         "buffer": "^6.0.3",
         "fp-ts": "^2.16.0",
         "inquirer": "^9.2.10",
