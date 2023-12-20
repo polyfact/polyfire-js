@@ -31,7 +31,7 @@ export function TextGenerated({
         setText(undefined);
 
         if (status === "authenticated" && prompt) {
-            const newGeneration = generate(prompt);
+            const newGeneration = generate(prompt, { temperature: 0 });
 
             setCurrentStream(newGeneration);
 
