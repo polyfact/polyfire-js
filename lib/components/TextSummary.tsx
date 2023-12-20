@@ -33,6 +33,7 @@ export function TextSummary({
         if (status === "authenticated" && prompt) {
             const newGeneration = generate(prompt, {
                 systemPrompt: "Summarize what the text the user provided",
+                temperature: 0,
             });
 
             setCurrentStream(newGeneration);
