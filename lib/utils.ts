@@ -1,5 +1,6 @@
 import { Mutex } from "async-mutex";
 import { Buffer } from "buffer";
+import { PolyfireError } from "./helpers/error";
 
 let token: string | undefined;
 let endpoint: string | undefined;
@@ -101,7 +102,7 @@ export class MutablePromise<T> implements PromiseLike<T> {
             throw e;
         }
 
-        throw new Error("Missing function in then");
+        throw new PolyfireError("Missing function in then");
     }
 }
 
