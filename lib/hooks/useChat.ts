@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 import { generateUUIDV4 } from "../helpers/uuid";
+import { PolyfireError } from "../helpers/error";
 import type { Chat as ChatType, ChatOptions } from "../chats";
 
 import usePolyfire from "./usePolyfire";
@@ -268,7 +269,7 @@ export default function useChat(
                 }
 
                 if (!newChatInstance) {
-                    throw new Error(
+                    throw new PolyfireError(
                         "sendMessage: You need to be authenticated to use this function",
                     );
                 }

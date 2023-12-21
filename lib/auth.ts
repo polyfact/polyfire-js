@@ -3,7 +3,7 @@ import { Buffer } from "buffer";
 import { Mutex } from "async-mutex";
 import { ClientOptions } from "./clientOpts";
 import { MutablePromise } from "./utils";
-import { ApiError, ErrorData } from "./helpers/error";
+import { PolyfireError, ApiError, ErrorData } from "./helpers/error";
 
 type SimpleProvider = "github" | "google";
 type LoginWithFirebaseInput = { token: string; provider: "firebase" };
@@ -93,7 +93,7 @@ export function oAuthRedirect(
     browserRedirect = true,
 ): string {
     if (typeof window === "undefined") {
-        throw new Error("signInWithOAuth not usable outside of the browser environment");
+        throw new PolyfireError("signInWithOAuth not usable outside of the browser environment");
     }
 
     const url = `${endpoint}/project/${project}/auth/provider/redirect?provider=${provider}&redirect_to=${encodeURIComponent(
@@ -192,7 +192,7 @@ export async function login(
 export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promise<void> {
     await co.deresolve();
     clearSessionStorage();
-    co.throw(new Error("You need to be authenticated to use this function"));
+    co.throw(new PolyfireError("You need to be authenticated to use this function"));
 }
 
 export async function init(
@@ -200,7 +200,7 @@ export async function init(
     projectOptions: { project: string; endpoint: string },
 ): Promise<boolean> {
     if (typeof window === "undefined") {
-        co.throw(new Error("You need to be authenticated to use this function"));
+        co.throw(new PolyfireError("You need to be authenticated to use this function"));
         return false;
     }
 
@@ -217,7 +217,7 @@ export async function init(
         await signInAnon(undefined, co, projectOptions);
         return true;
     } catch (e) {
-        co.throw(new Error("You need to be authenticated to use this function"));
+        co.throw(new PolyfireError("You need to be authenticated to use this function"));
         return false;
     }
 }

@@ -10,7 +10,7 @@ import {
 } from "../generate";
 import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
 import { Embeddings } from "../embeddings";
-import { ApiError, ErrorData } from "../helpers/error";
+import { ApiError, PolyfireError, ErrorData } from "../helpers/error";
 import { LoaderFunction, loaderToMemory } from "../dataloader";
 
 const Message = t.type({
@@ -197,7 +197,7 @@ export class Chat {
         );
 
         if (limit < 0 || limit % 1 !== 0 || offset < 0 || offset % 1 !== 0) {
-            throw new Error("limit and offset must be positive integers");
+            throw new PolyfireError("limit and offset must be positive integers");
         }
 
         url.searchParams.append("orderBy", orderBy);

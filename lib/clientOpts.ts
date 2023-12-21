@@ -1,4 +1,5 @@
 import { POLYFACT_ENDPOINT, POLYFACT_TOKEN, MutablePromise } from "./utils";
+import { PolyfireError } from "./helpers/error";
 
 export type ClientOptions = {
     endpoint: string;
@@ -10,9 +11,7 @@ export type InputClientOptions = Partial<ClientOptions> | PromiseLike<Partial<Cl
 export async function defaultOptions(popts: InputClientOptions): Promise<ClientOptions> {
     const opts = await popts;
     if (!opts.token && !POLYFACT_TOKEN) {
-        throw new Error(
-            "Please put your polyfire token in the POLYFACT_TOKEN environment variable. You can get one at https://app.polyfire.com",
-        );
+        throw new PolyfireError("Missing polyfire token");
     }
 
     return {
