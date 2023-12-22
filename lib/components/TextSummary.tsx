@@ -11,7 +11,7 @@ export interface TextSummaryProps extends React.HTMLAttributes<HTMLDivElement> {
 export function TextSummary({
     prompt,
     stream,
-    loadingElement,
+    loadingElement = "loading...",
     ...props
 }: TextSummaryProps): React.ReactElement {
     const {

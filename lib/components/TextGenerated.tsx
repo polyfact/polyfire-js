@@ -11,7 +11,7 @@ export interface TextGeneratedProps extends React.HTMLAttributes<HTMLDivElement>
 export function TextGenerated({
     prompt,
     stream,
-    loadingElement,
+    loadingElement = "loading...",
     ...props
 }: TextGeneratedProps): React.ReactElement {
     const {

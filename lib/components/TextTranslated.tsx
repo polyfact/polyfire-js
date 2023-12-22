@@ -10,7 +10,7 @@ export interface TextTranslatedProps extends React.HTMLAttributes<HTMLDivElement
 export function TextTranslated({
     text,
     language,
-    loadingElement,
+    loadingElement = "loading...",
     ...props
 }: TextTranslatedProps): React.ReactElement {
     const {
