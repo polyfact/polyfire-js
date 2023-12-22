@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { usePolyfire } from "../hooks";
+import "./Login.css";
 
 function GithubButton() {
     const {
@@ -112,9 +113,29 @@ export function Login({
         auth: { status },
     } = usePolyfire();
 
+    if (status === "loading") {
+        return (
+            <div
+                {...props}
+                style={{
+                    width: 240,
+                    minHeight: 145,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    ...(props.style || {}),
+                }}
+            >
+                <div style={{ width: 48, height: 48 }}>
+                    <span className="polyfire-login-loader"></span>
+                </div>
+            </div>
+        );
+    }
+
     if (status === "unauthenticated") {
         return (
-            <div {...props} style={{ width: 240, ...(props.style || {}) }}>
+            <div {...props} style={{ width: 240, minHeight: 145, ...(props.style || {}) }}>
                 <GithubButton />
                 <GoogleButton />
                 {(termsOfService || privacyPolicy) && (

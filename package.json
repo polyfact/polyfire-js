@@ -64,7 +64,7 @@
         "lint": "prettier --check lib/ ; eslint lib/",
         "lint:fix": "prettier --write lib/; eslint --fix lib/",
         "build:vanilla-js": "esbuild target/vanilla-js.ts --bundle --minify --target=chrome67,firefox68,edge79,safari15 --outfile=build/vanilla-js.js",
-        "build": "tsc --target es5 --lib es2021,DOM --moduleResolution node --strict --esModuleInterop --declaration --jsx react --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts lib/**/*.tsx && cp package.json README.md dist/",
+        "build": "tsc --target es5 --lib es2021,DOM --moduleResolution node --strict --esModuleInterop --declaration --jsx react --skipLibCheck --outDir dist --rootDir lib lib/*.ts lib/**/*.ts lib/**/*.tsx && cp package.json README.md dist/ && find lib/ -type f -name '*.css' -exec sh -c 'cp {} $(echo {} | sed s/^lib/dist/)' \\;",
         "npm-publish": "npm run build && cd dist && npm publish && cd .."
     }
 }
