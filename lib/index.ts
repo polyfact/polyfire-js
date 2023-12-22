@@ -5,7 +5,6 @@ import { generateWithType } from "./probabilistic_helpers/generateWithType";
 import { transcribe } from "./transcribe";
 import { Chat } from "./chats";
 import { Embeddings, createEmbeddings, updateEmbeddings, getAllEmbeddings } from "./embeddings";
-import { splitString, tokenCount } from "./split";
 import { usage } from "./user";
 import { get as KVGet, set as KVSet, del as KVDel, all as KVAll } from "./kv";
 import PolyfireClientBuilder from "./client";
@@ -50,8 +49,6 @@ export {
 
     // utils
     usage,
-    splitString,
-    tokenCount,
     t,
     kv,
 
