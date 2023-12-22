@@ -30,7 +30,7 @@ import { TextGenerated, Login } from "polyfire-js/components";
 
 function App() {
     return (
-        <Login termsOfService="https://example.com/tos" privacyPolicy="https://example.com/privacy">
+        <Login>
             <h2>Here's a little auto-generated haiku for you:</h2>
             <TextGenerated prompt="Generate a hello world haiku" />
         </Login>
