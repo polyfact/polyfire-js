@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { usePolyfire } from "polyfire-js/hooks";
 
 function App() {
