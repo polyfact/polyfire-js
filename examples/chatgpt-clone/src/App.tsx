@@ -8,7 +8,7 @@ function App() {
     } = usePolyfire();
     const {
         history: { data: messages },
-        utils: { onSendMessage: sendMessage },
+        utils: { sendMessage },
         answer: { loading },
     } = useChat();
 
