@@ -1,4 +1,4 @@
-name: eslint
+name: CI
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   eslint:
-    name: lint
+    name: Lint
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -19,3 +19,12 @@ jobs:
       run: yarn
     - name: Run ESLint
       run: ./node_modules/eslint/bin/eslint.js . --max-warnings 0
+  build-examples:
+    name: Build examples
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build Examples
+      working-directory: ./examples
+      run: make examples
+

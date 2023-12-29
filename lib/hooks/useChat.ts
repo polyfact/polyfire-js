@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 
 import { generateUUIDV4 } from "../helpers/uuid";
 import { PolyfireError } from "../helpers/error";
-import type { Chat as ChatType, ChatOptions } from "../chats";
+import type { Chat as ChatType, ChatInfos, ChatOptions } from "../chats";
 
 import usePolyfire from "./usePolyfire";
 
@@ -14,67 +14,6 @@ export type Message = {
     end_of_message?: boolean;
     id: string | null;
     is_user_message: boolean;
-};
-
-export type ChatInfos = {
-    created_at: string;
-    id: string;
-    latest_message_content: string;
-    latest_message_created_at: string;
-    name: string | null;
-    system_prompt: string | null;
-    system_prompt_id: string | null;
-    user_id: string;
-};
-
-const getChatList = async (getToken: () => Promise<string>): Promise<ChatInfos[]> => {
-    const token = await getToken();
-
-    return fetch(`https://api.polyfire.com/chats`, {
-        method: "GET",
-        headers: {
-            "X-Access-Token": token,
-        },
-    })
-        .then((res) => res.json())
-        .then((res) => {
-            if (res && res instanceof Array) return res.reverse();
-            return [];
-        })
-        .catch((err) => err);
-};
-
-const deleteChat = async (chatId: string, getToken: () => Promise<string>): Promise<boolean> => {
-    const token = await getToken();
-
-    return fetch(`https://api.polyfire.com/chat/${chatId}`, {
-        method: "DELETE",
-        headers: {
-            "X-Access-Token": token,
-        },
-    })
-        .then((res) => res.json())
-        .then((res) => res)
-        .catch((err) => err);
-};
-
-const renameChat = async (
-    chatId: string,
-    name: string,
-    getToken: () => Promise<string>,
-): Promise<boolean> => {
-    const token = await getToken();
-
-    return fetch(`https://api.polyfire.com/chat/${chatId}`, {
-        method: "PUT",
-        headers: {
-            "X-Access-Token": token,
-        },
-        body: JSON.stringify({ name }),
-    })
-        .then((res) => res.json())
-        .then((res) => res)
-        .catch((err) => err);
 };
 
 type ChatBase<T> = {
@@ -88,11 +27,11 @@ export type ChatHistory = ChatBase<Message[]>;
 export type ChatAnswer = ChatBase<Message>;
 
 export type ChatUtils = {
-    onDeleteChat: (chatId: string) => Promise<void>;
-    onRenameChat: (chatId: string, name: string) => Promise<void>;
-    onResetChat: () => void;
-    onSelectChat: (chatId: string) => Promise<void>;
-    onSendMessage: (message: string) => Promise<void>;
+    deleteChat: (chatId: string) => Promise<void>;
+    renameChat: (chatId: string, name: string) => Promise<void>;
+    resetChat: () => void;
+    selectChat: (chatId: string) => Promise<void>;
+    sendMessage: (message: string) => Promise<void>;
 };
 
 export type ChatInstance = {
@@ -113,7 +52,7 @@ export default function useChat(
             status,
             user: { getToken },
         },
-        utils: { Chat },
+        utils: { Chat, getChatList, deleteChat, renameChat },
     } = usePolyfire();
 
     const [chatInstance, setChatInstance] = useState<ChatType>();
@@ -357,11 +296,11 @@ export default function useChat(
             data: answer,
         },
         utils: {
-            onSendMessage,
-            onDeleteChat,
-            onSelectChat,
-            onRenameChat,
-            onResetChat,
+            sendMessage: onSendMessage,
+            deleteChat: onDeleteChat,
+            selectChat: onSelectChat,
+            renameChat: onRenameChat,
+            resetChat: onResetChat,
         },
     };
 }
