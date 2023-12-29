@@ -66,9 +66,9 @@ export async function getChatList(
     getToken: () => Promise<string>,
     clientOptions: InputClientOptions = {},
 ): Promise<ChatInfos[]> {
-    const token = await getToken();
+    const { token, endpoint } = await defaultOptions(clientOptions);
 
-    return fetch(`https://api.polyfire.com/chats`, {
+    return fetch(`${endpoint}/chats`, {
         method: "GET",
         headers: {
             "X-Access-Token": token,
@@ -87,9 +87,9 @@ export async function deleteChat(
     getToken: () => Promise<string>,
     clientOptions: InputClientOptions = {},
 ): Promise<boolean> {
-    const token = await getToken();
+    const { token, endpoint } = await defaultOptions(clientOptions);
 
-    return fetch(`https://api.polyfire.com/chat/${chatId}`, {
+    return fetch(`${endpoint}/chat/${chatId}`, {
         method: "DELETE",
         headers: {
             "X-Access-Token": token,
@@ -106,9 +106,9 @@ export async function renameChat(
     getToken: () => Promise<string>,
     clientOptions: InputClientOptions = {},
 ): Promise<boolean> {
-    const token = await getToken();
+    const { token, endpoint } = await defaultOptions(clientOptions);
 
-    return fetch(`https://api.polyfire.com/chat/${chatId}`, {
+    return fetch(`${endpoint}/chat/${chatId}`, {
         method: "PUT",
         headers: {
             "X-Access-Token": token,
