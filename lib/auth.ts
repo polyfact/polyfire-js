@@ -199,24 +199,24 @@ export async function init(
     co: MutablePromise<Partial<ClientOptions>>,
     projectOptions: { project: string; endpoint: string },
 ): Promise<boolean> {
-    if (typeof window === "undefined") {
-        co.throw(new PolyfireError("You need to be authenticated to use this function"));
-        return false;
-    }
-
-    const session = await getSession(projectOptions.project, projectOptions).catch(() => {
-        clearSessionStorage();
-        return {} as { token?: string; email?: string };
-    });
-    if (session.token) {
-        co.set({ token: session.token, endpoint: projectOptions.endpoint });
-        return true;
-    }
-
     try {
         await signInAnon(undefined, co, projectOptions);
         return true;
     } catch (e) {
+        if (typeof window === "undefined") {
+            co.throw(new PolyfireError("You need to be authenticated to use this function"));
+            return false;
+        }
+
+        const session = await getSession(projectOptions.project, projectOptions).catch(() => {
+            clearSessionStorage();
+            return {} as { token?: string; email?: string };
+        });
+        if (session.token) {
+            co.set({ token: session.token, endpoint: projectOptions.endpoint });
+            return true;
+        }
+
         co.throw(new PolyfireError("You need to be authenticated to use this function"));
         return false;
     }

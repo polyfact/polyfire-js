@@ -64,6 +64,8 @@ export type GenerationSimpleOptions = {
     model?: string;
     stop?: string[];
     temperature?: number;
+    cache?: boolean;
+    fuzzyCache?: boolean;
     language?: Language;
     autoComplete?: boolean;
 };
@@ -235,7 +237,7 @@ export class Generation extends _Readable implements Promise<string> {
             stream.push(null);
             stream.stop();
         });
-        if (window) {
+        if (typeof window !== "undefined") {
             window.addEventListener("beforeunload", () => {
                 this.stop();
             });
@@ -347,6 +349,8 @@ function stream(
             system_prompt_id: genOptions.systemPromptId,
             system_prompt: genOptions.systemPrompt,
             temperature: genOptions.temperature,
+            cache: genOptions.cache,
+            fuzzyCache: genOptions.fuzzyCache,
             chat_id: genOptions.chatId,
             web: genOptions.web,
             language: genOptions.language,
