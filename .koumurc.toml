@@ -9,6 +9,7 @@ data = "Related to the data sent to the models (Embeddings, loaders, etc...)"
 "react/hooks" = "Related to the react hooks"
 "react/components" = "Related to the react components"
 examples = "Related to the provided examples"
+tests = "Related to the tests"
 docs = "Documentation"
 meta = "Anything about the project / cross scopes"
 

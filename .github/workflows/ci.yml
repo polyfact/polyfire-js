@@ -18,7 +18,7 @@ jobs:
             - name: Install modules
               run: yarn
             - name: Run ESLint
-              run: ./node_modules/eslint/bin/eslint.js . --max-warnings 0
+              run: yarn lint --max-warnings 0
     build-examples:
         name: Build examples
         runs-on: ubuntu-latest
