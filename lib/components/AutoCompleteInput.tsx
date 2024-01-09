@@ -148,6 +148,7 @@ export function AutoCompleteInput({
                 ...((props.style || {}) as React.LabelHTMLAttributes<HTMLLabelElement>["style"]),
                 position: "relative",
             }}
+            className={props.className}
         >
             {/*
                 To allow to write the completion in a different color and for it

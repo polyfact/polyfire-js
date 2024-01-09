@@ -1,6 +1,6 @@
 {
     "name": "polyfire-js",
-    "version": "0.2.33",
+    "version": "0.2.34",
     "main": "index.js",
     "types": "index.d.ts",
     "author": "Lancelot Owczarczak <lancelot@owczarczak.fr>",
