@@ -55,7 +55,7 @@ function App() {
                 </div>
             ) : status === "authenticated" ? (
                 <div style={containerStyle}>
-                    <h1 style={headerStyle}> 🔥 Polyfire Component Demo</h1>
+                    <h1 style={headerStyle}> 🔥 Polyfire Components Demo</h1>
 
                     {/* Auto Completion Test Section */}
                     <div style={sectionStyle}>
