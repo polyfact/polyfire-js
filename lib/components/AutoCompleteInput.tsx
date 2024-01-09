@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { usePolyfire } from "../hooks";
 import type { Generation } from "../generate";
 
-export interface AutoCompleteInputProps extends React.HTMLAttributes<HTMLElement> {
+export interface AutoCompleteInputProps extends React.HTMLAttributes<HTMLInputElement> {
     onChange?: React.HTMLAttributes<HTMLInputElement>["onChange"];
 }
 

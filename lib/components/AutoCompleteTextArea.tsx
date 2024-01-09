@@ -5,7 +5,7 @@ import { useDebounce } from "./utils";
 
 declare const window: Window;
 
-export interface AutoCompleteTextAreaProps extends React.HTMLAttributes<HTMLElement> {
+export interface AutoCompleteTextAreaProps extends React.HTMLAttributes<HTMLTextAreaElement> {
     onChange?: React.HTMLAttributes<HTMLTextAreaElement>["onChange"];
 }
 

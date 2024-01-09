@@ -9,6 +9,7 @@ import {
     TextTranslated,
 } from "polyfire-js/components";
 import debounce from "lodash.debounce";
+import CodeDisplay from "./components/CodeDisplay";
 
 export function useDebounce<Params extends unknown[], Return>(
     cb: (...args: Params) => Return,
@@ -54,32 +55,85 @@ function App() {
                 </div>
             ) : status === "authenticated" ? (
                 <div style={containerStyle}>
-                    <h1 style={headerStyle}>Polyfire component tests</h1>
-                    <h2 style={headerStyle}>AutoComplete Input Field</h2>
-                    <AutoCompleteInput style={inputStyle} />
-                    <h2 style={headerStyle}>AutoComplete TextArea</h2>
-                    <AutoCompleteTextArea style={inputStyle} />
+                    <h1 style={headerStyle}> 🔥 Polyfire Component Demo</h1>
 
-                    <h4 style={headerStyle}>Modify prompt to test component generation :</h4>
-                    <input
-                        type="text"
-                        onChange={handleInputChange}
-                        defaultValue={userInput}
-                        style={inputStyle}
-                    />
-                    <h1 style={headerStyle}>AI-Generated Imagery</h1>
-                    <ImageGenerated
-                        prompt={userInput}
-                        model={"dall-e-3"}
-                        loadingElement={"Rendering..."}
-                        style={imageStyle}
-                    />
-                    <h1 style={headerStyle}>Dynamic Text Generation</h1>
-                    <TextGenerated prompt={userInput} stream={true} />
-                    <h1 style={headerStyle}>Content Summarization</h1>
-                    <TextSummary prompt={userInput} stream={true} />
-                    <h1 style={headerStyle}>Language Translation</h1>
-                    <TextTranslated text={userInput} language={"french"} />
+                    {/* Auto Completion Test Section */}
+                    <div style={sectionStyle}>
+                        <h2 style={headerSectionStyle}>Auto Completion Demo</h2>
+
+                        {/* AutoCompleteInput */}
+
+                        <h3 style={headerStyle}>AutoComplete Input Field</h3>
+                        <AutoCompleteInput style={inputStyle} />
+                        <CodeDisplay code={`<AutoCompleteInput />`} />
+
+                        {/* AutoCompleteTextArea */}
+
+                        <h3 style={headerStyle}>AutoComplete TextArea</h3>
+                        <AutoCompleteTextArea style={inputStyle} />
+                        <CodeDisplay code={`<AutoCompleteTextArea />`} />
+                    </div>
+
+                    {/* Generation Test Section */}
+                    <div style={sectionStyle}>
+                        <h2 style={headerSectionStyle}>Generation Demo</h2>
+
+                        <h4 style={headerStyle}>Modify prompt to test components generation:</h4>
+                        <input
+                            type="text"
+                            onChange={handleInputChange}
+                            defaultValue={userInput}
+                            style={inputStyle}
+                        />
+
+                        {/* ImageGenerated */}
+
+                        <h2 style={headerStyle}>AI-Generated Image</h2>
+
+                        <h3>Result</h3>
+                        <ImageGenerated
+                            prompt={userInput}
+                            model={"dall-e-3"}
+                            loadingElement={"Rendering..."}
+                            style={imageStyle}
+                        />
+
+                        <h3>Code</h3>
+                        <CodeDisplay
+                            code={`<ImageGenerated prompt={"${userInput}"} model={"dall-e-3"} />`}
+                        />
+
+                        {/* TextGenerated */}
+
+                        <h3 style={headerStyle}>Dynamic Text Generation</h3>
+
+                        <h4>Result</h4>
+                        <TextGenerated prompt={userInput} stream />
+
+                        <h4>Code</h4>
+                        <CodeDisplay code={`<TextGenerated prompt={"${userInput}"} stream} />`} />
+
+                        {/* TextSummary */}
+
+                        <h2 style={headerStyle}>Content Summarization</h2>
+
+                        <h4>Result</h4>
+                        <TextSummary prompt={userInput} stream />
+
+                        <h4>Code</h4>
+                        <CodeDisplay code={`<TextSummary prompt={"${userInput}"} stream />`} />
+
+                        {/* TextTranslated */}
+
+                        <h2 style={headerStyle}>Language Translation</h2>
+                        <h4>Result</h4>
+                        <TextTranslated text={userInput} language={"french"} />
+
+                        <h4>Code</h4>
+                        <CodeDisplay
+                            code={`<TextTranslated text={"${userInput}"} language={"french"} />`}
+                        />
+                    </div>
                 </div>
             ) : (
                 "Initializing Components..."
@@ -95,6 +149,7 @@ const containerStyle = {
 
 const headerStyle = {
     marginBottom: "1rem",
+    marginTop: "2rem",
     color: "#333",
     fontWeight: "bold",
 };
@@ -105,11 +160,11 @@ const imageStyle = {
 };
 
 const inputStyle = {
-    padding: "0.5rem 1rem",
+    padding: "0.5rem 0rem",
     margin: "1rem 0",
     border: "1px solid #ddd",
     borderRadius: "0.25rem",
-    width: "90vw",
+    width: "100%",
 };
 
 const buttonStyle = {
@@ -120,6 +175,21 @@ const buttonStyle = {
     borderRadius: "0.25rem",
     cursor: "pointer",
     fontWeight: "bold",
+};
+
+const sectionStyle = {
+    backgroundColor: "#f9f9f9",
+    padding: "20px",
+    borderRadius: "8px",
+    margin: "40px 0",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+};
+
+const headerSectionStyle = {
+    ...headerStyle,
+    borderBottom: "2px solid #eee",
+    paddingBottom: "10px",
+    marginBottom: "15px",
 };
 
 export default App;
