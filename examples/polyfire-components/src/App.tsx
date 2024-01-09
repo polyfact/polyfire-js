@@ -64,7 +64,7 @@ function App() {
                         {/* AutoCompleteInput */}
 
                         <h3 style={headerStyle}>AutoComplete Input Field</h3>
-                        <AutoCompleteInput style={inputStyle} />
+                        <AutoCompleteInput placeholder="test" />
                         <CodeDisplay code={`<AutoCompleteInput />`} />
 
                         {/* AutoCompleteTextArea */}

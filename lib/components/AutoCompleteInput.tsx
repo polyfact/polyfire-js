@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { usePolyfire } from "../hooks";
 import type { Generation } from "../generate";
 
-export interface AutoCompleteInputProps extends React.HTMLAttributes<HTMLInputElement> {
-    onChange?: React.HTMLAttributes<HTMLInputElement>["onChange"];
+export interface AutoCompleteInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    onChange?: React.InputHTMLAttributes<HTMLInputElement>["onChange"];
 }
 
 export function AutoCompleteInput({
@@ -136,7 +136,6 @@ export function AutoCompleteInput({
 
     return (
         <label
-            {...(props as React.HTMLAttributes<HTMLElement>)}
             style={{
                 display: "inline-block",
                 minHeight: 16,
@@ -146,7 +145,7 @@ export function AutoCompleteInput({
                 border: "2px solid #ccc",
                 borderRadius: "3px",
                 backgroundColor: "white",
-                ...(props.style || {}),
+                ...((props.style || {}) as React.LabelHTMLAttributes<HTMLLabelElement>["style"]),
                 position: "relative",
             }}
         >

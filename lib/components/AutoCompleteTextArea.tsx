@@ -5,7 +5,8 @@ import { useDebounce } from "./utils";
 
 declare const window: Window;
 
-export interface AutoCompleteTextAreaProps extends React.HTMLAttributes<HTMLTextAreaElement> {
+export interface AutoCompleteTextAreaProps
+    extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     onChange?: React.HTMLAttributes<HTMLTextAreaElement>["onChange"];
 }
 
@@ -162,7 +163,6 @@ export function AutoCompleteTextArea({
 
     return (
         <label
-            {...(props as React.HTMLAttributes<HTMLElement>)}
             style={{
                 display: "inline-block",
                 minHeight: 16,
@@ -172,7 +172,7 @@ export function AutoCompleteTextArea({
                 border: "2px solid #ccc",
                 borderRadius: "3px",
                 backgroundColor: "white",
-                ...(props.style || {}),
+                ...((props.style || {}) as React.LabelHTMLAttributes<HTMLLabelElement>["style"]),
                 position: "relative",
             }}
         >
