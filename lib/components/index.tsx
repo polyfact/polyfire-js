@@ -1,7 +1,8 @@
 import { TextGenerated, TextGeneratedProps } from "./TextGenerated";
 import { TextTranslated, TextTranslatedProps } from "./TextTranslated";
 import { TextSummary, TextSummaryProps } from "./TextSummary";
-import { AutoCompleteInput } from "./AutoCompleteInput";
+import { AutoCompleteInput, AutoCompleteInputProps } from "./AutoCompleteInput";
+import { AutoCompleteTextArea, AutoCompleteTextAreaProps } from "./AutoCompleteTextArea";
 import { ImageGenerated, ImageGeneratedProps } from "./ImageGenerated";
 import { Login, LoginProps } from "./Login";
 
@@ -11,6 +12,9 @@ export {
     TextSummary,
     TextSummaryProps,
     AutoCompleteInput,
+    AutoCompleteInputProps,
+    AutoCompleteTextArea,
+    AutoCompleteTextAreaProps,
     ImageGenerated,
     ImageGeneratedProps,
     TextTranslated,
