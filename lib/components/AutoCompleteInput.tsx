@@ -4,11 +4,12 @@ import type { Generation } from "../generate";
 
 export interface AutoCompleteInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     completionColor?: CSSProperties["color"];
+    containerStyle?: CSSProperties;
+    containerClassName?: string;
 }
 
 const containerStyle: CSSProperties = {
     maxWidth: "100%",
-    border: "1px solid #ccc",
     minHeight: "2rem",
     position: "relative",
     alignItems: "center",
@@ -23,8 +24,8 @@ const inputStyle: CSSProperties = {
     paddingLeft: "0.25rem",
     paddingTop: "0",
     paddingBottom: "0",
-    border: "none",
     overflow: "hidden",
+    border: "1px solid #ccc",
 };
 
 const completionStyle: CSSProperties = {
@@ -45,7 +46,7 @@ const hiddenSizerStyle: CSSProperties = {
 };
 
 export function AutoCompleteInput(props: AutoCompleteInputProps): React.ReactElement {
-    const { completionColor = "grey", className = "", ...inputProps } = props;
+    const { completionColor = "grey", ...inputProps } = props;
     const {
         auth: { status },
         models: { generate },
@@ -145,15 +146,18 @@ export function AutoCompleteInput(props: AutoCompleteInputProps): React.ReactEle
     );
 
     return (
-        <div style={containerStyle} className={className}>
+        <div
+            style={{ ...containerStyle, ...props.containerStyle }}
+            className={props.containerClassName}
+        >
             <input
                 {...inputProps}
                 ref={inputRef}
                 value={prompt}
                 onChange={onChange}
                 onKeyDown={onKeyDown}
-                style={inputStyle}
-                className={className}
+                style={{ ...inputStyle, ...props.style }}
+                className={props.className}
             />
             <span ref={hiddenSizerRef} style={hiddenSizerStyle} />
             <span ref={completionRef} style={{ ...completionStyle, color: completionColor }}>
