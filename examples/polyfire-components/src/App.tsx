@@ -85,7 +85,9 @@ function App() {
                     </div>
                 </div>
             ) : (
-                "Initializing Components..."
+                <div className="flex justify-center items-center h-screen text-bold">
+                    Initializing Components...
+                </div>
             )}
         </div>
     );
