@@ -46,7 +46,12 @@ const hiddenSizerStyle: CSSProperties = {
 };
 
 export function AutoCompleteInput(props: AutoCompleteInputProps): React.ReactElement {
-    const { completionColor = "grey", ...inputProps } = props;
+    const {
+        completionColor = "grey",
+        containerClassName,
+        containerStyle: containerStyleProps,
+        ...inputProps
+    } = props;
     const {
         auth: { status },
         models: { generate },
@@ -146,10 +151,7 @@ export function AutoCompleteInput(props: AutoCompleteInputProps): React.ReactEle
     );
 
     return (
-        <div
-            style={{ ...containerStyle, ...props.containerStyle }}
-            className={props.containerClassName}
-        >
+        <div style={{ ...containerStyle, ...containerStyleProps }} className={containerClassName}>
             <input
                 {...inputProps}
                 ref={inputRef}
