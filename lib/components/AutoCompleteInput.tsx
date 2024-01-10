@@ -86,12 +86,15 @@ export function AutoCompleteInput(props: AutoCompleteInputProps): React.ReactEle
             Only answer with the prediction until the end of the sentence. 
             Don't explain anything about the prediction. 
             Don't repeat what the user said. 
-            Complete from where the user stopped typing. 
-            Just answer only one or two words (never more words).`;
+            Complete from where the user stopped typing.`;
 
             const generation = generate(prompt, { systemPrompt, autoComplete: true });
             generationRef.current = generation;
-            setCompletion(await generation);
+
+            const completion = await generation;
+            const limitedCompletion = completion.split(" ").slice(0, 5).join(" ");
+
+            setCompletion(limitedCompletion);
         } catch (error) {
             console.error("Error generating completion:", error);
         }

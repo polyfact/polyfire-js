@@ -64,7 +64,9 @@ export function AutoCompleteTextArea({
             });
             setPreviousGeneration(generation);
             generation.then((text) => {
-                setCompletion({ text, position: caretPosition });
+                const limitedCompletion = text.split(" ").slice(0, 15).join(" ");
+
+                setCompletion({ text: limitedCompletion, position: caretPosition });
             });
         }
     }, 1000);
