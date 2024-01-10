@@ -162,7 +162,7 @@ export function AutoCompleteTextArea({
     }, []);
 
     return (
-        <label
+        <div
             style={{
                 display: "inline-block",
                 minHeight: 16,
@@ -257,6 +257,6 @@ export function AutoCompleteTextArea({
                 onResize={resynchronize}
                 ref={inputRef}
             />
-        </label>
+        </div>
     );
 }

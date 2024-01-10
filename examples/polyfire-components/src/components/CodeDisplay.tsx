@@ -16,7 +16,7 @@ const CodeDisplay = ({ code }: { code: string }) => {
 
     return (
         <div className="relative group">
-            <pre className="bg-gray-200 p-4 border border-gray-300 rounded text-sm font-mono overflow-x-auto">
+            <pre className="bg-stone-700 p-4 border border-stone-300 rounded text-sm font-mono overflow-x-auto">
                 {code}
             </pre>
             <button
@@ -24,7 +24,7 @@ const CodeDisplay = ({ code }: { code: string }) => {
                 className={`absolute top-2 right-2 flex items-center px-2 py-1 text-xs font-semibold rounded shadow-sm cursor-pointer ${
                     copyLabel === "Copied"
                         ? "bg-green-500 text-white"
-                        : "bg-white text-gray-800 hover:bg-gray-200"
+                        : "bg-white bg-stone-800 hover:bg-stone-800"
                 } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 aria-label={copyLabel}
             >

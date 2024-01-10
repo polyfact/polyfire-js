@@ -1,50 +1,21 @@
-import { useState, ChangeEvent, useRef, useEffect, useCallback } from "react";
 import { usePolyfire } from "polyfire-js/hooks";
-import {
-    AutoCompleteInput,
-    AutoCompleteTextArea,
-    ImageGenerated,
-    TextGenerated,
-    TextSummary,
-    TextTranslated,
-} from "polyfire-js/components";
-import debounce from "lodash.debounce";
+import { AutoCompleteInput, AutoCompleteTextArea } from "polyfire-js/components";
 import CodeDisplay from "./components/CodeDisplay";
-
-export function useDebounce<Params extends unknown[], Return>(
-    cb: (...args: Params) => Return,
-    delay: number,
-): (...args: Params) => Return {
-    const cbRef = useRef(cb);
-    useEffect(() => {
-        cbRef.current = cb;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    return useCallback(
-        debounce((...args: Params) => cbRef.current(...args), delay) as (...args: Params) => Return,
-        [delay],
-    );
-}
+import ImageGeneratedDemo from "./components/ImageGeneratedDemo";
+import TextGeneratedDemo from "./components/TextGenerationDemo";
+import TextSummaryDemo from "./components/TextSummaryDemo";
+import TextTranslatedDemo from "./components/TextTranslatedDemo";
 
 function App() {
     const {
         auth: { login, status },
     } = usePolyfire();
 
-    const [userInput, setUserInput] = useState("funny smiley with broken teeth");
-
-    const debouncedSetUserInput = useDebounce(setUserInput, 500);
-
-    const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-        debouncedSetUserInput(value);
-    };
-
     return (
-        <>
+        <div className="bg-stone-900 text-stone-100">
             {status === "unauthenticated" ? (
                 <div className="p-8 font-sans">
-                    <h1 className="text-xl text-gray-800 font-bold mb-6">
+                    <h1 className="text-xl  font-bold mb-6">
                         Reminder: Update the Project Configuration in src/index.tsx
                     </h1>
                     <button
@@ -56,121 +27,67 @@ function App() {
                 </div>
             ) : status === "authenticated" ? (
                 <div className="p-8 font-sans">
-                    <h1 className="text-2xl text-blue-800 font-bold mb-8">
+                    <h1 className="text-2xl text-stone-100 font-bold mb-8">
                         🔥 Polyfire Components Demo
                     </h1>
 
                     {/* Auto Completion Test Section */}
-                    <div className="bg-gray-100 p-6 rounded-lg shadow-md mb-10">
-                        <h2 className="text-lg text-gray-800 font-bold mb-5 border-b border-gray-200 pb-2">
+                    <div className="bg-stone-800 p-6 rounded-lg shadow-md mb-10">
+                        <h2 className="text-lg font-bold mb-5 border-b border-stone-600 pb-2">
                             Auto Completion Demo
                         </h2>
 
-                        <h3 className="text-md text-gray-800 font-semibold mb-4">
-                            AutoComplete Input Field
-                        </h3>
+                        <h3 className="text-md font-semibold mb-4">AutoComplete Input</h3>
                         <AutoCompleteInput
                             placeholder="Type something here..."
-                            className="py-2 px-3 border border-gray-300 bg-black rounded-md w-full mb-4"
+                            containerClassName="mb-4"
+                            className="bg-stone-700 text-stone-200 border !border-stone-600 placeholder-stone-200"
                         />
                         <CodeDisplay code={`<AutoCompleteInput />`} />
 
-                        <h3 className="text-md text-gray-800 font-semibold mb-4">
-                            AutoComplete TextArea
-                        </h3>
+                        <hr className="my-6 border-t border-stone-600" />
+
+                        <h3 className="text-md  font-semibold my-4">AutoComplete TextArea</h3>
                         <AutoCompleteTextArea
                             placeholder="Type something here..."
-                            className="py-2 px-3 border border-gray-300 rounded-md w-full mb-4"
+                            style={{
+                                width: "100%",
+                                marginBottom: "1rem",
+                                backgroundColor: "rgb(68, 64, 60)",
+                                borderColor: "rgb(87, 83, 78)",
+                            }}
+                            className="text-stone-200 placeholder-stone-200"
+                            rows={5}
                         />
                         <CodeDisplay code={`<AutoCompleteTextArea />`} />
                     </div>
 
                     {/* Generation Test Section */}
-                    <div className="bg-gray-100 p-6 rounded-lg shadow-md">
-                        <h2 className="text-lg text-gray-800 font-bold mb-5 border-b border-gray-200 pb-2">
+                    <div className="bg-stone-800 p-6 rounded-lg shadow-md">
+                        <h2 className="text-lg  font-bold mb-5 border-b border-stone-600 pb-2">
                             Generation Demo
                         </h2>
 
-                        <div className="mb-6">
-                            <h4 className="text-md text-gray-800 font-semibold mb-4">
-                                Modify prompt to test components generation:
-                            </h4>
-                            <input
-                                type="text"
-                                onChange={handleInputChange}
-                                defaultValue={userInput}
-                                className="py-2 px-3 border border-gray-300 rounded-md w-full mb-4"
-                            />
-                        </div>
-
-                        <hr className="my-6 border-t border-gray-300" />
-
                         {/* ImageGenerated */}
-                        <div className="mb-6">
-                            <h3 className="text-md text-gray-800 font-bold mb-4">
-                                AI-Generated Image
-                            </h3>
-                            <h4 className="font-semibold mb-2">Result</h4>
-                            <ImageGenerated
-                                prompt={userInput}
-                                model={"dall-e-3"}
-                                loadingElement={"Rendering..."}
-                                className="w-36 h-36 mb-4"
-                            />
-                            <h4 className="font-semibold my-2">Code</h4>
-                            <CodeDisplay
-                                code={`<ImageGenerated prompt={"${userInput}"} model={"dall-e-3"} />`}
-                            />
-                        </div>
-
-                        <hr className="my-6 border-t border-gray-300" />
+                        <ImageGeneratedDemo />
+                        <hr className="my-6 border-t border-stone-600" />
 
                         {/* TextGenerated */}
-                        <div className="mb-6">
-                            <h3 className="text-md text-gray-800 font-bold mb-4">
-                                Dynamic Text Generation
-                            </h3>
-                            <h4 className="font-semibold mb-2">Result</h4>
-                            <TextGenerated prompt={userInput} stream />
-                            <h4 className="font-semibold my-2">Code</h4>
-                            <CodeDisplay
-                                code={`<TextGenerated prompt={"${userInput}"} stream} />`}
-                            />
-                        </div>
-
-                        <hr className="my-6 border-t border-gray-300" />
+                        <TextGeneratedDemo />
+                        <hr className="my-6 border-t border-stone-600" />
 
                         {/* TextSummary */}
-                        <div className="mb-6">
-                            <h3 className="text-md text-gray-800 font-bold mb-4">
-                                Content Summarization
-                            </h3>
-                            <h4 className="font-semibold mb-2">Result</h4>
-                            <TextSummary prompt={userInput} stream />
-                            <h4 className="font-semibold my-2">Code</h4>
-                            <CodeDisplay code={`<TextSummary prompt={"${userInput}"} stream />`} />
-                        </div>
-
-                        <hr className="my-6 border-t border-gray-300" />
+                        <TextSummaryDemo />
+                        <hr className="my-6 border-t border-stone-600" />
 
                         {/* TextTranslated */}
-                        <div className="mb-6">
-                            <h3 className="text-md text-gray-800 font-bold mb-4">
-                                Language Translation
-                            </h3>
-                            <h4 className="font-semibold mb-2">Result</h4>
-                            <TextTranslated text={userInput} language={"french"} />
-                            <h4 className="font-semibold my-2">Code</h4>
-                            <CodeDisplay
-                                code={`<TextTranslated text={"${userInput}"} language={"french"} />`}
-                            />
-                        </div>
+                        <TextTranslatedDemo />
                     </div>
                 </div>
             ) : (
                 "Initializing Components..."
             )}
-        </>
+        </div>
     );
 }
 
