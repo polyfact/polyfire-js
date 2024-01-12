@@ -191,7 +191,7 @@ export function AutoCompleteTextArea({
             */}
             <div
                 style={{
-                    fontFamily: props?.style?.fontFamily || "Cantarell",
+                    fontFamily: props?.style?.fontFamily || "inherit",
                     backgroundColor: "transparent",
                     fontSize: "inherit",
                     position: "absolute",
@@ -237,7 +237,7 @@ export function AutoCompleteTextArea({
             <textarea
                 {...props}
                 style={{
-                    fontFamily: props?.style?.fontFamily || "Cantarell",
+                    fontFamily: props?.style?.fontFamily || "inherit",
                     caretColor: props?.style?.caretColor || "black",
                     fontSize: "inherit",
                     position: "relative",
