@@ -11,7 +11,7 @@ export interface TextGeneratedProps extends React.HTMLAttributes<HTMLDivElement>
 export function TextGenerated({
     prompt,
     stream,
-    loadingElement,
+    loadingElement = "loading...",
     ...props
 }: TextGeneratedProps): React.ReactElement {
     const {
@@ -31,7 +31,7 @@ export function TextGenerated({
         setText(undefined);
 
         if (status === "authenticated" && prompt) {
-            const newGeneration = generate(prompt);
+            const newGeneration = generate(prompt, { temperature: 0 });
 
             setCurrentStream(newGeneration);
 

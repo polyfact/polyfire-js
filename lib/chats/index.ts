@@ -10,8 +10,20 @@ import {
 } from "../generate";
 import { InputClientOptions, ClientOptions, defaultOptions } from "../clientOpts";
 import { Embeddings } from "../embeddings";
-import { ApiError, ErrorData } from "../helpers/error";
+import { ApiError, PolyfireError, ErrorData } from "../helpers/error";
 import { LoaderFunction, loaderToMemory } from "../dataloader";
+
+/* eslint-disable camelcase */
+export type ChatInfos = {
+    created_at: string;
+    id: string;
+    latest_message_content: string;
+    latest_message_created_at: string;
+    name: string | null;
+    system_prompt: string | null;
+    system_prompt_id: string | null;
+    user_id: string;
+};
 
 const Message = t.type({
     id: t.string,
@@ -48,6 +60,64 @@ export async function createChat(
         }
         throw e;
     }
+}
+
+export async function getChatList(
+    getToken: () => Promise<string>,
+    clientOptions: InputClientOptions = {},
+): Promise<ChatInfos[]> {
+    const { token, endpoint } = await defaultOptions(clientOptions);
+
+    return fetch(`${endpoint}/chats`, {
+        method: "GET",
+        headers: {
+            "X-Access-Token": token,
+        },
+    })
+        .then((res) => res.json())
+        .then((res) => {
+            if (res && res instanceof Array) return res.reverse();
+            return [];
+        })
+        .catch((err) => err);
+}
+
+export async function deleteChat(
+    chatId: string,
+    getToken: () => Promise<string>,
+    clientOptions: InputClientOptions = {},
+): Promise<boolean> {
+    const { token, endpoint } = await defaultOptions(clientOptions);
+
+    return fetch(`${endpoint}/chat/${chatId}`, {
+        method: "DELETE",
+        headers: {
+            "X-Access-Token": token,
+        },
+    })
+        .then((res) => res.json())
+        .then((res) => res)
+        .catch((err) => err);
+}
+
+export async function renameChat(
+    chatId: string,
+    name: string,
+    getToken: () => Promise<string>,
+    clientOptions: InputClientOptions = {},
+): Promise<boolean> {
+    const { token, endpoint } = await defaultOptions(clientOptions);
+
+    return fetch(`${endpoint}/chat/${chatId}`, {
+        method: "PUT",
+        headers: {
+            "X-Access-Token": token,
+        },
+        body: JSON.stringify({ name }),
+    })
+        .then((res) => res.json())
+        .then((res) => res)
+        .catch((err) => err);
 }
 
 export type ChatOptions = {
@@ -197,7 +267,7 @@ export class Chat {
         );
 
         if (limit < 0 || limit % 1 !== 0 || offset < 0 || offset % 1 !== 0) {
-            throw new Error("limit and offset must be positive integers");
+            throw new PolyfireError("limit and offset must be positive integers");
         }
 
         url.searchParams.append("orderBy", orderBy);
@@ -226,6 +296,10 @@ export class Chat {
 
 export type ChatClient = {
     createChat: (systemPrompt?: string, systemPromptId?: string) => Promise<string>;
+    getChatList: (getToken: () => Promise<string>) => Promise<ChatInfos[]>;
+    deleteChat: (chatId: string, getToken: () => Promise<string>) => Promise<boolean>;
+    renameChat: (chatId: string, name: string, getToken: () => Promise<string>) => Promise<boolean>;
+
     Chat: typeof Chat;
 };
 
@@ -233,6 +307,11 @@ export default function client(clientOptions: InputClientOptions = {}): ChatClie
     return {
         createChat: (systemPrompt?: string, systemPromptId?: string) =>
             createChat(systemPrompt, systemPromptId, clientOptions),
+        getChatList: (getToken: () => Promise<string>) => getChatList(getToken, clientOptions),
+        deleteChat: (chatId: string, getToken: () => Promise<string>) =>
+            deleteChat(chatId, getToken, clientOptions),
+        renameChat: (chatId: string, name: string, getToken: () => Promise<string>) =>
+            renameChat(chatId, name, getToken, clientOptions),
         Chat: class C extends Chat {
             constructor(options: ChatOptions = {}) {
                 super(options, clientOptions);

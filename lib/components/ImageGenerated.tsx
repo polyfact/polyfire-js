@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { usePolyfire } from "../hooks";
 
-export interface ImageGeneratedProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ImageGeneratedProps extends React.HTMLAttributes<HTMLImageElement> {
     prompt: string;
     model: string;
     loadingElement?: React.JSX.Element | string;
@@ -22,6 +22,7 @@ export function ImageGenerated({
 
     useEffect(() => {
         if (status === "authenticated" && prompt) {
+            setImageUrl(undefined);
             generateImage(prompt, { model }).then(({ url }) => setImageUrl(url));
         }
     }, [status, generateImage, prompt]);

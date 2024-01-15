@@ -11,7 +11,7 @@ export interface TextSummaryProps extends React.HTMLAttributes<HTMLDivElement> {
 export function TextSummary({
     prompt,
     stream,
-    loadingElement,
+    loadingElement = "loading...",
     ...props
 }: TextSummaryProps): React.ReactElement {
     const {
@@ -33,6 +33,7 @@ export function TextSummary({
         if (status === "authenticated" && prompt) {
             const newGeneration = generate(prompt, {
                 systemPrompt: "Summarize what the text the user provided",
+                temperature: 0,
             });
 
             setCurrentStream(newGeneration);

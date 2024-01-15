@@ -2,6 +2,7 @@
 
 import React, { ReactNode, JSX, useState, createContext, useContext, useEffect } from "react";
 import PolyfireClientBuilder, { Client } from "../client";
+import { PolyfireError } from "../helpers/error";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -48,7 +49,7 @@ export default function usePolyfire(): Omit<Client, "auth"> & {
     const polyfire = useContext(PolyfireContext);
 
     if (!polyfire) {
-        throw new Error(
+        throw new PolyfireError(
             "PolyfireProvider not found, did you forget to wrap your app in <PolyfireProvider>...</PolyfireProvider>?",
         );
     }

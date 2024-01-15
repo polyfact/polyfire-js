@@ -1,3 +1,5 @@
+import { PolyfireError } from "./error";
+
 interface ModelDetails {
     resolvedName: string;
     contextSize: number;
@@ -23,7 +25,7 @@ export const getModelSize = (modelName: string): number => {
         }
     }
 
-    throw new Error(`Unknown model name: ${modelName}`);
+    throw new PolyfireError(`Unknown model name: ${modelName}`);
 };
 
 export const getEmbeddingSize = (modelName: string): number => {

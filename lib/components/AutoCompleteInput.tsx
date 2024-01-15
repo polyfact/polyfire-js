@@ -1,209 +1,173 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, CSSProperties, useRef } from "react";
 import { usePolyfire } from "../hooks";
 import type { Generation } from "../generate";
 
-export interface AutoCompleteInputProps extends React.HTMLAttributes<HTMLElement> {
-    onChange?: React.HTMLAttributes<HTMLInputElement>["onChange"];
+export interface AutoCompleteInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    completionColor?: CSSProperties["color"];
+    containerStyle?: CSSProperties;
+    containerClassName?: string;
 }
 
-export function AutoCompleteInput({
-    onChange: onChangeProps,
-    ...props
-}: AutoCompleteInputProps): React.ReactElement {
+const containerStyle: CSSProperties = {
+    maxWidth: "100%",
+    minHeight: "2rem",
+    position: "relative",
+    alignItems: "center",
+    display: "flex",
+    overflow: "hidden",
+};
+
+const inputStyle: CSSProperties = {
+    minHeight: "2rem",
+    width: "100%",
+    lineHeight: "2rem",
+    paddingLeft: "0.25rem",
+    paddingTop: "0",
+    paddingBottom: "0",
+    overflow: "hidden",
+    border: "1px solid #ccc",
+};
+
+const completionStyle: CSSProperties = {
+    position: "absolute",
+    display: "flex",
+    pointerEvents: "none",
+    width: "auto",
+    lineHeight: "2rem",
+    paddingLeft: "0.5rem",
+};
+
+const hiddenSizerStyle: CSSProperties = {
+    visibility: "hidden",
+    position: "absolute",
+    whiteSpace: "pre",
+    maxWidth: "100%",
+    overflow: "hidden",
+};
+
+export function AutoCompleteInput(props: AutoCompleteInputProps): React.ReactElement {
+    const {
+        completionColor = "grey",
+        containerClassName,
+        containerStyle: containerStyleProps,
+        ...inputProps
+    } = props;
     const {
         auth: { status },
         models: { generate },
     } = usePolyfire();
 
-    const [prompt, setPrompt] = useState<string>();
-    const [scroll, setScroll] = useState<{ scrollLeft: number; scrollTop: number }>();
+    const [prompt, setPrompt] = useState("");
+    const [completion, setCompletion] = useState("");
 
-    const [completion, setCompletion] = useState<string>();
-    const [previousTimeout, setPreviousTimeout] = useState<ReturnType<typeof setTimeout> | null>(
-        null,
-    );
-    const [previousGeneration, setPreviousGeneration] = useState<Generation | null>(null);
+    // This state is used to wait for the user to start typing again before initiating a new completion
+    const [completionUsed, setCompletionUsed] = useState(false);
+
+    const inputRef = useRef<HTMLInputElement>(null);
+    const hiddenSizerRef = useRef<HTMLSpanElement>(null);
+    const completionRef = useRef<HTMLSpanElement>(null);
+    const generationRef = useRef<Generation | null>(null);
+
+    const updateCompletionPosition = () => {
+        if (inputRef.current && hiddenSizerRef.current && completionRef.current) {
+            hiddenSizerRef.current.innerText = prompt;
+            const textWidth = hiddenSizerRef.current.offsetWidth;
+
+            completionRef.current.style.left = `${textWidth}px`;
+        }
+    };
+
+    const generateCompletion = useCallback(async () => {
+        if (status !== "authenticated" || !prompt || completionUsed) return;
+
+        try {
+            const systemPrompt = `Your role is to predict what the user will type next. 
+            Don't answer the user because there is only one user who speaks. 
+            Only answer with the prediction until the end of the sentence. 
+            Don't explain anything about the prediction. 
+            Don't repeat what the user said. 
+            Complete from where the user stopped typing.`;
+
+            const generation = generate(prompt, { systemPrompt, autoComplete: true });
+            generationRef.current = generation;
+
+            const completion = await generation;
+            const limitedCompletion = completion.split(" ").slice(0, 5).join(" ");
+
+            setCompletion(limitedCompletion);
+        } catch (error) {
+            console.error("Error generating completion:", error);
+        }
+    }, [status, generate, prompt, completionUsed]);
 
     useEffect(() => {
-        // We need to stop the previous generations and timers to prevent the previous
-        // to appear after a change.
-        if (previousTimeout !== null) {
-            clearTimeout(previousTimeout);
-        }
-        if (previousGeneration) {
-            try {
-                previousGeneration.stop();
-                previousGeneration.destroy();
-                setPreviousGeneration(null);
-            } catch (_) {
-                // For some reason, previousGeneration.stop seems to throw an error
-                // when pasting some text. It might be due to a race condition if
-                // multiple letters are typed too fast causing the previousGeneration.stop()
-                // to be called multiple time on the same one ?
-                // In any case, this error is unimportant and can be dismissed.
+        const timer = setTimeout(generateCompletion, 500);
+        updateCompletionPosition();
+        return () => {
+            clearTimeout(timer);
+            // We need to stop the previous generations and timers to prevent the previous
+            // to appear after a change.
+            if (generationRef.current) {
+                try {
+                    generationRef.current.stop();
+                } catch (error) {
+                    console.error("Error stopping generation:", error);
+                }
+                generationRef.current = null;
             }
-        }
+        };
+    }, [generateCompletion, prompt]);
 
-        if (status === "authenticated" && prompt) {
-            setPreviousTimeout(
-                // We wait 1 second wihout anything typed before completing anything
-                // to avoid sending too many requests for nothing.
-                setTimeout(() => {
-                    const generation = generate(prompt, {
-                        systemPrompt: `Your role is to predict what the user will type next.
-                            Don't answer the user.
-                            Only answer with the prediction until the end of the sentence.
-                            Don't explain anything about the prediction. Don't repeat what the user said.
-                            Complete from the where the user stopped typing.`,
-                        autoComplete: true,
-                    });
-                    setPreviousGeneration(generation);
-                    generation.then(setCompletion);
-                }, 1000),
-            );
-        }
-    }, [status, generate, prompt]);
+    const onChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        setPrompt(e.target.value || "");
+        setCompletion("");
+        setCompletionUsed(false);
+        updateCompletionPosition();
 
-    const inputRef = React.useRef<HTMLInputElement>(null);
-    const outputRef = React.useRef<HTMLDivElement>(null);
-
-    const onChange: React.ChangeEventHandler<HTMLInputElement> = useCallback(
-        (e) => {
-            setPrompt(e.target.value);
-
-            const { scrollTop, scrollLeft } = e.target;
-            setScroll({ scrollTop, scrollLeft });
-            setCompletion("");
-
-            if (onChangeProps) {
-                onChangeProps(e);
-            }
-        },
-        [onChangeProps],
-    );
+        props.onChange?.(e);
+    };
 
     const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = useCallback(
         (e) => {
             if (e.key === "Tab" && completion) {
                 e.preventDefault();
-                setPrompt((p) => {
-                    if (inputRef.current && outputRef.current) {
-                        inputRef.current.value = p + completion || "";
+                setPrompt((prev) => {
+                    const updatedPrompt = prev + completion;
+                    setTimeout(() => {
+                        if (inputRef.current) {
+                            // We fully scroll left after a completion
+                            inputRef.current.scrollLeft = 99999999;
 
-                        // We fully scroll left after a completion
-                        inputRef.current.scrollLeft = 99999999;
-                        outputRef.current.scrollLeft = 99999999;
-                    }
-                    return p + completion;
+                            inputRef.current.setSelectionRange(
+                                updatedPrompt.length,
+                                updatedPrompt.length,
+                            );
+                        }
+                    }, 0);
+                    return updatedPrompt;
                 });
                 setCompletion("");
+                setCompletionUsed(true);
             }
         },
         [completion],
     );
 
-    // We have to manually check that the scroll stays synchronized between the
-    // div and the input
-    const onScroll: React.UIEventHandler<HTMLInputElement> = useCallback((e) => {
-        const { scrollTop, scrollLeft } = e.target as HTMLInputElement;
-        setScroll({ scrollTop, scrollLeft });
-    }, []);
-
-    useEffect(() => {
-        if (outputRef.current && scroll) {
-            outputRef.current.scrollLeft = scroll.scrollLeft;
-            outputRef.current.scrollTop = scroll.scrollTop;
-        }
-    }, [scroll]);
-
-    // And we need to also manually synchronize the output size and position to
-    // the input, to be sure it stays in the same place even if the style set in
-    // the props gets too weird
-    useEffect(() => {
-        if (outputRef.current && inputRef.current) {
-            outputRef.current.style.paddingLeft = `${
-                inputRef.current.getBoundingClientRect().left -
-                outputRef.current.getBoundingClientRect().left
-            }px`;
-            outputRef.current.style.paddingTop = `${
-                inputRef.current.getBoundingClientRect().top -
-                outputRef.current.getBoundingClientRect().top
-            }px`;
-
-            outputRef.current.style.width = `${inputRef.current.getBoundingClientRect().width}px`;
-        }
-    }, [outputRef, inputRef]);
-
     return (
-        <label
-            {...(props as React.HTMLAttributes<HTMLElement>)}
-            style={{
-                display: "inline-block",
-                minHeight: 16,
-                minWidth: 176,
-                fontSize: 13.33333,
-                padding: "1px 2px",
-                border: "2px solid #ccc",
-                borderRadius: "3px",
-                backgroundColor: "white",
-                ...(props.style || {}),
-                position: "relative",
-            }}
-        >
-            {/*
-                To allow to write the completion in a different color and for it
-                not to be editable right away (until we use tab), we create a div
-                behind the input that prints the input content as well as the
-                completion and set the text color and backgroundColor of the
-                input to transparent.
-
-                This feels wrong and I'm not entirely sure it would withstand any
-                css style/browser config used on this but I didn't found any other
-                way.
-            */}
-            <div
-                style={{
-                    fontFamily: props?.style?.fontFamily || "Cantarell",
-                    backgroundColor: "transparent",
-                    fontSize: "inherit",
-                    position: "absolute",
-                    color: "inherit",
-                    maxWidth: "inherit",
-                    width: "100%",
-                    height: "inherit",
-                    overflow: "hidden",
-                    padding: "0",
-                    display: "inline",
-                    whiteSpace: "pre",
-                }}
-                ref={outputRef}
-            >
-                {prompt}
-                <span style={{ color: "grey" }}>{completion}</span>
-            </div>
+        <div style={{ ...containerStyle, ...containerStyleProps }} className={containerClassName}>
             <input
-                {...props}
-                style={{
-                    fontFamily: props?.style?.fontFamily || "Cantarell",
-                    caretColor: props?.style?.caretColor || "black",
-                    fontSize: "inherit",
-                    position: "relative",
-                    width: "inherit",
-                    minWidth: "100%",
-                    maxWidth: "100%",
-                    height: "inherit",
-                    padding: 0,
-                    border: 0,
-                    display: "inline-block",
-                    color: "transparent",
-                    backgroundColor: "transparent",
-                }}
-                onChange={onChange}
-                onScrollCapture={onScroll}
-                onSelectCapture={onScroll}
-                onKeyDown={onKeyDown}
+                {...inputProps}
                 ref={inputRef}
+                value={prompt}
+                onChange={onChange}
+                onKeyDown={onKeyDown}
+                style={{ ...inputStyle, ...props.style }}
+                className={props.className}
             />
-        </label>
+            <span ref={hiddenSizerRef} style={hiddenSizerStyle} />
+            <span ref={completionRef} style={{ ...completionStyle, color: completionColor }}>
+                {completion}
+            </span>
+        </div>
     );
 }

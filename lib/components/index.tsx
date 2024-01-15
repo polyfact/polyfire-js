@@ -1,7 +1,8 @@
 import { TextGenerated, TextGeneratedProps } from "./TextGenerated";
 import { TextTranslated, TextTranslatedProps } from "./TextTranslated";
 import { TextSummary, TextSummaryProps } from "./TextSummary";
-import { AutoCompleteInput } from "./AutoCompleteInput";
+import { AutoCompleteInput, AutoCompleteInputProps } from "./AutoCompleteInput";
+import { AutoCompleteTextArea, AutoCompleteTextAreaProps } from "./AutoCompleteTextArea";
 import { ImageGenerated, ImageGeneratedProps } from "./ImageGenerated";
 import {
     Paywall,
@@ -11,6 +12,7 @@ import {
     PaywallLoadingProps,
     PaywallPaymentLinkProps,
 } from "./Paywall";
+import { Login, LoginProps } from "./Login";
 
 export {
     TextGenerated,
@@ -18,6 +20,9 @@ export {
     TextSummary,
     TextSummaryProps,
     AutoCompleteInput,
+    AutoCompleteInputProps,
+    AutoCompleteTextArea,
+    AutoCompleteTextAreaProps,
     ImageGenerated,
     ImageGeneratedProps,
     TextTranslated,
@@ -28,4 +33,6 @@ export {
     PaywallNotAuthorizedProps,
     PaywallLoadingProps,
     PaywallPaymentLinkProps,
+    Login,
+    LoginProps
 };

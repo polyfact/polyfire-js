@@ -2,6 +2,7 @@
 import * as t from "polyfact-io-ts";
 import { generate, GenerationOptions } from "../generate";
 import { InputClientOptions } from "../clientOpts";
+import { PolyfireError } from "../helpers/error"
 
 // The ts.io types are way too complex for me to write, I didn't want to spend 2 days fixing this so I
 // decided to bypass the typechecker and throw an error at runtime if the type is not supported.
@@ -73,7 +74,7 @@ function internalTsio2String(type: any, indent: number): string {
         return "null";
     }
 
-    throw new Error(
+    throw new PolyfireError(
         `Unsupported type "${type._tag}".\nPlease use one of:\n\t- InterfaceType (t.type)\n\t- ArrayType (t.array)\n\t- NumberType (t.number)\n\t- StringType (t.string)\n\t- BooleanType (t.boolean)`,
     );
 }
@@ -135,7 +136,9 @@ export async function generateWithType<
         return { result, tokenUsage } as unknown as ReturnType<typeof generateWithType<T, O>>;
     }
 
-    throw new Error("Generation failed to match the given type after 5 retry");
+    throw new PolyfireError(
+        "Generation failed to match the given type after 5 retry",
+    );
 }
 
 export type GenerationWithTypeClient = {

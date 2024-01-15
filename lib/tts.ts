@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { InputClientOptions, defaultOptions } from "./clientOpts";
-import { ApiError, ErrorData } from "./helpers/error";
+import { ApiError, PolyfireError, ErrorData } from "./helpers/error";
 
 declare const window: Window | undefined;
 
@@ -27,7 +27,7 @@ export class AudioTTS {
                     resolve(buffer);
                 });
             } else {
-                throw new Error("AudioContext is not supported in this environment");
+                throw new PolyfireError("AudioContext is not supported in this environment");
             }
         });
     }
@@ -46,7 +46,7 @@ export class AudioTTS {
                     resolve();
                 };
             } else {
-                reject(Error("AudioContext is not supported in this environment"));
+                reject(new PolyfireError("AudioContext is not supported in this environment"));
             }
         });
     }
@@ -60,7 +60,7 @@ export class AudioTTS {
                 };
                 this.source = null;
             } else {
-                reject(Error("AudioSource is not playing"));
+                reject(new PolyfireError("AudioSource is not playing"));
             }
         });
     }
@@ -69,7 +69,7 @@ export class AudioTTS {
         if (this.audioCtx && this.source) {
             return this.audioCtx.suspend();
         } else {
-            throw Error("AudioSource is not playing");
+            throw new PolyfireError("AudioSource is not playing");
         }
     }
 
@@ -77,7 +77,7 @@ export class AudioTTS {
         if (this.audioCtx && this.source) {
             return this.audioCtx.resume();
         } else {
-            throw Error("AudioSource does not exist");
+            throw new PolyfireError("AudioSource does not exist");
         }
     }
 }

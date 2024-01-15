@@ -4,6 +4,7 @@ import usePolyfire from "./usePolyfire";
 
 import { GenerationSimpleOptions } from "../generate";
 import { t } from "..";
+import { PolyfireError } from "../helpers/error";
 
 const ActionAgent = t.type({
     thought: t.string.description(
@@ -121,13 +122,13 @@ const useAgent = (
             const result = await generateWithType(history, ActionAgent, options);
 
             if (!ActionAgent.is(result)) {
-                throw new Error("Expected ActionAgent");
+                throw new PolyfireError("Expected ActionAgent");
             }
 
             progress("Thought", result?.thought as string);
 
             if (!result?.action.type) {
-                throw new Error("Expected action");
+                throw new PolyfireError("Expected action");
             }
 
             if (result.action.type === "Finish" || loop === 4 || !isRunning) {

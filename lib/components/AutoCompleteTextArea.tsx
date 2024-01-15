@@ -5,7 +5,8 @@ import { useDebounce } from "./utils";
 
 declare const window: Window;
 
-export interface AutoCompleteTextAreaProps extends React.HTMLAttributes<HTMLElement> {
+export interface AutoCompleteTextAreaProps
+    extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     onChange?: React.HTMLAttributes<HTMLTextAreaElement>["onChange"];
 }
 
@@ -63,7 +64,9 @@ export function AutoCompleteTextArea({
             });
             setPreviousGeneration(generation);
             generation.then((text) => {
-                setCompletion({ text, position: caretPosition });
+                const limitedCompletion = text.split(" ").slice(0, 15).join(" ");
+
+                setCompletion({ text: limitedCompletion, position: caretPosition });
             });
         }
     }, 1000);
@@ -161,8 +164,7 @@ export function AutoCompleteTextArea({
     }, []);
 
     return (
-        <label
-            {...(props as React.HTMLAttributes<HTMLElement>)}
+        <div
             style={{
                 display: "inline-block",
                 minHeight: 16,
@@ -172,7 +174,7 @@ export function AutoCompleteTextArea({
                 border: "2px solid #ccc",
                 borderRadius: "3px",
                 backgroundColor: "white",
-                ...(props.style || {}),
+                ...((props.style || {}) as React.LabelHTMLAttributes<HTMLLabelElement>["style"]),
                 position: "relative",
             }}
         >
@@ -189,7 +191,7 @@ export function AutoCompleteTextArea({
             */}
             <div
                 style={{
-                    fontFamily: props?.style?.fontFamily || "Cantarell",
+                    fontFamily: props?.style?.fontFamily || "inherit",
                     backgroundColor: "transparent",
                     fontSize: "inherit",
                     position: "absolute",
@@ -235,7 +237,7 @@ export function AutoCompleteTextArea({
             <textarea
                 {...props}
                 style={{
-                    fontFamily: props?.style?.fontFamily || "Cantarell",
+                    fontFamily: props?.style?.fontFamily || "inherit",
                     caretColor: props?.style?.caretColor || "black",
                     fontSize: "inherit",
                     position: "relative",
@@ -257,6 +259,6 @@ export function AutoCompleteTextArea({
                 onResize={resynchronize}
                 ref={inputRef}
             />
-        </label>
+        </div>
     );
 }

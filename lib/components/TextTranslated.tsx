@@ -10,7 +10,7 @@ export interface TextTranslatedProps extends React.HTMLAttributes<HTMLDivElement
 export function TextTranslated({
     text,
     language,
-    loadingElement,
+    loadingElement = "loading...",
     ...props
 }: TextTranslatedProps): React.ReactElement {
     const {
@@ -26,6 +26,7 @@ export function TextTranslated({
         if (status === "authenticated" && text) {
             generate(text, {
                 systemPrompt: `Translate the text the user provided to this language: "${language}". Just say the translated text. Do not write anything else, do not write any explanation. Only write in the target language (${language})`,
+                temperature: 0,
             }).then(setTranslation);
         }
     }, [status, generate, text]);

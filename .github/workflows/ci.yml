@@ -1,0 +1,45 @@
+name: CI
+on:
+    push:
+        branches:
+            - master
+            - main
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    eslint:
+        name: Lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Install modules
+              run: yarn
+            - name: Run ESLint
+              run: yarn lint --max-warnings 0
+    build-examples:
+        name: Build examples
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Build Examples
+              working-directory: ./examples
+              run: make examples
+    test:
+        name: Run tests
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Install modules
+              run: yarn
+            - name: Build library
+              run: yarn build
+            - name: Run tests
+              run: yarn test
+              env:
+                  CUSTOM_PROJECT_ID: ${{ secrets.CUSTOM_PROJECT_ID }}
+                  CUSTOM_PROJECT_TOKEN: ${{ secrets.CUSTOM_PROJECT_TOKEN }}
+                  ENDPOINT: ${{ secrets.ENDPOINT }}
+                  ANONYMOUS_PROJECT_ID: ${{ secrets.ANONYMOUS_PROJECT_ID }}

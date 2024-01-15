@@ -6,7 +6,11 @@ function App() {
     const {
         auth: { login, status },
     } = usePolyfire();
-    const { messages, sendMessage, loading } = useChat();
+    const {
+        history: { data: messages },
+        utils: { sendMessage },
+        answer: { loading },
+    } = useChat();
 
     return (
         <>
