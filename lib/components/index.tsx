@@ -4,6 +4,14 @@ import { TextSummary, TextSummaryProps } from "./TextSummary";
 import { AutoCompleteInput, AutoCompleteInputProps } from "./AutoCompleteInput";
 import { AutoCompleteTextArea, AutoCompleteTextAreaProps } from "./AutoCompleteTextArea";
 import { ImageGenerated, ImageGeneratedProps } from "./ImageGenerated";
+import {
+    Paywall,
+    PaywallRootProps,
+    PaywallAuthorizedProps,
+    PaywallNotAuthorizedProps,
+    PaywallLoadingProps,
+    PaywallPaymentLinkProps,
+} from "./Paywall";
 import { Login, LoginProps } from "./Login";
 
 export {
@@ -19,6 +27,12 @@ export {
     ImageGeneratedProps,
     TextTranslated,
     TextTranslatedProps,
+    Paywall,
+    PaywallRootProps,
+    PaywallAuthorizedProps,
+    PaywallNotAuthorizedProps,
+    PaywallLoadingProps,
+    PaywallPaymentLinkProps,
     Login,
-    LoginProps,
+    LoginProps
 };
