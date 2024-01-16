@@ -16,16 +16,18 @@ export function PolyfireProvider({
     children,
     project,
     endpoint = "https://api.polyfire.com",
+    autoLogin,
 }: {
     children: ReactNode;
     project: string;
     endpoint?: string;
+    autoLogin?: boolean;
 }): JSX.Element {
     const [status, setStatus] = useState<AuthStatus>("loading");
     const [polyfire] = useState<Client>(() => PolyfireClientBuilder({ project, endpoint }));
 
     useEffect(() => {
-        polyfire.auth.init().then((isAuthenticated) => {
+        polyfire.auth.init(autoLogin).then((isAuthenticated) => {
             setStatus(isAuthenticated ? "authenticated" : "unauthenticated");
         });
     }, []);

@@ -198,27 +198,36 @@ export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promis
 export async function init(
     co: MutablePromise<Partial<ClientOptions>>,
     projectOptions: { project: string; endpoint: string },
+    autoLogin = true,
 ): Promise<boolean> {
-    if (typeof window === "undefined") {
+    try {
+        if (!autoLogin) {
+            throw new PolyfireError("Auto login disabled");
+        }
+        await signInAnon(undefined, co, projectOptions);
+        return true;
+    } catch (e) {
+        if (typeof window === "undefined") {
+            co.throw(new PolyfireError("You need to be authenticated to use this function"));
+            return false;
+        }
+
+        const session = await getSession(projectOptions.project, projectOptions).catch(() => {
+            clearSessionStorage();
+            return {} as { token?: string; email?: string };
+        });
+        if (session.token) {
+            co.set({ token: session.token, endpoint: projectOptions.endpoint });
+            return true;
+        }
+
         co.throw(new PolyfireError("You need to be authenticated to use this function"));
         return false;
     }
-
-    const session = await getSession(projectOptions.project, projectOptions).catch(() => {
-        clearSessionStorage();
-        return {} as { token?: string; email?: string };
-    });
-    if (session.token) {
-        co.set({ token: session.token, endpoint: projectOptions.endpoint });
-        return true;
-    }
-
-    co.throw(new PolyfireError("You need to be authenticated to use this function"));
-    return false;
 }
 
 export type AuthClient = {
-    init: () => Promise<boolean>;
+    init: (autoLogin?: boolean) => Promise<boolean>;
     login: (input: LoginFunctionInput) => Promise<void>;
     logout: () => Promise<void>;
 };
@@ -228,7 +237,7 @@ export default function authClient(
     projectOptions: { project: string; endpoint: string },
 ): AuthClient {
     return {
-        init: () => init(co, projectOptions),
+        init: (autoLogin) => init(co, projectOptions, autoLogin),
         login: (input: LoginFunctionInput) => login(input, projectOptions, co),
         logout: () => logout(co),
     };
