@@ -198,8 +198,12 @@ export async function logout(co: MutablePromise<Partial<ClientOptions>>): Promis
 export async function init(
     co: MutablePromise<Partial<ClientOptions>>,
     projectOptions: { project: string; endpoint: string },
+    autoLogin = true,
 ): Promise<boolean> {
     try {
+        if (!autoLogin) {
+            throw new PolyfireError("Auto login disabled");
+        }
         await signInAnon(undefined, co, projectOptions);
         return true;
     } catch (e) {
@@ -223,7 +227,7 @@ export async function init(
 }
 
 export type AuthClient = {
-    init: () => Promise<boolean>;
+    init: (autoLogin?: boolean) => Promise<boolean>;
     login: (input: LoginFunctionInput) => Promise<void>;
     logout: () => Promise<void>;
 };
@@ -233,7 +237,7 @@ export default function authClient(
     projectOptions: { project: string; endpoint: string },
 ): AuthClient {
     return {
-        init: () => init(co, projectOptions),
+        init: (autoLogin) => init(co, projectOptions, autoLogin),
         login: (input: LoginFunctionInput) => login(input, projectOptions, co),
         logout: () => logout(co),
     };
