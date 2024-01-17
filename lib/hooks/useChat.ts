@@ -45,7 +45,7 @@ export type ChatInstance = {
 export default function useChat(
     options?: Omit<ChatOptions, "chatId">,
     onError?: (error: string) => void,
-    onSuccess?: () => void,
+    onSuccess?: (message: Message) => void,
 ): ChatInstance {
     const {
         auth: {
@@ -258,7 +258,7 @@ export default function useChat(
                     setHistory((prev) => [...prev, aiMessage]);
                     setAnswer(undefined);
 
-                    onSuccess?.();
+                    onSuccess?.(aiMessage);
                 });
             } catch (error) {
                 if (error instanceof Error) {
