@@ -9,9 +9,9 @@ import React, {
     useContext,
 } from "react";
 
-export type SpeechSynthesisOptions = Partial<SpeechSynthesisUtterance>;
+export type BrowserSpeechOptions = Partial<SpeechSynthesisUtterance>;
 
-export type UseSpeechSynthesis = {
+export type UseBrowserSpeech = {
     togglePlay: (content: string, speechId: string) => void;
     togglePause: () => void;
     speaking: boolean;
@@ -20,7 +20,7 @@ export type UseSpeechSynthesis = {
     voices: SpeechSynthesisVoice[];
 };
 
-export type SpeechContextType = {
+export type BrowserSpeechContextType = {
     startSpeaking: (content: string, speechId: string) => void;
     togglePause: () => void;
     speaking: boolean;
@@ -29,17 +29,17 @@ export type SpeechContextType = {
     voices?: SpeechSynthesisVoice[];
 };
 
-const defaultOptions: SpeechSynthesisOptions = {
+const defaultOptions: BrowserSpeechOptions = {
     pitch: 1,
     rate: 1,
 };
 
 // Hook
 
-const useSpeechSynthesis = (
+export const useBrowserSpeech = (
     onActiveSpeechChange?: (speechId: string | null) => void,
-    options: SpeechSynthesisOptions = defaultOptions,
-): UseSpeechSynthesis => {
+    options: BrowserSpeechOptions = defaultOptions,
+): UseBrowserSpeech => {
     const [speaking, setSpeaking] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -73,7 +73,7 @@ const useSpeechSynthesis = (
 
             Object.keys(options).forEach((key) => {
                 if (key in utterance) {
-                    utteranceWithOptions[key] = options[key as keyof SpeechSynthesisOptions];
+                    utteranceWithOptions[key] = options[key as keyof BrowserSpeechOptions];
                 }
             });
 
@@ -160,7 +160,7 @@ const useSpeechSynthesis = (
 
 // Context
 
-const SpeechContext = createContext<SpeechContextType>({
+const BrowserSpeechContext = createContext<BrowserSpeechContextType>({
     startSpeaking: () => {},
     togglePause: () => {},
     speaking: false,
@@ -168,19 +168,18 @@ const SpeechContext = createContext<SpeechContextType>({
     activeSpeechId: null,
 });
 
-const useSpeechContext = (): SpeechContextType => useContext(SpeechContext);
+export const useBrowserSpeechContext = (): BrowserSpeechContextType =>
+    useContext(BrowserSpeechContext);
 
-export default useSpeechContext;
-
-export const SpeechProvider = ({
+export const BrowserSpeechProvider = ({
     children,
     options,
 }: {
     children: ReactNode;
-    options?: SpeechSynthesisOptions;
+    options?: BrowserSpeechOptions;
 }): ReactNode => {
     const [activeSpeechId, setActiveSpeechId] = useState<string | null>(null);
-    const { togglePlay, togglePause, speaking, isPaused, voices } = useSpeechSynthesis(
+    const { togglePlay, togglePause, speaking, isPaused, voices } = useBrowserSpeech(
         (newActiveSpeechId) => {
             setActiveSpeechId(newActiveSpeechId);
         },
@@ -195,7 +194,7 @@ export const SpeechProvider = ({
     };
 
     return (
-        <SpeechContext.Provider
+        <BrowserSpeechContext.Provider
             value={{
                 startSpeaking,
                 togglePause,
@@ -206,6 +205,6 @@ export const SpeechProvider = ({
             }}
         >
             {children}
-        </SpeechContext.Provider>
+        </BrowserSpeechContext.Provider>
     );
 };
