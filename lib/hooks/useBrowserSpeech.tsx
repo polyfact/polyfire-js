@@ -1,5 +1,7 @@
 /* eslint-env browser */
 
+"use client";
+
 import React, {
     useState,
     useEffect,
