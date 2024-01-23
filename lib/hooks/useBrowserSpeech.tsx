@@ -14,7 +14,7 @@ import React, {
 export type BrowserSpeechOptions = Partial<SpeechSynthesisUtterance>;
 
 export type UseBrowserSpeech = {
-    togglePlay: (content: string, speechId: string) => void;
+    togglePlay: (content: string, speechId: string, voice?: number) => void;
     togglePause: () => void;
     speaking: boolean;
     isPaused: boolean;
@@ -23,7 +23,7 @@ export type UseBrowserSpeech = {
 };
 
 export type BrowserSpeechContextType = {
-    startSpeaking: (content: string, speechId: string) => void;
+    startSpeaking: (content: string, speechId: string, voice?: number) => void;
     togglePause: () => void;
     speaking: boolean;
     isPaused: boolean;
@@ -124,14 +124,14 @@ export const useBrowserSpeech = (
     }, []);
 
     const togglePlay = useCallback(
-        (content: string, speechId: string) => {
+        (content: string, speechId: string, voice?: number) => {
             if (speaking && activeSpeechId === speechId) {
                 stop();
                 setSpeaking(false);
                 setActiveSpeechId(null);
                 onActiveSpeechChange?.(null);
             } else {
-                start(content);
+                start(content, voice);
                 setSpeaking(true);
                 setIsPaused(false);
                 setActiveSpeechId(speechId);
@@ -188,11 +188,11 @@ export const BrowserSpeechProvider = ({
         options,
     );
 
-    const startSpeaking = (content: string, speechId: string) => {
+    const startSpeaking = (content: string, speechId: string, voice?: number) => {
         if (activeSpeechId && activeSpeechId !== speechId) {
-            togglePlay("", activeSpeechId);
+            togglePlay("", activeSpeechId, voice);
         }
-        togglePlay(content, speechId);
+        togglePlay(content, speechId, voice);
     };
 
     return (
