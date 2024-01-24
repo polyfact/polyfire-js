@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { usePolyfire } from "../hooks";
 import type { Generation } from "../generate";

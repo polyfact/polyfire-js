@@ -1,4 +1,6 @@
 /* eslint-disable camelcase */
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 
 import { generateUUIDV4 } from "../helpers/uuid";
