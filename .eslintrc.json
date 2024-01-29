@@ -46,6 +46,7 @@
         "import/prefer-default-export": "off",
         "import/extensions": "off",
         "no-else-return": "off",
+        "lines-around-directive": "off",
 
         "no-unused-vars": "off",
         "no-restricted-imports": [
