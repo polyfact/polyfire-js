@@ -105,7 +105,7 @@ export class Transcription implements Promise<string> {
 
         if (!dialogue || dialogue.length === 0) {
             console.warn(
-                "No dialogue found in transcription even though text has been transcribed. \nThis could indicate the provider you are using does not support word-level transcriptions. If you did not explicitely defined a provider when calling the transcribe function, the default provider is openai and does not support word level transcription.\nYou can switch to a provider like deepgram if you need word-level transcription. For more information check the polyfire documentation.",
+                "No dialogue found in transcription even though text has been transcribed. \nThis could indicate the provider you are using does not support word-level transcriptions. If you did not explicitely defined a provider when calling the transcribe function, the default provider is openai and does not support word level transcription.\nYou can switch to a provider like deepgram if you need word-level transcription. For more information check the Polyfire documentation at https://docs.polyfire.com.",
             );
             return [];
         }
