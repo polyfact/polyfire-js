@@ -101,7 +101,7 @@ export class Transcription implements Promise<string> {
     }
 
     async dialogue(): Promise<DialogueElement[]> {
-        const { text, dialogue } = await this.promise;
+        const { dialogue } = await this.promise;
 
         if (!dialogue || dialogue.length === 0) {
             console.warn(
