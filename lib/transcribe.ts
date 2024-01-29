@@ -21,6 +21,12 @@ const ResultType = t.intersection([
                 speaker_confidence: t.number,
             }),
         ),
+        dialogue: t.array(
+            t.type({
+                speaker: t.number,
+                text: t.string,
+            }),
+        ),
     }),
 ]);
 
@@ -31,6 +37,8 @@ function randomString() {
 
 type TranscriptionOptions = {
     provider?: string;
+    language?: string;
+    outputFormat?: string;
 };
 
 type Word = {
@@ -41,6 +49,11 @@ type Word = {
     confidence: number;
     speaker: number;
     speakerConfidence: number;
+};
+
+type DialogueElement = {
+    speaker: number;
+    text: string;
 };
 
 export class Transcription implements Promise<string> {
@@ -86,6 +99,19 @@ export class Transcription implements Promise<string> {
             })) ?? []
         );
     }
+
+    async dialogue(): Promise<DialogueElement[]> {
+        const { text, dialogue } = await this.promise;
+
+        if (!dialogue || dialogue.length === 0) {
+            console.warn(
+                "No dialogue found in transcription even though text has been transcribed. \nThis could indicate the provider you are using does not support word-level transcriptions. If you did not explicitely defined a provider when calling the transcribe function, the default provider is openai and does not support word level transcription.\nYou can switch to a provider like deepgram if you need word-level transcription. For more information check the polyfire documentation.",
+            );
+            return [];
+        }
+
+        return dialogue;
+    }
 }
 
 export function transcribe(
@@ -110,7 +136,12 @@ export function transcribe(
 
             const res = await axios.post(
                 `${endpoint}/transcribe`,
-                { ...options, file_path: fileName },
+                {
+                    provider: options.provider,
+                    language: options.language,
+                    output_format: options.outputFormat,
+                    file_path: fileName,
+                },
                 {
                     headers: {
                         "X-Access-Token": token,

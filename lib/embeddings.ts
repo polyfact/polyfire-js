@@ -34,7 +34,7 @@ async function createEmbeddings(
 
 async function updateEmbeddings(
     id: string,
-    input: string,
+    input: string | string[],
     maxToken = 0,
     clientOptions: InputClientOptions = {},
 ): Promise<{ success: boolean }> {
@@ -154,7 +154,10 @@ class Embeddings {
         }
     }
 
-    async add(input: string, { maxToken = 0 }: EmbeddingsAddOptions = {}): Promise<void> {
+    async add(
+        input: string | string[],
+        { maxToken = 0 }: EmbeddingsAddOptions = {},
+    ): Promise<void> {
         const id = await this.memoryId;
         await updateEmbeddings(id, input, maxToken, await this.clientOptions);
     }
@@ -173,13 +176,17 @@ export { createEmbeddings, updateEmbeddings, getAllEmbeddings, Embeddings };
 
 export type EmbeddingsClient = {
     createMemory: (isPublic: true) => Promise<{ id: string }>;
-    updateMemory: (id: string, input: string, maxToken?: number) => Promise<{ success: boolean }>;
+    updateMemory: (
+        id: string,
+        input: string | string[],
+        maxToken?: number,
+    ) => Promise<{ success: boolean }>;
     getAllMemories: () => Promise<{ ids: string[] }>;
     Memory: () => Embeddings;
     createEmbeddings: (isPublic: true) => Promise<{ id: string }>;
     updateEmbeddings: (
         id: string,
-        input: string,
+        input: string | string[],
         maxToken?: number,
     ) => Promise<{ success: boolean }>;
     getAllEmbeddings: () => Promise<{ ids: string[] }>;
@@ -189,13 +196,13 @@ export type EmbeddingsClient = {
 export default function client(clientOptions: InputClientOptions = {}): EmbeddingsClient {
     return {
         createMemory: () => createEmbeddings(clientOptions),
-        updateMemory: (id: string, input: string, maxToken?: number) =>
+        updateMemory: (id: string, input: string | string[], maxToken?: number) =>
             updateEmbeddings(id, input, maxToken, clientOptions),
         getAllMemories: () => getAllEmbeddings(clientOptions),
         Memory: (embeddingsOptions?: EmbeddingsOptions) =>
             new Embeddings(embeddingsOptions, clientOptions),
         createEmbeddings: () => createEmbeddings(clientOptions),
-        updateEmbeddings: (id: string, input: string, maxToken?: number) =>
+        updateEmbeddings: (id: string, input: string | string[], maxToken?: number) =>
             updateEmbeddings(id, input, maxToken, clientOptions),
         getAllEmbeddings: () => getAllEmbeddings(clientOptions),
         Embeddings: (embeddingsOptions?: EmbeddingsOptions) =>
