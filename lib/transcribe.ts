@@ -56,6 +56,8 @@ type Word = {
 type DialogueElement = {
     speaker: number;
     text: string;
+    start: number;
+    end: number;
 };
 
 export class Transcription implements Promise<string> {
