@@ -25,6 +25,8 @@ const ResultType = t.intersection([
             t.type({
                 speaker: t.number,
                 text: t.string,
+                start: t.number,
+                end: t.number,
             }),
         ),
     }),
