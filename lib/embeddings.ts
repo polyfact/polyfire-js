@@ -190,7 +190,7 @@ export type EmbeddingsClient = {
         maxToken?: number,
     ) => Promise<{ success: boolean }>;
     getAllEmbeddings: () => Promise<{ ids: string[] }>;
-    Embeddings: () => Embeddings;
+    Embeddings: (embeddingsOptions?: EmbeddingsOptions) => Embeddings;
 };
 
 export default function client(clientOptions: InputClientOptions = {}): EmbeddingsClient {
