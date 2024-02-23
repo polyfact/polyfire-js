@@ -34,5 +34,5 @@ export {
     PaywallLoadingProps,
     PaywallPaymentLinkProps,
     Login,
-    LoginProps
+    LoginProps,
 };
