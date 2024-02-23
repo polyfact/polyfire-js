@@ -1,14 +1,12 @@
 "use client";
-
-import React, { ReactNode } from "react";
-import { usePolyfire } from "../hooks";
-import "./Login.css";
-
 import {
     GoogleLoginButton,
     MicrosoftLoginButton,
     GithubLoginButton,
 } from "react-social-login-buttons";
+import React, { ReactNode } from "react";
+import { usePolyfire } from "../hooks";
+import "./Login.css";
 
 export interface LoginProps extends React.HTMLAttributes<HTMLDivElement> {
     children: ReactNode;
