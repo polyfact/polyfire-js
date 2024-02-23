@@ -144,17 +144,21 @@ export interface LoginProps extends React.HTMLAttributes<HTMLDivElement> {
     children: ReactNode;
     termsOfService?: string;
     privacyPolicy?: string;
+    providers?: string[];
 }
 
 export function Login({
     children,
     termsOfService,
     privacyPolicy,
+    providers,
     ...props
 }: LoginProps): React.ReactElement {
     const {
         auth: { status },
     } = usePolyfire();
+
+    if (!providers) providers = ["github", "google", "azure"];
 
     if (status === "loading") {
         return (
@@ -179,9 +183,18 @@ export function Login({
     if (status === "unauthenticated") {
         return (
             <div {...props} style={{ width: 240, minHeight: 145, ...(props.style || {}) }}>
-                <GithubButton />
-                <GoogleButton />
-                <MicrosoftButton />
+                {providers.map((p) => {
+                    switch (p) {
+                        case "github":
+                            return <GithubButton />;
+                        case "google":
+                            return <GoogleButton />;
+                        case "azure":
+                            return <MicrosoftButton />;
+                        default:
+                            return null;
+                    }
+                })}
                 {(termsOfService || privacyPolicy) && (
                     <p style={{ fontSize: 11, textAlign: "center" }}>
                         By continuing, you are indicating that you accept
