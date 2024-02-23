@@ -5,7 +5,7 @@ import { ClientOptions } from "./clientOpts";
 import { MutablePromise } from "./utils";
 import { PolyfireError, ApiError, ErrorData } from "./helpers/error";
 
-type SimpleProvider = "github" | "google";
+type SimpleProvider = "github" | "google" | "azure";
 type LoginWithFirebaseInput = { token: string; provider: "firebase" };
 type LoginWithCustomInput = { token: string; provider: "custom" };
 type LoginWithRawPolyfireTokenInput = { token: string; provider: "raw-polyfire" };
