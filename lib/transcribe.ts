@@ -41,6 +41,7 @@ type TranscriptionOptions = {
     provider?: string;
     language?: string;
     outputFormat?: string;
+    keywords?: string[];
 };
 
 type Word = {
@@ -144,6 +145,7 @@ export function transcribe(
                     provider: options.provider,
                     language: options.language,
                     output_format: options.outputFormat,
+                    keywords: options.keywords,
                     file_path: fileName,
                 },
                 {
