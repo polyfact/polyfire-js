@@ -61,7 +61,36 @@ export async function getSession(
             refreshToken = storedRefreshToken;
         } else if (refreshToken) {
             setSessionStorage(refreshToken, projectId);
-            window.history.replaceState({}, window.document.title, window.location.pathname);
+
+            // cleanURLFromTokens removes access_token and refresh_token from the URL
+            // Required otherwise other useful link params are lost
+            const cleanURLFromTokens = () => {
+                const url = new URL(window.location.href);
+                if (url.hash.includes("access_token") || url.hash.includes("refresh_token")) {
+                    const hashParams = url.hash
+                        .substring(1)
+                        .split("&")
+                        .reduce((acc: { [key: string]: string }, current) => {
+                            const [key, value] = current.split("=");
+                            acc[key] = value;
+                            return acc;
+                        }, {});
+
+                    delete hashParams.access_token;
+                    delete hashParams.refresh_token;
+
+                    const newHash = Object.entries(hashParams)
+                        .map(([key, value]) => `${key}=${value}`)
+                        .join("&");
+
+                    window.history.replaceState(
+                        {},
+                        window.document.title,
+                        `${url.pathname}${url.search}${newHash ? `#${newHash}` : ""}`,
+                    );
+                }
+            };
+            cleanURLFromTokens();
         }
 
         if (!refreshToken) {
