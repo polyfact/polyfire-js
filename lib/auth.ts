@@ -64,27 +64,23 @@ export async function getSession(
 
             // cleanURLFromTokens removes access_token and refresh_token from the URL
             // Required otherwise other useful link params are lost
-            const cleanURLFromTokens = () => {
-                const url = new URL(window.location.href);
-                if (url.hash.includes("access_token") || url.hash.includes("refresh_token")) {
-                    const newHash = url.hash
-                        .substring(1)
-                        .split("&")
-                        .filter(
-                            (param) =>
-                                !param.startsWith("access_token") &&
-                                !param.startsWith("refresh_token"),
-                        )
-                        .join("&");
+            const url = new URL(window.location.href);
+            if (url.hash.includes("access_token") || url.hash.includes("refresh_token")) {
+                const newHash = url.hash
+                    .substring(1)
+                    .split("&")
+                    .filter(
+                        (param) =>
+                            !param.startsWith("access_token") && !param.startsWith("refresh_token"),
+                    )
+                    .join("&");
 
-                    window.history.replaceState(
-                        {},
-                        window.document.title,
-                        `${url.pathname}${url.search}${newHash ? `#${newHash}` : ""}`,
-                    );
-                }
-            };
-            cleanURLFromTokens();
+                window.history.replaceState(
+                    {},
+                    window.document.title,
+                    `${url.pathname}${url.search}${newHash ? `#${newHash}` : ""}`,
+                );
+            }
         }
 
         if (!refreshToken) {
