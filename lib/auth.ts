@@ -71,7 +71,7 @@ export async function getSession(
                     .split("&")
                     .filter(
                         (param) =>
-                            !param.startsWith("access_token") && !param.startsWith("refresh_token"),
+                            !param.startsWith("access_token=") && !param.startsWith("refresh_token="),
                     )
                     .join("&");
 
