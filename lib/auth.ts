@@ -67,20 +67,14 @@ export async function getSession(
             const cleanURLFromTokens = () => {
                 const url = new URL(window.location.href);
                 if (url.hash.includes("access_token") || url.hash.includes("refresh_token")) {
-                    const hashParams = url.hash
+                    const newHash = url.hash
                         .substring(1)
                         .split("&")
-                        .reduce((acc: { [key: string]: string }, current) => {
-                            const [key, value] = current.split("=");
-                            acc[key] = value;
-                            return acc;
-                        }, {});
-
-                    delete hashParams.access_token;
-                    delete hashParams.refresh_token;
-
-                    const newHash = Object.entries(hashParams)
-                        .map(([key, value]) => `${key}=${value}`)
+                        .filter(
+                            (param) =>
+                                !param.startsWith("access_token") &&
+                                !param.startsWith("refresh_token"),
+                        )
                         .join("&");
 
                     window.history.replaceState(
