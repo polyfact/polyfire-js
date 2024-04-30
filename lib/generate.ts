@@ -366,10 +366,11 @@ function stream(
         ws.onopen = () => ws.send(JSON.stringify(requestBody));
         ws.onmessage = (data: unknown) => onMessage(data, resultStream);
         ws.onclose = () => resultStream.push(null);
+        ws.onerror = () => resultStream.push(null);
         resultStream.stop = () => {
             ws.send("STOP");
         };
-    })();
+    })().catch(console.error);
     return resultStream;
 }
 
