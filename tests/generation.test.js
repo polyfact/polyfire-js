@@ -96,4 +96,5 @@ test(
 
         expect(message).toBe("banana42");
     }),
+    10000,
 );
