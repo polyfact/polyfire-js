@@ -110,6 +110,7 @@ export type Ressource = {
     similarity: number;
     id: string;
     content: string;
+    metadatas?: Record<string, unknown>;
 };
 
 export type GenerationResult = {

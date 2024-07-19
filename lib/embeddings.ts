@@ -92,7 +92,9 @@ async function searchEmbeddings(
     id: string,
     input: string,
     clientOptions: InputClientOptions = {},
-): Promise<{ id: string; content: string; similarity: number }[]> {
+): Promise<
+    { id: string; content: string; similarity: number; metadatas: Record<string, unknown> }[]
+> {
     const { token, endpoint } = await defaultOptions(clientOptions);
 
     try {
@@ -166,7 +168,11 @@ class Embeddings {
         return this.memoryId;
     }
 
-    async search(input: string): Promise<{ id: string; content: string; similarity: number }[]> {
+    async search(
+        input: string,
+    ): Promise<
+        { id: string; content: string; similarity: number; metadatas: Record<string, unknown> }[]
+    > {
         const id = await this.memoryId;
         return searchEmbeddings(id, input, await this.clientOptions);
     }

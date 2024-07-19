@@ -86,12 +86,13 @@ test(
 
         const embeddings = Embeddings();
 
-        embeddings.add('The word you have to remember is "banana42"');
+        await embeddings.add('The word you have to remember is "banana42"');
 
         const message = await generate("Just answer with the word you have to remember", {
             temperature: 0,
             cache: false,
             embeddings,
+            model: "gpt-3.5-turbo",
         });
 
         expect(message).toBe("banana42");
