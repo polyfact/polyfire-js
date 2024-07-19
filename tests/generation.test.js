@@ -92,7 +92,7 @@ test(
             temperature: 0,
             cache: false,
             embeddings,
-            model: "gpt-3.5",
+            model: "gpt-3.5-turbo",
         });
 
         expect(message).toBe("banana42");
