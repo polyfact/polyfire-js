@@ -16,6 +16,8 @@ We **manage your AI backend** so you don't have to.
 
 ![Demo Gif](https://files.readme.io/7442014-demo.gif)
 
+> **Note:** The Polyfire SDK and API are no longer actively maintained, but you can still use them. For more information, please refer to the documentation in the `docs` folder.
+
 ### React
 
 ```js
