@@ -1,7 +1,6 @@
 <h1 align="center">🔥 polyfire</h1>
 
 <h4 align="center">
-    <a href="https://docs.polyfire.com">Documentation</a> |
     <a href="https://www.polyfire.com/discord">Discord</a> |  <a href="https://beta.polyfire.com">Dashboard</a>
 </h4>
 
@@ -16,10 +15,6 @@ Why use Polyfire?
 We **manage your AI backend** so you don't have to.
 
 ![Demo Gif](https://files.readme.io/7442014-demo.gif)
-
-## 🧰 Examples
-
-We have several examples in our [documentation](https://docs.polyfire.com/). But here are two simple ones to get you started
 
 ### React
 
@@ -69,35 +64,193 @@ root.render(
 
 > Don't forget to change the **your_project_id** by your project ID you will have got on https://beta.polyfire.com
 
-## 🆕 Getting Started
-
-To get an overview of Polyfire follow this **[Basic Usage](https://docs.polyfire.com/docs/basic-usage)** tutorial.
-
-## ✨ Starter Guides
-
-We also made a couple of tutorials you can use to get started with Polyfire:
-
--   **[How to make a clone of ChatGPT](https://docs.polyfire.com/docs/chatgpt-clone)**
--   **[New Project & Rate Limits](https://docs.polyfire.com/docs/new-project-rate-limit)**
--   **[Adding stripe subscriptions](https://docs.polyfire.com/docs/react-stripe-subscriptions)**
--   **[Call Polyfire from React](https://docs.polyfire.com/docs/usepolyfire)**: The usePolyfire hooks lets you use Polyfire and handle authentification without having to deploy any backend
--   **[Call Polyfire from other browser environments](https://docs.polyfire.com/docs/javascript)**: The Polyfire Client Object allows you to use Polyfire and handle authentification without having to deploy any backend in any environment
-
-## 📚 Useful References
-
--   **[Generate Simple Text](https://docs.polyfire.com/reference/generate)**: Answer to simple requests as text
--   **[Create Chatbots](https://docs.polyfire.com/reference/chats)**: Easily create chatbots
--   **[Transcribe](https://docs.polyfire.com/reference/transcribe)**: Transcribe audio files to text
--   **[Memory](https://docs.polyfire.com/reference/embeddings)**: Easily create a long-term memory and simplify the use of large amounts of information
--   **[GenerateImage](https://docs.polyfire.com/reference/generate-image)**: Generate images with Dall-E
-
 ## 🔗 Links
 
 -   Website: [polyfire.com](https://www.polyfire.com)
--   Documentation: [docs.polyfire.com](https://docs.polyfire.com)
 -   Dashboard: [beta.polyfire.com](https://beta.polyfire.com)
 -   Discord: [polyfire.com/discord](https://www.polyfire.com/discord)
--   Javascript SDK: [github.com/polyfire-ai/polyfire-js](https://www.github.com/polyfire-ai/polyfire-js)
--   Open Source API (your managed backend!): [github.com/polyfire-ai/polyfire-api](https://github.com/polyfire-ai/polyfire-api)
+-   Javascript SDK: [github.com/polyfact/polyfire-js](https://www.github.com/polyfact/polyfire-js)
+-   Open Source API (your managed backend!): [github.com/polyfact/polyfire-api](https://github.com/polyfact/polyfire-api)
 
 We're open source! Make a good PR to the JS SDK or the API and we'll merge it.
+
+
+# SDK Documentation
+
+## Overview
+
+This SDK provides functionalities for text generation, transcription, memory management, image generation, and data loading. Below is a guide on how to use these features.
+
+### Installation
+
+To install the SDK, use the following command:
+
+```bash
+npm install polyfire-js
+```
+
+### Importing the SDK
+
+To use the SDK, import the necessary functions and classes:
+
+```typescript
+import {
+    generate,
+    generateWithType,
+    transcribe,
+    Chat,
+    createMemory,
+    updateMemory,
+    getAllMemories,
+    generateImage,
+    TextFileLoader,
+    StringLoader,
+    AudioLoader,
+    kv,
+    usage,
+    t
+} from "polyfire-js";
+import PolyfireClientBuilder from "polyfire-js";
+```
+
+## Features
+
+### Text Generation
+
+- **generate**: Generate text based on input.
+- **generateWithType**: Generate text with probabilistic types.
+
+```typescript
+const options: GenerationOptions = { /* Generation options */ };
+const result = await generate("Your input text", options);
+```
+
+### Transcription
+
+- **transcribe**: Transcribe audio to text.
+
+```typescript
+const transcription = await transcribe(audioFile);
+```
+
+### Chat
+
+- **Chat**: Class for handling chat functionalities.
+
+```typescript
+const chat = new Chat();
+chat.sendMessage("Hello!");
+```
+
+### Memory Management
+
+- **createMemory**: Create embeddings for memory.
+- **updateMemory**: Update existing embeddings.
+- **getAllMemories**: Retrieve all embeddings.
+
+```typescript
+const memory = createMemory(data);
+const updatedMemory = updateMemory(memoryId, newData);
+const allMemories = getAllMemories();
+```
+
+### Image Generation
+
+- **generateImage**: Generate images based on input.
+
+```typescript
+const image = await generateImage("A beautiful sunset");
+```
+
+### Data Loaders
+
+- **TextFileLoader**: Load text files.
+- **StringLoader**: Load strings.
+- **AudioLoader**: Load audio files.
+
+```typescript
+const textLoader = new TextFileLoader(filePath);
+const stringLoader = new StringLoader(stringData);
+const audioLoader = new AudioLoader(audioFile);
+```
+
+### Key-Value Store Operations
+
+- **kv.get**: Retrieve a value by key.
+- **kv.set**: Store a value by key.
+- **kv.del**: Delete a value by key.
+- **kv.all**: Retrieve all key-value pairs.
+
+```typescript
+const value = await kv.get("key");
+await kv.set("key", "value");
+await kv.del("key");
+const allValues = await kv.all();
+```
+
+### Usage Tracking
+
+- **usage**: Track usage of the SDK.
+
+```typescript
+const usageData = await usage();
+```
+
+### Type Validation
+
+- **t**: Type validation using `polyfact-io-ts`.
+
+```typescript
+const isValid = t.validate(data, schema);
+```
+
+### Client Builder
+
+- **PolyfireClientBuilder**: Build the client.
+
+```typescript
+const client = new PolyfireClientBuilder({ apiKey: "your-api-key" });
+```
+
+## Example Usage
+
+Here is a complete example of using the SDK:
+
+```typescript
+import {
+    generate,
+    transcribe,
+    createMemory,
+    generateImage,
+    kv,
+    usage
+} from "polyfire-js";
+import PolyfireClientBuilder from "polyfire-js";
+
+async function main() {
+    // Text generation
+    const text = await generate("Hello, world!");
+
+    // Transcription
+    const transcription = await transcribe("path/to/audio/file");
+
+    // Memory management
+    const memory = createMemory("Some data");
+
+    // Image generation
+    const image = await generateImage("A beautiful sunset");
+
+    // Key-Value operations
+    await kv.set("key", "value");
+    const value = await kv.get("key");
+
+    // Usage tracking
+    const usageData = await usage();
+
+    // Client builder
+    const client = new PolyfireClientBuilder({ apiKey: "your-api-key" });
+}
+
+main();
+```
+
